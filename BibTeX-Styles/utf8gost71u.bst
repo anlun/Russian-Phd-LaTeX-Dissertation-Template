@@ -650,8 +650,7 @@ FUNCTION {format.names}
   numnames 'namesleft :=
   s nameptr
   "{vv~}{ll,}{~jj}{~f.}" format.name$ 
-  % "{vv~}{ll,}{~jj}{~ff}" format.name$ 
-  
+
 }
 
 
@@ -851,15 +850,38 @@ FUNCTION {format.bvolume}
 { volume empty$
     { "" }
     { bbl.vvol volume tie.connect
-      series empty$
-        'skip$
-        { bbl.of space.word * series emphasize * }
-      if$
-      "volume and number" number either.or.check
     }
   if$
 }
 
+FUNCTION {format.bvolume22}
+{ series
+}
+% FUNCTION {format.bvolume22}
+% { volume empty$
+%     { "" }
+%     { bbl.vvol volume tie.connect
+%       series empty$
+%         'skip$
+%         { series output }
+%       if$
+%       "volume and number" number either.or.check
+%     }
+%   if$
+% }
+
+% FUNCTION {format.bvolume}
+% { volume empty$
+%     { "" }
+%     { bbl.vvol volume tie.connect
+%       series empty$
+%         'skip$
+%         { bbl.of space.word * series emphasize * }
+%       if$
+%       "volume and number" number either.or.check
+%     }
+%   if$
+% }
 FUNCTION {format.number.series}
 { volume empty$
     { number empty$
@@ -1243,6 +1265,7 @@ FUNCTION {inproceedings}
   new.slash
   author.after
   new.dblslash
+  format.bvolume22 output
   booktitle "booktitle" output.check
   new.slash
   editor.organization.after
