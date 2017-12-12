@@ -32,9 +32,10 @@
 %  {}{}
 
 %%% Цитирование %%%
-\renewcommand\citepunct{;\penalty\citepunctpenalty%
-    \hskip.13emplus.1emminus.1em\relax}                % Разделение ; при перечислении ссылок (ГОСТ Р 7.0.5-2008)
-
+%% \renewcommand\citepunct{;\penalty\citepunctpenalty%
+%%     \hskip.13emplus.1emminus.1em\relax}                % Разделение ; при перечислении ссылок (ГОСТ Р 7.0.5-2008)
+\renewcommand\citepunct{,\penalty\citepunctpenalty%
+    \hskip.13emplus.1emminus.1em\relax}
 
 %%% Создание команд для вывода списка литературы %%%
 \newcommand*{\insertbibliofull}{
