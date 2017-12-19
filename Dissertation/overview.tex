@@ -515,6 +515,7 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 некорректны в JMM.
 
 \subsection{Модель памяти C/C++}
+\label{sec:cppmodel}
 В последние годы научным сообществом было уделено особое внимание модели памяти C/C++11.
 Базовым результатом о модели является её формализация в работе \cite{Batty-al:POPL11};
 далее мы будем подразумевать под моделью C/C++11 именно эту формализацию.
@@ -526,7 +527,8 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 \cite{Batty-al:POPL12,Vafeiadis-al:POPL15,Chakraborty-Vafeiadis:CGO16,Lahav-al:PLDI17,Batty-al:POPL16},
 логикам для формальных рассуждений о программах
 \cite{Turon-al:OOPSLA14,Vafeiadis-Narayan:OOPSLA13,Lahav-Vafeiadis:ICALP15,Doko-Vafeiadis:VMCAI16,Vafeiadis:CPP15}
-и другим результатам о модели \cite{Batty-al:POPL13,Batty-al:ESOP15,Lidbury-Donaldson:POPL17}.
+и другим результатам о модели
+\cite{Batty-al:POPL13,Batty-al:ESOP15,Lidbury-Donaldson:POPL17, Tassarotti-al:PLDI15,Doko-Vafeiadis:ESOP17}.
 Как следствие, модель C/C++11 является одной из самых проработанных моделей памяти ЯП.
 Тем не менее, она не лишена недостатков, в том числе ``значений из воздуха''.
 
@@ -566,17 +568,6 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 %% \subsection{Операционные модели}
 %% \subsection{Аксиоматические (декларативные) модели}
 %% \subsection{Денотационные модели}
-
-\section{Модель памяти C/C++11}
-\label{sec:cppmodel}
-
-Данной модели памяти посвящено множество работ
-\cite{Batty-al:POPL12,Batty-al:POPL13,Lahav-al:PLDI17,Chakraborty-Vafeiadis:CGO16,Vafeiadis-al:POPL15,Vafeiadis:CPP15}
-
-В том числе были предложены логики для рассуждений о программах в этой модели
-\cite{Turon-al:OOPSLA14,Vafeiadis-Narayan:OOPSLA13,Lahav-Vafeiadis:ICALP15,Doko-Vafeiadis:VMCAI16}
-и использованы для доказательства корректности
-алгоритмов в рамках модели (например, RCU \cite{Tassarotti-al:PLDI15,Doko-Vafeiadis:ESOP17}).
 
 %% Данное заключение неверно для моделей, в том числе для обещающей и ARMv8.3
 %% моделей. Рассмотрим, как слабое поведение $a = 1, b = 0$ достигается при исполнении ${\rm MP}$
