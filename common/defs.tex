@@ -164,6 +164,7 @@
 \newcommand{\rlx}{\mathtt{rlx}}
 \newcommand{\rel}{{\mathtt{rel}}}
 \newcommand{\acq}{{\mathtt{acq}}}
+\newcommand{\con}{{\mathtt{con}}}
 \newcommand{\acqrel}{{\mathtt{acqrel}}}
 \newcommand{\sco}{{\mathtt{sc}}}
 \newcommand{\sto}{{\mathtt{st}}}
@@ -236,7 +237,7 @@
 \newcommand{\lOBS}{{\mathtt{obs}}}
 \newcommand{\lEORD}{{\mathtt{eord}}}
 \newcommand{\lTORD}{{\mathtt{tord}}}
-\newcommand{\lSC}{{\mathtt{sc}}}
+\newcommand{\lSC}{{\color{colorSC}{\mathtt{sc}}}}
 
 \newcommand{\lSCB}{{\color{colorSCB} \mathtt{scb}}}
 \newcommand{\lPSC}{{\color{colorPSC} \mathtt{psc}}}
@@ -469,6 +470,9 @@
 \newcommand{\fenceInst}[1]{\fence{#1}}
 \newcommand{\dmbSY}{\fenceInst{\SY}}
 \newcommand{\dmbLD}{\fenceInst{\LD}}
+
+\newcommand{\readInstParam}[3]{#2 \;:=_{#1}\;[#3]}
+\newcommand{\writeInstParam}[3]{[#2] \;:=_{#1}\;#3}
 
 \newcommand\ifGoto{\textsf{if}-\textsf{goto}}
 \newcommand{\ifGotoInst}[2]{\textsf{if} \; #1 \; \textsf{goto} \; #2}

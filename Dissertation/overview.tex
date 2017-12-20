@@ -533,9 +533,8 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 Как следствие, модель C/C++11 является одной из самых проработанных моделей памяти ЯП.
 Тем не менее, она не лишена недостатков, в том числе ``значений из воздуха''.
 
-Аналогично модели JMM, в C/C++11 MM сценарий поведения программы представляется в виде графа,
-вершинами которого также являются события над памятью,
-а локации бывают двух типов --- неатомарные (non-atomic) и атомарные (atomic).
+\subsubsection{Виды обращений к памяти}
+В модели C/C++11 локации бывают двух типов --- неатомарные (non-atomic) и атомарные (atomic).
 В отличие от случая Java, разделение между ними менее строгое,
 т.к. языки C/C++ разрешают совершать преобразование типов, и, как следствие,
 на один и тот же адрес в памяти может ссылаться две переменных в программе, одна из которых будет
@@ -545,23 +544,259 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 чтение, запись или одновременное чтение-запись (RMW, read-modify-write).
 Описание последних мы опустим для краткости.
 
-Событие чтения может быть неатомарным, \emph{расслабленным} (relaxed),
-\emph{потребляющим} (consume), \emph{приобретающим} (acquire)
-или \emph{последовательно-консистентным} (sc, sequentially-consistent).
-Событие записи может быть неатомарным, \emph{расслабленным} (relaxed),
-\emph{высвобождающим} (release)
-или \emph{последовательно-консистентным} (sc, sequentially-consistent).
+Событие чтения может быть неатомарным, \emph{расслабленным} (relaxed, $\rlx$),
+\emph{потребляющим} (consume, $\con$), \emph{приобретающим} (acquire, $\acq$)
+или \emph{последовательно-консистентным} (sequentially-consistent, $\sco$).
+Событие записи может быть неатомарным, расслабленным,
+\emph{высвобождающим} (release, $\rel$)
+или последовательно-консистентным.
 В обоих случаях виды обращений упорядочены по тому, сколько гарантий они предоставляют.
 Расслабленные обращения похожи на обычные обращения в модели JMM, тогда как
 последовательно-консистентные --- на синхронизирующие.
 Неатомарные обращения предоставляют наименьшие гарантии: если неатомарное обращение
 является частью гонки по данным, то программа имеет неопределенное поведение в C/C++11 MM.
+Приобретающее чтение и высвобождающая запись могут быть использованы для того,
+чтобы запретить результат $a = 1, b = 0$ в версии программы, аналогично синхронизирующим
+обращениям в случае JMM:
+\begin{equation*}
+\tag{MP-rel-acq}\label{ex:MPrelAcq}
+\begin{tabular}{L || L L}
+  \writeInstParam{\rlx}{x}{1}; & \readInstParam{\acq}{a}{y}; & \valuefail{1} \\
+  \writeInstParam{\rel}{y}{1}; & \readInstParam{\rlx}{b}{x}; & \valuefail{0} \\
+\end{tabular}
+\end{equation*}
+При этом, в отличие от синхронизирующих обращений JMM и $\sco$-обращений C/C++11 MM,
+на высвобождающих и приобретающих событиях не существует тотального порядка,
+обязательно учитывающего программный порядок, и, как следствие, следующая программа,
+использующая высвобождающие записи, имеет сценарий поведения с результатом $a = 1, b = 1$:
+\begin{equation*}
+\tag{2W-rel}\label{ex:WWrel}
+\begin{array}{c}
+\begin{tabular}{L || L}
+  \writeInstParam{\rel}{x}{1}; & \writeInstParam{\rel}{y}{1}; \\
+  \writeInstParam{\rel}{y}{2}; & \writeInstParam{\rel}{x}{2}; \\
+\end{tabular} \\
+\readInstParam{\sco}{a}{x}; \valuecom{1} \\
+\readInstParam{\sco}{b}{y}; \valuecom{1}
+\end{array}
+\end{equation*}
+тогда как она же с $\sco$-записями --- нет:
+\begin{equation*}
+\tag{2W-sc}\label{ex:WWsc}
+\begin{array}{c}
+\begin{tabular}{L || L}
+  \writeInstParam{\sco}{x}{1}; & \writeInstParam{\sco}{y}{1}; \\
+  \writeInstParam{\sco}{y}{2}; & \writeInstParam{\sco}{x}{2}; \\
+\end{tabular} \\
+\readInstParam{\sco}{a}{x}; \valuefail{1} \\
+\readInstParam{\sco}{b}{y}; \valuefail{1}
+\end{array}
+\end{equation*}
+
+Идейно, высвобождающие записи не могут быть переставлены с предшествующими им (в программном порядке) записями
+(ни на этапе компиляции, ни во время исполнения программы) и, будучи прочитанными приобретающими чтениями,
+гарантируют, что читающий поток станет осведомлён о предшествующих записях.
+Аналогично, приобретающие чтения не могут быть переставлены с последующими чтениями.
+
+Потребляющие (consume) чтения являются ослабленной версией приобретающих чтений и предоставляют те же гарантии
+только для последующих чтений, которые находятся в зависимости по данным от них.
+Так, их будет недостаточно, чтобы гарантировать отсутствие сценария поведения $a = 1, b = 0$ в версии программы
+${\rm MP\text{-}rel\text{-}acq}$, в которой $\acq$-чтение заменено на $\con$-чтение, однако будет достаточно,
+чтобы гарантировать отсутствие сценария поведения $a = y, b = 0$ в следующей программе:
+\begin{equation*}
+\tag{MP-addr-con}\label{ex:MPaddrCon}
+\begin{array}{c}
+\writeInst{x}{0};
+\writeInst{y}{0};
+\writeInst{z}{x}; \\
+\begin{tabular}{L || L L}
+  \writeInstParam{\rlx}{y}{1}; & \readInstParam{\con}{a}{z}; & \valuefail{y} \\
+  \writeInstParam{\rel}{z}{y}; & \readInstParam{\rlx}{b}{a}; & \valuefail{0} \\
+\end{tabular}
+\end{array}
+\end{equation*}
+
+%% В целом, модель С/C++11 предоставляет большую по сравнению с JMM вариативность в смысле обращений
+
+\subsubsection{Сценарии поведения}
+Аналогично модели JMM, в C/C++11 MM сценарий поведения программы представляется в виде графа,
+вершинами которого являются события над памятью.
+%% Каждое событие обладает соответствующей пометкой.
+%% Так, например, для события чтения указывается его вид, целевая локация и прочитанное значение.
+%% В сценариях поведения, также как и в JMM, фигурируют
+Также в сценариях поведения фигурируют
+отношения программного порядка $\lPO$, ``читает из'' $\lRF$, ``синхронизируется с'' $\lSW$
+и ``предшествует'' $\lHB$.
+При этом $\lSW$ и $\lHB$ определяются по-другому, так, в частности, $\lSW$ включает в себя подмножество $\lRF$,
+связывающее высвобождающие записи с приобретающими чтениями, а $\lHB$ является транзитивным замыканием объединения
+$\lPO$ и $\lSW$ в отсутствии $\con$-чтений (с ними определение становится сложнее).
+Дополнительно в модели используются два важных отношения: $\lMO$ и $\lSC$.
+Отношение $\lMO$, или \emph{порядок памяти} (memory order, coherence order), для каждой локации является полным порядком
+на событиях записи в неё. Отношение $\lSC$ (sequential consistency order) является полным порядком на всех $\sco$-событиях
+в сценарии исполнения.
+
+Также, как и в случае JMM, определяются аксиомы, которые ограничивают пространство возможных сценариев исполнения.
+Полный список аксиом представлен в \cite{Batty-al:POPL11} и \cite{Vafeiadis-Narayan:OOPSLA13}.
+Отличием от JMM является то, что в модели C/C++11 не используется процесс верификации исполнения, который в JMM
+используется для фильтрации сценариев поведения со ``значениями из воздуха''.
+В итоге, с одной стороны, C/C++11 MM допускает такие поведения, но, с другой стороны, поддерживает большее число
+компиляторных оптимизаций.
+
+\subsubsection{Построение сценариев поведения по программе}
+Построение сценариев поведения в модели C/C++11 состоит из трёх этапов
+(формально процесс изложен в \cite{Vafeiadis-Narayan:OOPSLA13}).
+На первом этапе по программе строится множество т.н. \emph{предзапусков} --- частичных графов сценариев
+поведения, в которых присутствует только отношение $\lPO$.
+При этом, поскольку события чтения не связываются с событиями записи, для каждого события чтения
+прочитанное значение выбирается недетерминировано.
+В частности, среди предзапусков программы ${\rm MP\text{-}rel\text{-}acq}$ будет следующий граф:
+\[
+\begin{tikzpicture}[yscale=1,xscale=1.8]
+  \node (01)  at (-2,2) {$a: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,2) {$b: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2,1) {$c: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2,0) {$d: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1)  {$e: \rlab{\acq}{y}{5}$ };
+  \node (12) at (0,0)  {$f: \rlab{\rlx}{x}{9}$ };
+
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  %% \draw[hb] (01) edge node[left] {\small $\lHB$} (1);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  %% \draw[hb] (1) edge node[above] {\small $\lHB$} (12);
+  %% \draw[mo,bend right=20] (01)  edge node[left] {\small $\lCO$} (1);
+  %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+\]
+На втором этапе в каждый предзапуск недетерминировано добавляются дуги отношений $\lRF$, $\lSC$ и $\lMO$, по
+которым также вычисляются производные отношения, такие как $\lSW$ и $\lHB$.
+Полученные графы проверяются на базовую корректность.
+В частности, проверяется, что если из события $p$ идёт $\lRF$-дуга в $q$,
+то $p$ является событием записи, $q$ --- чтения, они оперируют над одной и той же локацией,
+и прочитанное значение равняется записанному.
+После второго этапа во множестве полученных сценариев поведения для программы ${\rm MP\text{-}rel\text{-}acq}$
+есть следующий сценарий поведения (некоторые ребра опушены):
+\[
+\begin{tikzpicture}[yscale=1,xscale=1.8]
+  \node (01)  at (-2,3) {$a: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {$b: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2,1.5) {$c: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2,0) {$d: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {$e: \rlab{\acq}{y}{1}$ };
+  \node (12) at (0,0)  {$f: \rlab{\rlx}{x}{0}$ };
+
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  \draw[hb] (01) edge node[right] {\small $\lHB$} (1);
+  %% \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  \draw[sw] (2) edge node[above] {\small $\lSW$} (11);
+  \draw[hb] (1) edge node[below] {\small $\lHB$} (12);
+  \draw[mo,bend right=20] (01)  edge node[left] {\small $\lMO$} (1);
+  \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+\]
+На третьем этапе полученные сценарии поведения проверяются на соответствие аксиомам модели C/C++11.
+Одна из таких аксиом аналогична приведённой выше для JMM:
+$$
+\begin{array}{l}
+\forall r, w. \; \lRF(w, r) \land \lHB(w, r) \Rightarrow \\
+\quad \not \exists w'. \; \lCO(w,w') \land \lHB(w, w') \land \lHB(w', r).
+\end{array}
+$$
+Данная аксиома не выполняется для последнего приведенного сценария поведения,
+и, как следствие, программа ${\rm MP\text{-}rel\text{-}acq}$ имеет только три корректных
+сценария поведения в рамках модели C/C++11 (см. Рис. \ref{fig:MPrelAcqSem}),
+соответствующих результатам $[a=0, b = 0]$, $[a = 0, b = 1]$ и $[a = 1, b = 1]$.
+
+\newcommand{\smallLabelFont}{\scriptsize}
+
+\begin{figure}
+  \begin{tabular}{c c c}
+\begin{tikzpicture}[yscale=1,xscale=1]
+  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\acq}{y}{0}$ };
+  \node (12) at (0,0)  {\smallLabelFont$f: \rlab{\rlx}{x}{0}$ };
+
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
+  %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
+  \draw[rf,bend left=20] (02) edge node[right] {\smallLabelFont $\lRF$} (11);
+  \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
+  \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+  \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+ &
+\begin{tikzpicture}[yscale=1,xscale=1]
+  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\acq}{y}{0}$ };
+  \node (12) at (0,0)  {\smallLabelFont$f: \rlab{\rlx}{x}{1}$ };
+
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  \draw[rf,bend left=20] (02) edge node[right] {\smallLabelFont $\lRF$} (11);
+  \draw[rf] (1)  edge node[below] {\smallLabelFont $\lRF$} (12);
+  \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+  \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+ &
+\begin{tikzpicture}[yscale=1,xscale=1]
+  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\acq}{y}{1}$ };
+  \node (12) at (0,0)  {\smallLabelFont$f: \rlab{\rlx}{x}{1}$ };
+
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  \draw[rf] (2) edge node[right] {} (11);
+  \draw[rf] (1) edge node[below] {\smallLabelFont $\lRF$} (12);
+  \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+  \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+  \end{tabular}
+  \caption{Сценарии поведения программы ${\rm MP\text{-}rel\text{-}acq}$ в модели C/C++11}
+  \label{fig:MPrelAcqSem}
+\end{figure}
+
+\subsubsection{Проблема ``значений из воздуха''}
+
 
 %% События имеют несколько типов, среди которых: чтение, запись, атомарное чтение-запись (RMW, read-modify-write),
 %% барьер памяти, захват замка, высвобождение замка.
-
-
-\app{TODO: описать базовые механизмы модели, построение исполнений в модели и т.д.}
+\app{TODO}
 
 \begin{table}[t]
   \begin{center}
