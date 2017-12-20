@@ -59,13 +59,14 @@
 \newcommand{\textcode}[1]{\texorpdfstring{\texttt{#1}}{#1}}
 \newcommand{\kw}[1]{\textbf{\textcode{#1}}}
 \newcommand{\skipc}{\kw{skip}}
-\newcommand{\ite}[3]{\kw{if}\;#1\:\kw{then}\;#2\;\\ \kw{else}\;#3}
+\newcommand{\ite}[3]{\kw{if}\;#1\:\kw{then}\;#2\;\\ \kw{else}\;#3\;\kw{fi}}
 \newcommand{\iteml}[3]{
   \kw{if} \; #1\\
   \begin{array}[t]{@{}l@{}l}
     \kw{then}& \begin{array}[t]{l} #2 \end{array} \\
     \kw{else}& \begin{array}[t]{l} #3 \end{array} \\
-  \end{array}
+  \end{array}\\
+  \kw{fi}
 }
 \newcommand{\itne}[2]{\kw{if}\;#1\:\kw{then}\\ \quad\;{#2}}
 \newcommand{\while}[2]{\kw{while}\;#1\;\kw{do}\;#2}

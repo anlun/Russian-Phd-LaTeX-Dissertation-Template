@@ -40,7 +40,7 @@
 \tag{MP}\label{ex:MP}
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; ~\valuecom{1} \\
-  \writeInst{y}{1}; & \readInst{b}{x}; ~\valuecom{0} \\
+  \writeInst{y}{1} & \readInst{b}{x}~ ~\valuecom{0} \\
 \end{tabular}
 \end{equation*}
 Эта программа является упрощенным примером передачи данных между потоками.
@@ -141,8 +141,8 @@ Nienhuis-al:OOPSLA16,Batty-al:POPL11,Manson-al:POPL05}.
       \begin{array}{l c l}
         \begin{array}{l}
         \assignInst{a}{0}; \\
-        \iteml{a}{\readInst{b}{x}}{\skipc;} \\
-        \readInst{c}{y}; \\
+        \iteml{a}{\readInst{b}{x}}{\skipc}; \\
+        \readInst{c}{y} \\
         \end{array}
         & \optarrow &
         \begin{array}{l}
@@ -245,7 +245,7 @@ Power\footnote{Здесь и далее в
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; \\
   \hwsync;          &  \hwsync;        \\
-  \writeInst{y}{1}; & \readInst{b}{x}; \\
+  \writeInst{y}{1}  & \readInst{b}{x} \\
 \end{tabular}
 \end{equation*}
 На ряду с $\hwsync$ архитектура Power также предоставляет более слабый барьер $\lwsync$,
@@ -256,7 +256,7 @@ Power\footnote{Здесь и далее в
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; \\
   \lwsync;          &  \lwsync;        \\
-  \writeInst{y}{1}; & \readInst{b}{x}; \\
+  \writeInst{y}{1}  & \readInst{b}{x} \\
 \end{tabular}
 \end{equation*}
 В данном случае схема компиляции, использующая барьер $\lwsync$, является более предпочтительной по сравнению
@@ -330,7 +330,7 @@ LeyWild-Nanevski:POPL13,Sergey-al:PLDI15,Vechev-al:STTT13,Raychev-al:SAS13}.
   $\writeInst{x}{0}; \writeInst{y}{0};$ \\
 \begin{tabular}{L || L}
   \readInst{a}{x};  & \readInst{b}{y}; \\
-  \writeInst{y}{a}; & \writeInst{x}{b}; \\
+  \writeInst{y}{a} & \writeInst{x}{b} \\
 \end{tabular}
 \end{tabular}
 \end{equation*}
@@ -351,10 +351,10 @@ LeyWild-Nanevski:POPL13,Sergey-al:PLDI15,Vechev-al:STTT13,Raychev-al:SAS13}.
 \begin{tabular}{L || L}
   \readInst{a}{x}; & \readInst{b}{y}; \\
   \begin{array}{@{}l@{}}
-  \iteml{a}{\writeInst{y}{1}}{\skipc;}
+  \iteml{a}{\writeInst{y}{1}}{\skipc}
   \end{array} &
   \begin{array}{@{}l@{}}
-  \iteml{b}{\writeInst{x}{1}}{\skipc;}
+  \iteml{b}{\writeInst{x}{1}}{\skipc}
   \end{array} \\
 \end{tabular}
 \end{tabular}
@@ -455,7 +455,7 @@ $y$ помечена как изменчивая.
 \tag{MP-volatile}\label{ex:MPvolatile}
 \begin{tabular}{L || L L}
   \writeInst{x}{1}; & \readInstVolatile{a}{y}; & \valuefail{1} \\
-  \writeInstVolatile{y}{1}; & \readInst{b}{x}; & \valuefail{0} \\
+  \writeInstVolatile{y}{1} & \readInst{b}{x} & \valuefail{0} \\
 \end{tabular}
 \end{equation*}
 Для того, чтобы проверить данное утверждение, построим соответствующий граф.
@@ -562,7 +562,7 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 \tag{MP-rel-acq}\label{ex:MPrelAcq}
 \begin{tabular}{L || L L}
   \writeInstParam{\rlx}{x}{1}; & \readInstParam{\acq}{a}{y}; & \valuefail{1} \\
-  \writeInstParam{\rel}{y}{1}; & \readInstParam{\rlx}{b}{x}; & \valuefail{0} \\
+  \writeInstParam{\rel}{y}{1} & \readInstParam{\rlx}{b}{x} & \valuefail{0} \\
 \end{tabular}
 \end{equation*}
 При этом, в отличие от синхронизирующих обращений JMM и $\sco$-обращений C/C++11 MM,
@@ -574,10 +574,10 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 \begin{array}{c}
 \begin{tabular}{L || L}
   \writeInstParam{\rel}{x}{1}; & \writeInstParam{\rel}{y}{1}; \\
-  \writeInstParam{\rel}{y}{2}; & \writeInstParam{\rel}{x}{2}; \\
+  \writeInstParam{\rel}{y}{2} & \writeInstParam{\rel}{x}{2} \\
 \end{tabular} \\
 \readInstParam{\sco}{a}{x}; \valuecom{1} \\
-\readInstParam{\sco}{b}{y}; \valuecom{1}
+\readInstParam{\sco}{b}{y}~ \valuecom{1}
 \end{array}
 \end{equation*}
 тогда как она же с $\sco$-записями --- нет:
@@ -586,10 +586,10 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 \begin{array}{c}
 \begin{tabular}{L || L}
   \writeInstParam{\sco}{x}{1}; & \writeInstParam{\sco}{y}{1}; \\
-  \writeInstParam{\sco}{y}{2}; & \writeInstParam{\sco}{x}{2}; \\
+  \writeInstParam{\sco}{y}{2} & \writeInstParam{\sco}{x}{2} \\
 \end{tabular} \\
 \readInstParam{\sco}{a}{x}; \valuefail{1} \\
-\readInstParam{\sco}{b}{y}; \valuefail{1}
+\readInstParam{\sco}{b}{y}~ \valuefail{1}
 \end{array}
 \end{equation*}
 
@@ -611,7 +611,7 @@ ${\rm MP\text{-}rel\text{-}acq}$, в которой $\acq$-чтение заме
 \writeInst{z}{x}; \\
 \begin{tabular}{L || L L}
   \writeInstParam{\rlx}{y}{1}; & \readInstParam{\con}{a}{z}; & \valuefail{y} \\
-  \writeInstParam{\rel}{z}{y}; & \readInstParam{\rlx}{b}{a}; & \valuefail{0} \\
+  \writeInstParam{\rel}{z}{y} & \readInstParam{\rlx}{b}{a} & \valuefail{0} \\
 \end{tabular}
 \end{array}
 \end{equation*}
@@ -792,11 +792,139 @@ $$
 \end{figure}
 
 \subsubsection{Проблема ``значений из воздуха''}
+Для того, чтобы понять, откуда берется проблема ``значений из воздуха'' в модели C/C++11,
+рассмотрим две похожие программы, одну из которых мы уже обсуждали.
+Здесь мы считаем, что все обращения к памяти являются расслабленными, т.е. помечены модификатором $\rlx$.
+\begin{tabular}{l l}
+  \begin{minipage}{.45\textwidth}
+    {\small
+\begin{equation*}
+\tag{IF-OOTA}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInst{a}{x}; & \readInst{b}{y}; \\
+  \begin{array}{@{}l@{}}
+  \iteml{a}{\writeInst{y}{1}}{\skipc}
+  \end{array} &
+  \begin{array}{@{}l@{}}
+  \iteml{b}{\writeInst{x}{1}}{\skipc}
+  \end{array} \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+}
+  \end{minipage}
+  &
+  \begin{minipage}{.45\textwidth}
+    {\small
+\begin{equation*}
+\tag{IF-notOOTA}\label{ex:IFnotoota}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInst{a}{x}; & \readInst{b}{y}; \\
+  \begin{array}{@{}l@{}}
+  \iteml{a}{\writeInst{y}{1}}{\writeInst{y}{1}}
+  \end{array} &
+  \begin{array}{@{}l@{}}
+  \iteml{b}{\writeInst{x}{1}}{\skipc}
+  \end{array} \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+   }
+  \end{minipage}
+\end{tabular}
+Программа ${\rm IF\text{-}notOOTA}$ отличается от ${\rm IF\text{-}OOTA}$ лишь тем, что
+ветка $\kw{else}$ в первом потоке содержит инструкцию записи $\writeInst{y}{1}$.
+Наличие этой инструкции позволяет компилятору сделать вывод, что $\writeInst{y}{1}$
+не зависит от условия конструкции $\kw{if}$, а значит может быть вынесено из неё.
+Далее вынесенная операция может быть переупорядочена с независимым чтением $\readInst{a}{x}$:
+%% {\small
+\begin{equation*}
+\tag{IF-notOOTA-optimized}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
+\begin{tabular}{L || L}
+  \writeInst{y}{1}; & \readInst{b}{y}; \\
+  \readInst{a}{x}
+  &
+      \begin{array}{@{}l@{}}
+      \iteml{b}{\writeInst{x}{1}}{\skipc}
+      \end{array}
+  \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+%% }
+Для получившейся программы результат $a = 1, b = 1$ возможен и в модели SC.
+Таким образом, для того, чтобы разрешить использованные в трансформации программы
+оптимизации, модель C/C++11 должна разрешать результат $a = 1, b = 1$ для программы
+${\rm IF\text{-}notOOTA}$.
+Как следствие, эта программа имеет два корректных сценария исполнения (см. Рис. \ref{fig:ifOOTASem}).
+\begin{figure}
+\begin{center}
+\begin{tabular}{c c}
+\begin{tikzpicture}[yscale=1,xscale=1]
+  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\rlx}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \rlab{\rlx}{x}{0}$ };
+  %% \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rlx}{y}{0}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\rlx}{y}{0}$ };
+  %% \node (12) at (0,0)  {\smallLabelFont$f: \wlab{\rlx}{x}{1}$ };
 
+  %% \draw[po] (1)  edge  (2);
+  %% \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
+  %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
+  \draw[rf,bend left=20] (02) edge node[right] {\smallLabelFont $\lRF$} (11);
+  \draw[rf,bend right=20] (01) edge node[left] {\smallLabelFont $\lRF$} (1);
+  %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
+  %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+  %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+ &
+\begin{tikzpicture}[yscale=1,xscale=1]
+  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\rlx}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \rlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rlx}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\rlx}{y}{1}$ };
+  \node (12) at (0,0)  {\smallLabelFont$f: \wlab{\rlx}{x}{1}$ };
 
-%% События имеют несколько типов, среди которых: чтение, запись, атомарное чтение-запись (RMW, read-modify-write),
-%% барьер памяти, захват замка, высвобождение замка.
-\app{TODO}
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
+  %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
+  \draw[rf] (2) edge node[below] {\smallLabelFont $\lRF$} (11);
+  \draw[rf] (12) edge node[left] {} (1);
+  %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
+  %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+  %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+\end{tabular}
+\end{center}
+  \caption{Сценарии поведения программы ${\rm IF\text{-}notOOTA}$ в модели C/C++11}
+\label{fig:ifOOTASem}
+\end{figure}
+
+Заметим, что мы можем получить те же графы по программе ${\rm IF\text{-}OOTA}$, используя
+приведенный выше алгоритм построения сценариев поведения в модели C/C++11, несмотря на то,
+что правый граф на рис. \ref{fig:ifOOTASem} представляет результат $a = 1, b = 1$ ---
+``значение из воздуха''.
 
 \begin{table}[t]
   \begin{center}
