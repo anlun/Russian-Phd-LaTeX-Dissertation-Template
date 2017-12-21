@@ -284,7 +284,7 @@ ${\rm MP}$ из такой модели в модель Power не будет н
 %% Поскольку барьеры памяти запрещают определенные оптимизации, их присутствие замедляет исполнение программ.
 %% Для того, чтобы уменьшить такой эффект, но при этом сохранить корректность компиляции, 
 
-\app{TODO: Описать цену сохранения SC.}
+%% \app{TODO: Описать цену сохранения SC.}
 %% [13] D. Marino, A. Singh, T. Millstein, M. Musuvathi, and
 %%      S. Narayanasamy. A case for an SC-preserving compiler. In
 
@@ -481,12 +481,12 @@ $y$ помечена как изменчивая.
 Для того, чтобы проверить данное утверждение, построим соответствующий граф.
 \[
 \begin{tikzpicture}[yscale=1,xscale=1.8]
-  \node (01)  at (-2.5,2) {$a: \wlab{}{x}{0}$ };
-  \node (02)  at (0,2) {$b: \wlab{volatile}{y}{0}$ };
-  \node (1)  at (-2.5,1) {$c: \wlab{}{x}{1}$ };
-  \node (2)  at (-2.5,0) {$d: \wlab{volatile}{y}{1}$ };
-  \node (11) at (0,1)  {$e: \rlab{volatile}{y}{1}$ };
-  \node (12) at (0,0)  {$f: \rlab{}{x}{0}$ };
+  \node (01)  at (-2.5,2) {$p: \wlab{}{x}{0}$ };
+  \node (02)  at (0,2) {$q: \wlab{volatile}{y}{0}$ };
+  \node (1)  at (-2.5,1) {$r: \wlab{}{x}{1}$ };
+  \node (2)  at (-2.5,0) {$s: \wlab{volatile}{y}{1}$ };
+  \node (11) at (0,1)  {$t: \rlab{volatile}{y}{1}$ };
+  \node (12) at (0,0)  {$u: \rlab{}{x}{0}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -503,15 +503,15 @@ $y$ помечена как изменчивая.
   %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
 \end{tikzpicture}
 \]
-В этом графе шесть событий. События $a$ и $b$ соответствуют инициализирующим записям в локации $x$ и $y$,
+В этом графе шесть событий. События $p$ и $q$ соответствуют инициализирующим записям в локации $x$ и $y$,
 а остальные --- инструкциям из ${\rm MP\text{-}volatile}$.
 Недописанные дуги --- это дуги отношения $\lPO$. На этом рисунке не представлены дуги отношения $\lHB$,
-однако $\lHB$ связывает $a$ и $c$ (т.к. $\lPO \suq \lHB$), а также $c$ и $f$ (т.к. $\lPO(c, d)$, $\lSW(d, e)$, $\lPO(e,f)$ и
+однако $\lHB$ связывает $p$ и $r$ (т.к. $\lPO \suq \lHB$), а также $r$ и $u$ (т.к. $\lPO(r, s)$, $\lSW(s, t)$, $\lPO(t,u)$ и
 $\lHB = (\lPO \cup \lSW)^{+}$).
 Таким образом, данный граф противоречит приведенной выше аксиоме и не является корректным в JMM.
 
-Отметим, что если бы локация $y$ не была бы помечена как изменчивая, тогда события $d$ и $e$ имели бы
-обычный тип и между ними бы не было ребра $\lSW$, а значит аксиома бы выполнялась и результат $a = 1; b = 0$
+Отметим, что если бы локация $y$ не была бы помечена как изменчивая, тогда события $s$ и $t$ имели бы
+обычный тип и между ними бы не было ребра $\lSW$, а значит аксиома бы выполнялась и результат $a = 1, b = 0$
 был бы возможным.
 
 %% Сценарий поведения программы в JMM представляется как кортеж следующего вида:
@@ -672,12 +672,12 @@ $\lPO$ и $\lSW$ в отсутствии $\con$-чтений (с ними опр
 В частности, среди предзапусков программы ${\rm MP\text{-}rel\text{-}acq}$ будет следующий граф:
 \[
 \begin{tikzpicture}[yscale=1,xscale=1.8]
-  \node (01)  at (-2,2) {$a: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,2) {$b: \wlab{\na}{y}{0}$ };
-  \node (1)  at (-2,1) {$c: \wlab{\rlx}{x}{1}$ };
-  \node (2)  at (-2,0) {$d: \wlab{\rel}{y}{1}$ };
-  \node (11) at (0,1)  {$e: \rlab{\acq}{y}{5}$ };
-  \node (12) at (0,0)  {$f: \rlab{\rlx}{x}{9}$ };
+  \node (01)  at (-2,2) {$p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,2) {$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2,1) {$r: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1)  {$t: \rlab{\acq}{y}{5}$ };
+  \node (12) at (0,0)  {$u: \rlab{\rlx}{x}{9}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -695,19 +695,19 @@ $\lPO$ и $\lSW$ в отсутствии $\con$-чтений (с ними опр
 На втором этапе в каждый предзапуск недетерминировано добавляются дуги отношений $\lRF$, $\lSC$ и $\lMO$, по
 которым также вычисляются производные отношения, такие как $\lSW$ и $\lHB$.
 Полученные графы проверяются на базовую корректность.
-В частности, проверяется, что если из события $p$ идёт $\lRF$-дуга в $q$,
-то $p$ является событием записи, $q$ --- чтения, они оперируют над одной и той же локацией,
+В частности, проверяется, что если из события $e$ идёт $\lRF$-дуга в $f$,
+то $e$ является событием записи, $f$ --- чтения, они оперируют над одной и той же локацией,
 и прочитанное значение равняется записанному.
 После второго этапа во множестве полученных сценариев поведения для программы ${\rm MP\text{-}rel\text{-}acq}$
 есть следующий сценарий поведения (некоторые ребра опушены):
 \[
 \begin{tikzpicture}[yscale=1,xscale=1.8]
-  \node (01)  at (-2,3) {$a: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {$b: \wlab{\na}{y}{0}$ };
-  \node (1)  at (-2,1.5) {$c: \wlab{\rlx}{x}{1}$ };
-  \node (2)  at (-2,0) {$d: \wlab{\rel}{y}{1}$ };
-  \node (11) at (0,1.5)  {$e: \rlab{\acq}{y}{1}$ };
-  \node (12) at (0,0)  {$f: \rlab{\rlx}{x}{0}$ };
+  \node (01)  at (-2,3) {$p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2,1.5) {$r: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {$t: \rlab{\acq}{y}{1}$ };
+  \node (12) at (0,0)  {$u: \rlab{\rlx}{x}{0}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -741,12 +741,12 @@ $$
 \begin{figure}
   \begin{tabular}{c c c}
 \begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\na}{y}{0}$ };
-  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \wlab{\rlx}{x}{1}$ };
-  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rel}{y}{1}$ };
-  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\acq}{y}{0}$ };
-  \node (12) at (0,0)  {\smallLabelFont$f: \rlab{\rlx}{x}{0}$ };
+  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\acq}{y}{0}$ };
+  \node (12) at (0,0)  {\smallLabelFont$u: \rlab{\rlx}{x}{0}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -765,12 +765,12 @@ $$
 \end{tikzpicture}
  &
 \begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\na}{y}{0}$ };
-  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \wlab{\rlx}{x}{1}$ };
-  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rel}{y}{1}$ };
-  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\acq}{y}{0}$ };
-  \node (12) at (0,0)  {\smallLabelFont$f: \rlab{\rlx}{x}{1}$ };
+  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\acq}{y}{0}$ };
+  \node (12) at (0,0)  {\smallLabelFont$u: \rlab{\rlx}{x}{1}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -786,12 +786,12 @@ $$
 \end{tikzpicture}
  &
 \begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\na}{y}{0}$ };
-  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \wlab{\rlx}{x}{1}$ };
-  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rel}{y}{1}$ };
-  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\acq}{y}{1}$ };
-  \node (12) at (0,0)  {\smallLabelFont$f: \rlab{\rlx}{x}{1}$ };
+  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\acq}{y}{1}$ };
+  \node (12) at (0,0)  {\smallLabelFont$u: \rlab{\rlx}{x}{1}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -813,111 +813,31 @@ $$
 
 \subsubsection{Проблема ``значений из воздуха''}
 Для того, чтобы понять, откуда берется проблема ``значений из воздуха'' в модели C/C++11,
-рассмотрим две похожие программы, одну из которых мы уже обсуждали.
-Здесь мы считаем, что все обращения к памяти являются расслабленными, т.е. помечены модификатором $\rlx$.
-\begin{tabular}{l l}
-  \begin{minipage}{.45\textwidth}
-    {\small
+рассмотрим программу, которую мы уже обсуждали ранее:
 \begin{equation*}
-\tag{IF-OOTA}
+\tag{IF-OOTA-rlx}
 \begin{tabular}{c}
-  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
+  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
 \begin{tabular}{L || L}
-  \readInst{a}{x}; & \readInst{b}{y}; \\
+  \readInstParam{\rlx}{a}{x}; & \readInstParam{\rlx}{b}{y}; \\
   \begin{array}{@{}l@{}}
-  \iteml{a}{\writeInst{y}{1}}{\skipc}
+  \iteml{a}{\writeInstParam{\rlx}{y}{1}}{\skipc}
   \end{array} &
   \begin{array}{@{}l@{}}
-  \iteml{b}{\writeInst{x}{1}}{\skipc}
+  \iteml{b}{\writeInstParam{\rlx}{x}{1}}{\skipc}
   \end{array} \\
 \end{tabular}
 \end{tabular}
 \end{equation*}
-}
-  \end{minipage}
-  &
-  \begin{minipage}{.45\textwidth}
-    {\small
-\begin{equation*}
-\tag{IF-notOOTA}\label{ex:IFnotoota}
-\begin{tabular}{c}
-  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
-\begin{tabular}{L || L}
-  \readInst{a}{x}; & \readInst{b}{y}; \\
-  \begin{array}{@{}l@{}}
-  \iteml{a}{\writeInst{y}{1}}{\writeInst{y}{1}}
-  \end{array} &
-  \begin{array}{@{}l@{}}
-  \iteml{b}{\writeInst{x}{1}}{\skipc}
-  \end{array} \\
-\end{tabular}
-\end{tabular}
-\end{equation*}
-   }
-  \end{minipage}
-\end{tabular}
-Программа ${\rm IF\text{-}notOOTA}$ отличается от ${\rm IF\text{-}OOTA}$ лишь тем, что
-ветка $\kw{else}$ в первом потоке содержит инструкцию записи $\writeInst{y}{1}$.
-Наличие этой инструкции позволяет компилятору сделать вывод, что $\writeInst{y}{1}$
-не зависит от условия конструкции $\kw{if}$, а значит может быть вынесено из неё.
-Далее вынесенная операция может быть переупорядочена с независимым чтением $\readInst{a}{x}$:
-%% {\small
-\begin{equation*}
-\tag{IF-notOOTA-optimized}
-\begin{tabular}{c}
-  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
-\begin{tabular}{L || L}
-  \writeInst{y}{1}; & \readInst{b}{y}; \\
-  \readInst{a}{x}
-  &
-      \begin{array}{@{}l@{}}
-      \iteml{b}{\writeInst{x}{1}}{\skipc}
-      \end{array}
-  \\
-\end{tabular}
-\end{tabular}
-\end{equation*}
-%% }
-Для получившейся программы результат $a = 1, b = 1$ возможен и в модели SC.
-Таким образом, для того, чтобы разрешить использованные в трансформации программы
-оптимизации, модель C/C++11 должна разрешать результат $a = 1, b = 1$ для программы
-${\rm IF\text{-}notOOTA}$.
-Как следствие, эта программа имеет два корректных сценария поведения (см. Рис. \ref{fig:ifOOTASem}).
-\begin{figure}
-\begin{center}
-\begin{tabular}{c c}
-\begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\rlx}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\rlx}{y}{0}$ };
-  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \rlab{\rlx}{x}{0}$ };
-  %% \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rlx}{y}{0}$ };
-  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\rlx}{y}{0}$ };
-  %% \node (12) at (0,0)  {\smallLabelFont$f: \wlab{\rlx}{x}{1}$ };
-
-  %% \draw[po] (1)  edge  (2);
-  %% \draw[po] (11) edge (12);
-  \draw[po] (01) edge (11);
-  \draw[po] (02) edge (11);
-  %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
-  \draw[po] (01) edge (1);
-  \draw[po] (02) edge  (1);
-  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
-  %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
-  %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
-  \draw[rf,bend left=20] (02) edge node[right] {\smallLabelFont $\lRF$} (11);
-  \draw[rf,bend right=20] (01) edge node[left] {\smallLabelFont $\lRF$} (1);
-  %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
-  %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
-  %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
-\end{tikzpicture}
- &
-\begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $a: \wlab{\rlx}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$b: \wlab{\rlx}{y}{0}$ };
-  \node (1)  at (-2.5,1.5) {\smallLabelFont$c: \rlab{\rlx}{x}{1}$ };
-  \node (2)  at (-2.5,0) {\smallLabelFont$d: \wlab{\rlx}{y}{1}$ };
-  \node (11) at (0,1.5)  {\smallLabelFont$e: \rlab{\rlx}{y}{1}$ };
-  \node (12) at (0,0)  {\smallLabelFont$f: \wlab{\rlx}{x}{1}$ };
+Одним из корректных сценариев поведения этой программы в C/C++ MM является следующий граф,
+\[
+\begin{tikzpicture}[yscale=1,xscale=1.8]
+  \node (01)  at (-2.5,3) {$p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2.5,1.5) {$r: \rlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2.5,0) {$s: \wlab{\rlx}{y}{1}$ };
+  \node (11) at (0,1.5)  {$t: \rlab{\rlx}{y}{1}$ };
+  \node (12) at (0,0)  {$u: \wlab{\rlx}{x}{1}$ };
 
   \draw[po] (1)  edge  (2);
   \draw[po] (11) edge (12);
@@ -929,46 +849,191 @@ ${\rm IF\text{-}notOOTA}$.
   %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
   %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
   %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
-  \draw[rf] (2) edge node[below] {\smallLabelFont $\lRF$} (11);
+  \draw[rf] (2) edge node[below] {\small $\lRF$} (11);
   \draw[rf] (12) edge node[left] {} (1);
   %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
   %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
   %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
 \end{tikzpicture}
+\]
+\noindent
+который обладает ``значениями из воздуха'', т.к. соответствует результату $a = 1, b = 1$.
+В данном случае из программы и графа очевидно, что есть у события $r$ есть циклическая зависимость
+от себя самого --- для того, чтобы событие $r$ прочитало $1$, событие $u$ должно записать $1$,
+что возможно только если событие $t$ прочитало $1$, которая должна была быть записана событием $s$,
+которое случается только если $r$ прочитало $1$!
+
+Мы могли бы попробовать решить данную проблему, добавив в граф отношение зависимости по управлению, $\lCTRL$,
+с рёбрами $(r, s)$ и $(t, u)$, а также дополнительную аксиому, которая требовала бы ацикличности
+объединения отношений $\lCTRL$ и $\lRF$.
+Тогда в приведенном графе был бы цикл $[r, s, t, u, r]$, и сценарий считался бы некорректным с точки
+зрения модифицированной модели.
+
+К сожалению, такое решение является неудовлетворительным с точки зрения целей модели C/C++11.
+Рассмотрим следующую программу:
+\begin{equation*}
+\tag{IF-notOOTA-rlx}
+\begin{tabular}{c}
+  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInstParam{\rlx}{a}{x}; & \readInstParam{\rlx}{b}{y}; \\
+  \begin{array}{@{}l@{}}
+  \iteml{a}{\writeInstParam{\rlx}{y}{1}}{\writeInstParam{\rlx}{y}{1}}
+  \end{array} &
+  \begin{array}{@{}l@{}}
+  \iteml{b}{\writeInstParam{\rlx}{x}{1}}{\skipc}
+  \end{array} \\
 \end{tabular}
-\end{center}
-  \caption{Сценарии поведения программы ${\rm IF\text{-}notOOTA}$ в модели C/C++11}
-\label{fig:ifOOTASem}
-\end{figure}
+\end{tabular}
+\end{equation*}
+Программа ${\rm IF\text{-}notOOTA\text{-}rlx}$ отличается от ${\rm IF\text{-}OOTA\text{-}rlx}$ лишь тем, что
+ветка $\kw{else}$ в первом потоке содержит инструкцию записи $\writeInstParam{\rlx}{y}{1}$.
+Наличие этой инструкции позволяет компилятору сделать вывод, что $\writeInstParam{\rlx}{y}{1}$
+не зависит от условия конструкции $\kw{if}$, а значит может быть вынесено из неё.
+Далее вынесенная операция может быть переупорядочена с независимым чтением $\readInstParam{\rlx}{a}{x}$:
+%% {\small
+\begin{equation*}
+\tag{IF-notOOTA-optimized}
+\begin{tabular}{c}
+  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \writeInstParam{\rlx}{y}{1}; & \readInstParam{\rlx}{b}{y}; \\
+  \readInstParam{\rlx}{a}{x}
+  &
+      \begin{array}{@{}l@{}}
+      \iteml{b}{\writeInstParam{\rlx}{x}{1}}{\skipc}
+      \end{array}
+  \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+%% }
+Для получившейся программы результат $a = 1, b = 1$ возможен и в модели SC.
 
-Заметим, что мы можем получить те же графы по программе ${\rm IF\text{-}OOTA}$, используя
-приведенный выше алгоритм построения сценариев поведения в модели C/C++11.
-При этом для ${\rm IF\text{-}OOTA}$ результат $a = 1, b = 1$, представляемый правым графом
-на рис. \ref{fig:ifOOTASem}, имеет ``значения из воздуха'' и нежелателен.
-К сожалению, в рамках текущего подхода построения сценариев поведения, запрет
-таких сценариев для некоторых программ  не представляется возможным,
-т.к. после построения предзапусков (первый шаг алгоритма) программа более не участвует
-в процессе, хотя наличие или отсутствие ``значений из воздуха'' в некотором сценарий
-является характеристикой программы.
+Таким образом, для того, чтобы разрешить использованные трансформации,
+модель C/C++11 должна разрешать результат $a = 1, b = 1$ для программы
+${\rm IF\text{-}notOOTA\text{-}rlx}$.
+Это означает, что мы не можем напрямую использовать предложенное ранее ``исправление'' модели, т.к.
+добавление зависимостей по управлению в граф и дополнительной аксиомы в модель сделает результат
+$a = 1, b = 1$ некорректным для ${\rm IF\text{-}notOOTA\text{-}rlx}$.
 
-В стандартах C \cite{C:11} и C++ \cite{CPP:11, CPP:14} данную проблему пытаются решить
+В чём же разница между зависимостями по управлению в левых потоках программ 
+${\rm IF\text{-}OOTA\text{-}rlx}$ и ${\rm IF\text{-}notOOTA\text{-}rlx}$?
+В обоих случаях есть синтаксическая зависимость инструкции $\writeInstParam{\rlx}{y}{1}$ от
+$\readInstParam{\rlx}{a}{x}$, но семантическая зависимость ---
+только в случае программы ${\rm IF\text{-}OOTA\text{-}rlx}$.
+Соответственно проблема могла бы быть решена, если бы граф сценария поведения добавлялась
+семантическая зависимость по управлению \cite{Batty-Sewell:WNote14}.
+К сожалению, для более сложных примеров программ наличие семантической зависимости по управлению
+требует детального анализа программы.
+В следующем разделе мы рассмотрим, какие способы представления семантической зависимости
+есть на данный момент.
+
+%% Как следствие, эта программа имеет три корректных сценария поведения (см. Рис. \ref{fig:ifOOTASem}).
+%% \begin{figure}
+%% \begin{center}
+%% \begin{tabular}{c c c}
+%% \begin{tikzpicture}[yscale=1,xscale=1]
+%%   \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\rlx}{x}{0}$ };
+%%   \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\rlx}{y}{0}$ };
+%%   \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \rlab{\rlx}{x}{0}$ };
+%%   \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rlx}{y}{1}$ };
+%%   \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\rlx}{y}{0}$ };
+%%   %% \node (12) at (0,0)  {\smallLabelFont$u: \wlab{\rlx}{x}{1}$ };
+
+%%   \draw[po] (1)  edge  (2);
+%%   %% \draw[po] (11) edge (12);
+%%   \draw[po] (01) edge (11);
+%%   \draw[po] (02) edge (11);
+%%   %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+%%   \draw[po] (01) edge (1);
+%%   \draw[po] (02) edge  (1);
+%%   %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+%%   %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
+%%   %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
+%%   \draw[rf,bend left=20] (02) edge node[right] {\smallLabelFont $\lRF$} (11);
+%%   \draw[rf,bend right=20] (01) edge node[left] {\smallLabelFont $\lRF$} (1);
+%%   %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
+%%   %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+%%   %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+%% \end{tikzpicture}
+%%  &
+%% \begin{tikzpicture}[yscale=1,xscale=1]
+%%   \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\rlx}{x}{0}$ };
+%%   \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\rlx}{y}{0}$ };
+%%   \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \rlab{\rlx}{x}{0}$ };
+%%   \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rlx}{y}{1}$ };
+%%   \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\rlx}{y}{1}$ };
+%%   \node (12) at (0,0)  {\smallLabelFont$u: \wlab{\rlx}{x}{1}$ };
+
+%%   \draw[po] (1)  edge  (2);
+%%   \draw[po] (11) edge (12);
+%%   \draw[po] (01) edge (11);
+%%   \draw[po] (02) edge (11);
+%%   %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+%%   \draw[po] (01) edge (1);
+%%   \draw[po] (02) edge  (1);
+%%   %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+%%   %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
+%%   %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
+%%   \draw[rf,bend right=20] (01) edge node[left] {\smallLabelFont $\lRF$} (1);
+%%   \draw[rf] (2) edge node[below] {\smallLabelFont $\lRF$} (11);
+%%   %% \draw[rf] (12) edge node[left] {} (1);
+%%   %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
+%%   %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+%%   %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+%% \end{tikzpicture}
+%%  &
+%% \begin{tikzpicture}[yscale=1,xscale=1]
+%%   \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\rlx}{x}{0}$ };
+%%   \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\rlx}{y}{0}$ };
+%%   \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \rlab{\rlx}{x}{1}$ };
+%%   \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rlx}{y}{1}$ };
+%%   \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\rlx}{y}{1}$ };
+%%   \node (12) at (0,0)  {\smallLabelFont$u: \wlab{\rlx}{x}{1}$ };
+
+%%   \draw[po] (1)  edge  (2);
+%%   \draw[po] (11) edge (12);
+%%   \draw[po] (01) edge (11);
+%%   \draw[po] (02) edge (11);
+%%   %% \draw[hb] (01) edge node[right] {\smallLabelFont $\lHB$} (1);
+%%   \draw[po] (01) edge (1);
+%%   \draw[po] (02) edge  (1);
+%%   %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+%%   %% \draw[sw] (2) edge node[above] {\smallLabelFont $\lSW$} (11);
+%%   %% \draw[hb] (1) edge node[below] {\smallLabelFont $\lHB$} (12);
+%%   \draw[rf] (2) edge node[below] {\smallLabelFont $\lRF$} (11);
+%%   \draw[rf] (12) edge node[left] {} (1);
+%%   %% \draw[rf] (01) edge node[below] {\smallLabelFont $\lRF$} (12);
+%%   %% \draw[mo,bend right=20] (01)  edge node[left] {\smallLabelFont $\lMO$} (1);
+%%   %% \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+%% \end{tikzpicture}
+%% \end{tabular}
+%% \end{center}
+%%   \caption{Сценарии поведения программы ${\rm IF\text{-}notOOTA}$ в модели C/C++11}
+%% \label{fig:ifOOTASem}
+%% \end{figure}
+
+%% Заметим, что мы можем получить третий граф с Рис. \ref{fig:ifOOTASem} по программе ${\rm IF\text{-}OOTA}$, используя
+%% приведенный выше алгоритм построения сценариев поведения в модели C/C++11.
+%% При этом для ${\rm IF\text{-}OOTA}$ результат $a = 1, b = 1$, представляемый этим графом,
+%% имеет ``значения из воздуха'' и нежелателен.
+%% К сожалению, в рамках текущего подхода построения сценариев поведения, запрет
+%% таких сценариев для некоторых программ  не представляется возможным,
+%% т.к. после построения предзапусков (первый шаг алгоритма) программа более не участвует
+%% в процессе, хотя наличие или отсутствие ``значений из воздуха'' в некотором сценарий
+%% является характеристикой программы.
+
+Стоит отметить, что в стандартах C \cite{C:11} и C++ \cite{CPP:11, CPP:14} упомянутую проблему пытаются решить
 путём прямого запрета сценариев поведения со ``значениями из воздуха''.
 Данный запрет является неформальным, поскольку в стандарте отсутствует формальное определение
 ``значений из воздуха''.
-Так, в \cite{Boehm-Demsky:MSPC14} отмечается, что это решение проблемы не является
-удовлетворительным.
+Так, в \cite{Boehm-Demsky:MSPC14} отмечается, что это решение проблемы также неудовлетворительно.
 
-\app{Добавить ссылку
-M. Batty and P. Sewell. The thin-air problem. Working note,
-available at http://www.cl.cam.ac.uk/~pes20/cpp/notes42.
-html, Feb. 2014.
-}
-
-\app{TODO: описать локальные изменения модели, предложенные Виктором и Ори.}
+%% \app{TODO: описать локальные изменения модели, предложенные Виктором и Ори.}
 
 \subsection{Теоретические модели памяти}
-В этом разделе мы вкратце рассмотрим существующие подходы и альтернативные теоретические модели памяти
-для ЯП, которые были предложены.
+В этом разделе мы вкратце рассмотрим альтернативные теоретические модели памяти для языков программирования.
 
 Работа \cite{Nienhuis-al:OOPSLA16} представляет операционную семантику на базе модели C/C++11.
 Эта семантика по предзапуску программы инкрементально строит полный сценарий поведения.
@@ -985,11 +1050,40 @@ html, Feb. 2014.
 К недостаткам модели стоит отнести то, что в ней позволяются сценарии поведения со ``значениями из воздуха''.
 
 В работе \cite{PichonPharabod-Sewell:POPL16} представлена модели памяти на основе \emph{структур событий}
-(event structures). Так вместо того, чтобы представлять семантику программы как множество несвязанных графов,
-в этом подходе она представляется как один большой граф, в котором дополнительно появляется \emph{отношение конфликта}.
-Последнее позволяет разделять вершины, относящиеся к разным сценарием поведения.
+(event structures) \cite{Winskel:AC86, Winskel:LTBT88}.
+Так вместо того, чтобы представлять семантику программы как множество несвязанных графов,
+в этом подходе она представляется как структура событий --- один большой граф,
+в котором дополнительно появляется \emph{отношение конфликта}.
+Последнее позволяет разделять вершины, относящиеся к разным сценарием поведения --- каждый максимальный подграф
+структуры, в котором нет конфликтующих событий, является сценарием поведения в аксиоматическом смысле.
+Поскольку все сценарии представляются согласованно в структуре событий, данная семантика может проверять
+наличие семантической зависимости между событиями.
+В частности, для программы ${\rm IF\text{-}notOOTA\text{-}rlx}$ семантика может заметить, что вне зависимости
+от того, какое значение читается в регистр $a$ левым потоком, он исполняет запись $\writeInstParam{\rlx}{y}{1}$,
+а, значит, между соответствующими чтением и записью нет зависимости.
+Аналогично для программы ${\rm IF\text{-}OOTA\text{-}rlx}$ семантика может определить наличие зависимости.
+Данная модель обладает тремя недостатками.
+Во-первых, она поддерживает только фиксированное множество компиляторных оптимизаций,
+которые явным образом представлены как переходы в модели.
+Во-вторых, модель определена только для подмножества языка C/C++, содержащего только
+неатомарные и расслабленные операции чтения и записи, а также захват и высвобождение замков.
+В-третьих, модель не поддерживает эффективную компиляцию в модель
+ARMv8 POP \cite{Flur-al:POPL16}\footnote{В главе \ref{sec:armpop} мы рассмотрим программу ${\rm ARM\text{-}weak}$.
+Эта программа обладает слабым поведением, которое не проявляется в модели \cite{PichonPharabod-Sewell:POPL16}.}.
 
-\cite{Jeffrey-Riely:LICS16}
+Близкий подход к заданию модели памяти без ``значений из воздуха'' представлен в \cite{Jeffrey-Riely:LICS16}.
+В этой модели, в отличие от использования явных переписываний структуры событий с помощью фиксированного
+набора оптимизаций, существует процесс валидации корректных сценариев поведения, похожий на аналогичный
+механизм в JMM. Процесс валидации базируется на идеи \emph{игры} для двух игроков.
+В ней первый игрок пытается обойти подграф структуры событий, соответствующий проверяемому сценарию,
+тогда как второй игрок встревает в этот обход, добавляя в конфигурацию обхода произвольные вершины
+и пытаясь помешать первому.
+При наличии выигрышной стратегии у первого игрока считается, что сценарий исполнения корректен с точки зрения
+модели.
+Эта игра является представлением недетерминированного переключения контекстов со стороны процессора.
+Для модели формально доказано утверждение, косвенно подтверждающие отсутствие проблемы ``значений из воздуха''.
+К недостаткам стоит отнести то, что модель не поддерживает некоторые базовые оптимизации, как например
+перестановка независимых чтений.
 
 %% \begin{table}[t]
 %%   \begin{center}
