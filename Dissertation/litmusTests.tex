@@ -1,0 +1,1661 @@
+%% \begin{figure*}[t]
+
+\newcommand{\litmusTestStart}[3]{
+\begin{minipage}[t]{0.2\linewidth}
+\textbf{#1} \\
+Fully Supported: #2 \\
+Requires: #3\\
+\end{minipage}
+}
+\newcommand{\litmusTestEnd}{
+\vspace{.2cm}
+\hrule
+\vspace{.2cm}
+}
+
+\newcommand{\tickP}{\checkmark}%
+\newcommand{\tickPP}{\checkmark}%
+
+\newcommand{\sbTemplate}[6]{
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+\begin{equation*}
+\begin{tabular}{c}
+  $\writeInstParam{#1}{x}{0}; \writeInstParam{#2}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \writeInstParam{#3}{x}{1}; & \writeInstParam{#5}{y}{1}; \\
+  \readInstParam{#4}{a}{y} & \readInstParam{#6}{b}{x} \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+\end{minipage}
+}
+
+\newcommand{\lbTemplate}[6]{
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+\begin{equation*}
+\begin{tabular}{c}
+  $\writeInstParam{#1}{x}{0}; \writeInstParam{#2}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInstParam{#3}{a}{y} & \readInstParam{#5}{b}{x} \\
+  \writeInstParam{#4}{x}{1}; & \writeInstParam{#6}{y}{1}; \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+\end{minipage}
+}
+
+\chapter{Каталог тестов для модели C/C++11}
+\label{sec:litmusTests}
+
+\section{Store Buffering (SB)}
+\label{app:sb}
+
+\litmusTestStart{SB\_rel+acq}{\tick}{History + Viewfronts}
+%
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+a = 0 \land b = 1\\
+a = 1 \land b = 0\\
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\sbTemplate{\rel}{\rel}{\rel}{\acq}{\rel}{\acq}
+\litmusTestEnd
+
+
+\litmusTestStart{SB\_sc}{\tick}{SC + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Forbidden outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+\end{array}\]
+\end{minipage}
+%
+\sbTemplate{\sco}{\sco}{\sco}{\sco}{\sco}{\sco}
+\litmusTestEnd
+
+\litmusTestStart{SB\_sc+rel}{\tick}{SC + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+a = 0 \land b = 1\\
+a = 1 \land b = 0\\
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\sbTemplate{\sco}{\sco}{\rel}{\sco}{\sco}{\sco}
+\litmusTestEnd
+
+\litmusTestStart{SB\_sc+acq}{\tick}{SC + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+a = 0 \land b = 1\\
+a = 1 \land b = 0\\
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\sbTemplate{\sco}{\sco}{\sco}{\acq}{\sco}{\sco}
+\litmusTestEnd
+
+%\newpage
+
+\section{Load Buffering (LB)}
+\label{app:lb}
+
+\litmusTestStart{LB\_rlx}{\tick}{Postponed Reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+a = 0 \land b = 1\\
+a = 1 \land b = 0\\
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\lbTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
+\litmusTestEnd
+
+\litmusTestStart{LB\_rel+rlx}{\tick}{Postponed Reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+a = 0 \land b = 1\\
+a = 1 \land b = 0\\
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\lbTemplate{\rlx}{\rlx}{\rlx}{\rel}{\rlx}{\rel}
+\litmusTestEnd
+
+\litmusTestStart{LB\_acq+rlx}{\fail}{Postponed Reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\[\begin{array}{l}
+a = 0 \land b = 0\\
+a = 0 \land b = 1\\
+a = 1 \land b = 0\\
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\lbTemplate{\rlx}{\rlx}{\acq}{\rlx}{\acq}{\rlx}
+
+Our semantics doesn't allow the $a = 1 \land b = 1$ outcome for the program.
+It doesn't allow reordering of an acquire read with a subsequent write.
+The known sound compilation schemes of acquire read to major platforms (x86, ARM, Power) don't
+allow the behavior either. 
+
+\litmusTestEnd
+
+\litmusTestStart{LB\_rel+acq+rlx}{\tick}{Postponed Reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Forbidden outcomes:\\
+\[\begin{array}{l}
+a = 1 \land b = 1\\
+\end{array}\]
+\end{minipage}
+%
+\lbTemplate{\rlx}{\rlx}{\acq}{\rlx}{\rlx}{\rel}
+\litmusTestEnd
+
+\litmusTestStart{LB\_rlx+use}{\tick}{Postponed Reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Allowed outcome:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+|$[$|z1|$]_{rlx}$| := r1;
+|$[$|x|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{rlx}$|;
+|$[$|z2|$]_{rlx}$| := r2;
+|$[$|y|$]_{rlx}$| := 1
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+%% Comment:
+%% Unfortunately, our semantics isn't able to reorder writes,
+%% thus, we can't store 1s to z1 and z2.
+\litmusTestEnd
+
+\litmusTestStart{LB\_rlx+let}{\tick}{Postponed Reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Allowed outcome:\\
+\lstinline{  r1 = 1 |$\land$| r'1 = 2 |$\land$| r2 = 1 |$\land$| r'2 = 2}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+r'1 = r1 + 1;
+|$[$|x|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{rlx}$|;
+r'2 = r2 + 1;
+|$[$|y|$]_{rlx}$| := 1
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{LB\_rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}
+\begin{minipage}[t]{0.2\linewidth}
+Allowed outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+            |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+|$[$|z1|$]_{rlx}$| := r1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+  0
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{rlx}$|;
+|$[$|z2|$]_{rlx}$| := r2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+  0
+\end{lstlisting}
+\end{tabular}
+
+\vspace{-1pt}
+\begin{tabular}{l||l}
+  \begin{lstlisting}
+            |$[$|x|$]_{rlx}$| := 1
+  \end{lstlisting}
+%% \hspace{.708cm}
+\hspace{2.52em}
+&
+  \begin{lstlisting}
+      |$[$|y|$]_{rlx}$| := 1
+  \end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+%% Unfortunately, our semantics isn't complete for this snippet,
+%% because it can't postpone write, or anything across a join point.
+\litmusTestEnd
+
+\litmusTestStart{LB\_rel+rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}
+\begin{minipage}[t]{0.2\linewidth}
+Allowed outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+            |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+|$[$|z1|$]_{rlx}$| := r1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+  0
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{rlx}$|;
+|$[$|z2|$]_{rlx}$| := r2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+  0
+\end{lstlisting}
+\end{tabular}
+
+\vspace{-1pt}
+\begin{tabular}{l||l}
+  \begin{lstlisting}
+            |$[$|x|$]_{rel}$| := 1
+  \end{lstlisting}
+%% \hspace{.708cm}
+\hspace{2.52em}
+&
+  \begin{lstlisting}
+      |$[$|y|$]_{rel}$| := 1
+  \end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{LB\_acq+rlx+join}{\fail}{Postponed Reads + History + Viewfronts + JN}
+\begin{minipage}[t]{0.2\linewidth}
+Allowed outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+            |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{acq}$|;
+|$[$|z1|$]_{rlx}$| := r1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+  0
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{acq}$|;
+|$[$|z2|$]_{rlx}$| := r2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+  0
+\end{lstlisting}
+\end{tabular}
+
+\vspace{-1pt}
+\begin{tabular}{l||l}
+  \begin{lstlisting}
+            |$[$|x|$]_{rlx}$| := 1
+  \end{lstlisting}
+%% \hspace{.708cm}
+\hspace{2.52em}
+&
+  \begin{lstlisting}
+      |$[$|y|$]_{rlx}$| := 1
+  \end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\section{Message Passing (MP)}
+\label{app:mp}
+
+\litmusTestStart{MP\_rlx+na}{\tick}{NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 0}\\
+\lstinline{  r1 = 5}\\
+\lstinline{  stuck}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rlx}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+repeat |$[$|f|$]_{rlx}$| end;
+r1 = |$[$|d|$]_{na}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_rel+rlx+na}{\tick}{NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 0}\\
+\lstinline{  r1 = 5}\\
+\lstinline{  stuck}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rlx}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+repeat |$[$|f|$]_{rlx}$| end;
+r1 = |$[$|d|$]_{na}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_rlx+acq+na}{\tick}{NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 0}\\
+\lstinline{  r1 = 5}\\
+\lstinline{  stuck}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rlx}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+repeat |$[$|f|$]_{acq}$| end;
+r1 = |$[$|d|$]_{na}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_rel+acq+na}{\tick}{NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 5}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+repeat |$[$|f|$]_{acq}$| end;
+r1 = |$[$|d|$]_{na}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_rel+acq+na+rlx}{\tick}{Write-fronts + NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 5}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rel}$| := 1;
+|$[$|f|$]_{rlx}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+repeat |$[$|f|$]_{acq}$| == 2 end;
+r1 = |$[$|d|$]_{na}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_rel+acq+na+rlx\_2}{\tick}{Write-fronts + NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 5 /\ r2 = <0, 1>}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+|$[$|f|$]_{na}$| := 0; |$[$|d|$]_{na}$| := 0; |$[$|x|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rel}$| := 1;
+|$[$|x|$]_{rel}$| := 1;
+|$[$|f|$]_{rlx}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+repeat |$[$|f|$]_{acq}$| == 2 end;
+r1 := |$[$|d|$]_{na}$|;
+r2 := |$[$|x|$]_{rlx}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_con+na}{\tick}{Consume + NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 0}\\
+\lstinline{  r1 = 5}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{con}$| := null; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rel}$| := d
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r0 := |$[$|f|$]_{con}$|;
+if r0 != null
+then r1 = |$[$|r0|$]_{na}$|
+else r1 = 0
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_con+na\_2}{\tick}{Consume + NA + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r2 = 0 /\ r3 = <0, 1>}\\
+\lstinline{  r2 = 5 /\ r3 = <0, 1>}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+|$[$|p|$]_{na}$| := null; |$[$|d|$]_{na}$| := 0; |$[$|x|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1;
+|$[$|d|$]_{na}$| := 1;
+|$[$|p|$]_{rel}$| := d
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|p|$]_{con}$|;
+if   r1 != null
+then r2 = |$[$|r1|$]_{na}$|;
+     r3 = |$[$|x|$]_{rlx}$|
+else r2 = 0; r3 = 0
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_cas+rel+acq+na from \cite{Vafeiadis-Narayan:OOPSLA13}}{\tick}{NA + History + Viewfronts}
+\begin{minipage}[t]{0.2\linewidth}
+Impossible outcomes:\\
+\lstinline{  stuck}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rlx}$| := 1; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l@{\ \ \ \ }||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5;
+|$[$|f|$]_{rel}$| := 0
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = cas|$_{acq,rlx}$|(f, 0, 1);
+if r1 == 0
+then |$[$|d|$]_{rlx}$| := 6
+else 0
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = cas|$_{acq,rlx}$|(f, 0, 1);
+if r2 == 0
+then |$[$|d|$]_{rlx}$| := 7
+else 0
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{MP\_cas+rel+rlx+na}{\tick}{NA + History + Viewfronts}
+\begin{minipage}[t]{0.2\linewidth}
+Possible outcomes:\\
+\lstinline{  stuck}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|f|$]_{rlx}$| := 1; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l}
+\begin{lstlisting}
+|$[$|d|$]_{na}$| := 5
+|$[$|f|$]_{rel}$| := 0;
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = cas|$_{rlx,rlx}$|(f, 0, 1);
+if r1 == 0
+then |$[$|d|$]_{rlx}$| := 6
+else 0
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = cas|$_{rlx,rlx}$|(f, 0, 1);
+if r2 == 0
+then |$[$|d|$]_{rlx}$| := 7
+else 0
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\section{Coherence of Read-Read (CoRR)}
+\label{app:corr}
+
+\litmusTestStart{CoRR\_rlx}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Impossible outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 2 |$\land$| r3 = 2 |$\land$| r4 = 1}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 1 |$\land$| r3 = 1 |$\land$| r4 = 2}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+                    |$[$|x|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{rlx}$|;
+r2 = |$[$|x|$]_{rlx}$|
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r3 = |$[$|x|$]_{rlx}$|;
+r4 = |$[$|x|$]_{rlx}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{CoRR\_rel+acq}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Impossible outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 2 |$\land$| r3 = 2 |$\land$| r4 = 1}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 1 |$\land$| r3 = 1 |$\land$| r4 = 2}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+                   |$[$|x|$]_{rel}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{acq}$|;
+r2 = |$[$|x|$]_{acq}$|
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r3 = |$[$|x|$]_{acq}$|;
+r4 = |$[$|x|$]_{acq}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\section{Independent Reads of Independent Writes (IRIW)}
+\label{app:iriw}
+
+\litmusTestStart{IRIW\_rlx}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = <0, 1>; r2 = <0, 1>;}\\
+\lstinline{  r3 = <0, 1>; r4 = <0, 1>}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.5\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+               |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{rlx}$|;
+r2 = |$[$|y|$]_{rlx}$|
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r3 = |$[$|y|$]_{rlx}$|;
+r4 = |$[$|x|$]_{rlx}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+Comment:
+It is possible to get
+\lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
+\litmusTestEnd
+
+\litmusTestStart{IRIW\_rel+acq}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = <0, 1>; r2 = <0, 1>;}\\
+\lstinline{  r3 = <0, 1>; r4 = <0, 1>}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.5\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+               |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{acq}$|;
+r2 = |$[$|y|$]_{acq}$|
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r3 = |$[$|y|$]_{acq}$|;
+r4 = |$[$|x|$]_{acq}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+Comment:
+It is possible to get
+\lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
+\litmusTestEnd
+
+\litmusTestStart{IRIW\_sc}{\tick}{SC + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Forbidden outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 0 |$\land$| r3 = 1 |$\land$| r4 = 0}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.5\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+               |$[$|x|$]_{sc}$| := 0; |$[$|y|$]_{sc}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{sc}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{sc}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{sc}$|;
+r2 = |$[$|y|$]_{sc}$|
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r3 = |$[$|y|$]_{sc}$|;
+r4 = |$[$|x|$]_{sc}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\section{Write-to-Read Causality (WRC)}
+\label{app:wrc}
+
+\litmusTestStart{WRC\_rel+acq}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Forbidden outcomes:\\
+\lstinline{  r2 = 1 |$\land$| r3 = 0}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{acq}$|;
+|$[$|y|$]_{rel}$| := r1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|y|$]_{acq}$|;
+r3 = |$[$|x|$]_{acq}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{WRC\_rlx}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r2 = 0 |$\land$| r3 = 0}\\
+\lstinline{  r2 = 0 |$\land$| r3 = 1}\\
+\lstinline{  r2 = 1 |$\land$| r3 = 0}\\
+\lstinline{  r2 = 1 |$\land$| r3 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|x|$]_{rlx}$|;
+|$[$|y|$]_{rlx}$| := r1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|y|$]_{rlx}$|;
+r3 = |$[$|x|$]_{rlx}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+%% Comment:
+%% It is possible to get
+\lstinline{r2 = 1; r3 = 0}
+\litmusTestEnd
+
+\litmusTestStart{WRC\_cas+rel}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Impossible outcomes:\\
+\lstinline{  r2 = 2 |$\land$| r3 = 0}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 1;
+|$[$|y|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+cas|$_{rel,acq}$|(y, 1, 2)
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rel}$|;
+r2 = |$[$|x|$]_{rel}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\vspace{.2cm}
+\hrule
+\vspace{.2cm}
+
+\litmusTestStart{WRC\_cas+rlx}{\tick}{History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Impossible outcomes:\\
+\lstinline{  r2 = 2 |$\land$| r3 = 0}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+        |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1;
+|$[$|y|$]_{rel}$| := 1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+cas|$_{rlx,rlx}$|(y, 1, 2)
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+r2 = |$[$|x|$]_{rlx}$|
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+
+%\newpage
+
+\section{Out-of-Thin-Air reads}
+\label{app:ota}
+
+In our semantics it is not possible to get out-of-thin-air results,
+unlike the C11 standard. But such reads are considered to be an
+undesirable behavior by most of the standard's
+clients~\cite{Batty-al:ESOP15}.
+
+\litmusTestStart{OTA\_lb}{\fail}{Postponed reads + History + Viewfronts}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 0 |$\land$| r2 = 0}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+|$[$|x|$]_{rlx}$| := r1
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{rlx}$|;
+|$[$|y|$]_{rlx}$| := r2
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+Comment: According to the C11 standard \cite{C:11,CPP:11},
+\lstinline{r1} and \lstinline{r2} can get arbitrary values.
+\litmusTestEnd
+
+\litmusTestStart{OTA\_if}{\fail}{Postponed reads + History + Viewfronts}
+\begin{minipage}[t]{0.4\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 0 |$\land$| r2 = 0}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|y|$]_{rlx}$|;
+if r1
+then |$[$|x|$]_{rlx}$| := 1
+else r1 = 0 
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|x|$]_{rlx}$|;
+if r2
+then |$[$|y|$]_{rlx}$| := 1
+else r2 = 0
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+Comment: According to the C11 standard \cite{C:11,CPP:11},
+\lstinline{r1} and \lstinline{r2} can be 1s at the end of execution.
+\litmusTestEnd
+
+\section{Write Reorder (WR), or 2+2W from \cite{Lahav-al:POPL16}}
+\label{app:wr}
+
+\litmusTestStart{WR\_rlx}{\tick}{History + Viewfronts + Operational Buffers}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 2}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 1}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 2}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1;
+|$[$|y|$]_{rlx}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rlx}$| := 1;
+|$[$|x|$]_{rlx}$| := 2
+\end{lstlisting}
+\end{tabular}
+\begin{lstlisting}
+  r1 = |$[$|x|$]_{rlx}$|; r2 = |$[$|y|$]_{rlx}$|
+\end{lstlisting}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{WR\_rlx+rel}{\tick}{History + Viewfronts + Operational Buffers}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 2}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 1}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 2}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 1;
+|$[$|y|$]_{rel}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rlx}$| := 1;
+|$[$|x|$]_{rel}$| := 2
+\end{lstlisting}
+\end{tabular}
+\begin{lstlisting}
+  r1 = |$[$|x|$]_{rlx}$|; r2 = |$[$|y|$]_{rlx}$|
+\end{lstlisting}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\litmusTestStart{WR\_rel}{\tick}{History + Viewfronts + Operational Buffers}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r1 = 1 |$\land$| r2 = 2}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 1}\\
+\lstinline{  r1 = 2 |$\land$| r2 = 2}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 1;
+|$[$|y|$]_{rel}$| := 2
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rel}$| := 1;
+|$[$|x|$]_{rel}$| := 2
+\end{lstlisting}
+\end{tabular}
+\begin{lstlisting}
+  r1 = |$[$|x|$]_{acq}$|; r2 = |$[$|y|$]_{acq}$|
+\end{lstlisting}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+
+\vspace{10pt}
+
+%% This is an example of the program from \cite{Lahav-al:POPL16}.
+%% The weak behavior (\lstinline{r1 = r2 = 1}) is allowed in C11,
+%% but never observable under any known sound compilation scheme
+%% of the C11 release writes.
+%% Our semantics doesn't allow such behaviour as well as SRA
+%% \cite{Lahav-al:POPL16}. 
+
+\litmusTestEnd
+
+%% \section{Value Stealing}
+%% \label{app:ss}
+
+%% \litmusTestStart{VS\_rlx}{\tick}{}
+%% \begin{minipage}[t]{0.3\linewidth}
+%% Possible outcomes:\\
+%% \lstinline{  r1 = 0}\\
+%% \lstinline{  r1 = 1}\\
+%% \end{minipage}
+%% %
+%% \begin{minipage}[t]{0.3\linewidth}
+%% \vspace{-.2cm}
+%%   \begin{tabular}{l@{\ \ \ }l}
+%%     \begin{minipage}[l]{4.3cm} \small
+%% \begin{lstlisting}
+%%         |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
+%% \end{lstlisting}
+%% \vspace{-.2cm}
+%% \begin{tabular}{l||l||l}
+%% \begin{lstlisting}
+%% r1 = |$[$|x|$]_{rlx}$|;
+%% |$[$|x|$]_{rlx}$| := 1
+%% \end{lstlisting}
+%% \hspace{.6cm}
+%% &
+%% \begin{lstlisting}
+%% r2 = |$[$|x|$]_{rlx}$|;
+%% |$[$|y|$]_{rlx}$| := r2
+%% \end{lstlisting}
+%% \hspace{.6cm}
+%% &
+%% \begin{lstlisting}
+%% r3 = |$[$|y|$]_{rlx}$|;
+%% |$[$|x|$]_{rlx}$| := r3
+%% \end{lstlisting}
+%% \end{tabular}
+%%     \end{minipage}
+%% &
+%%   \end{tabular}
+%% \end{minipage}
+
+%% \litmusTestEnd
+
+\section{Speculative Execution}
+\label{app:se}
+
+\litmusTestStart{SE\_simple}{\tick}{}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r0 = 0}\\
+\lstinline{  r0 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+%
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0; |$[$|z|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|x|$]_{rlx}$|;
+if r1
+then |$[$|z|$]_{rlx}$| := 1;
+     |$[$|y|$]_{rlx}$| := 1
+else |$[$|y|$]_{rlx}$| := 1
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|y|$]_{rlx}$|;
+if r2
+then |$[$|x|$]_{rlx}$| := 1
+else 0 
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+
+\begin{lstlisting}
+                  r0 = |$[$|z|$]_{rlx}$|
+\end{lstlisting}
+\end{minipage}
+
+\litmusTestEnd
+
+\litmusTestStart{SE\_prop}{\tick}{}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r0 = 0}\\
+\lstinline{  r0 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+%
+\begin{lstlisting}
+  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0; |$[$|z|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|x|$]_{rlx}$|;
+if r1
+then |$[$|z|$]_{rlx}$| := 1;
+     r1 = |$[$|z|$]_{rlx}$|;
+     |$[$|y|$]_{rlx}$| := r1
+else |$[$|y|$]_{rlx}$| := 1
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r2 = |$[$|y|$]_{rlx}$|;
+if r2
+then |$[$|x|$]_{rlx}$| := 1
+else 0 
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+
+\begin{lstlisting}
+                  r0 = |$[$|z|$]_{rlx}$|
+\end{lstlisting}
+\end{minipage}
+
+\litmusTestEnd
+
+\litmusTestStart{SE\_nested}{\tick}{}
+\begin{minipage}[t]{0.3\linewidth}
+Possible outcomes:\\
+\lstinline{  r0 = 0}\\
+\lstinline{  r0 = 1}\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+%
+\begin{lstlisting}
+|$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0; |$[$|z|$]_{rlx}$| := 0; |$[$|f|$]_{rlx}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+r1 = |$[$|x|$]_{rlx}$|;
+if r1
+then r2 = |$[$|f|$]_{rlx}$|;
+     if r2
+     then |$[$|z|$]_{rlx}$| := 1;
+          |$[$|y|$]_{rlx}$| := 1
+     else |$[$|y|$]_{rlx}$| := 1
+     fi
+else |$[$|y|$]_{rlx}$| := 1
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+r3 = |$[$|y|$]_{rlx}$|;
+if r3
+then |$[$|f|$]_{rlx}$| := 1;
+     |$[$|x|$]_{rlx}$| := 1
+else 0 
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+
+\begin{lstlisting}
+                  r0 = |$[$|z|$]_{rlx}$|
+\end{lstlisting}
+\end{minipage}
+
+\litmusTestEnd
+
+
+\section{Locks}
+\label{app:locks}
+
+\begin{minipage}[t]{0.4\linewidth}
+\textbf{Dekker's lock}\\\\
+Possible outcomes:\\
+\lstinline{  stuck}\\
+Requires: RA + na\\
+Fully Supported: $\tick$\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := 1;
+r1 = |$[$|y|$]_{acq}$|
+if r1 == 0
+then |$[$|d|$]_{na}$| := 5
+else 0 
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rel}$| := 1;
+r2 = |$[$|x|$]_{acq}$|
+if r2 == 0
+then |$[$|d|$]_{na}$| := 6
+else 0 
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+
+\begin{minipage}[t]{0.4\linewidth}
+\textbf{Cohen's lock}\\\\
+Impossible outcomes (according to \cite{Turon-al:OOPSLA14}):\\
+\lstinline{  stuck}\\
+Requires: RA + na\\
+Fully Supported: $\tick$\\
+\end{minipage}
+%
+\begin{minipage}[t]{0.4\linewidth}
+\vspace{-.2cm}
+  \begin{tabular}{l@{\ \ \ }l}
+    \begin{minipage}[l]{4.3cm} \small
+\begin{lstlisting}
+  |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
+\end{lstlisting}
+\vspace{-.2cm}
+\begin{tabular}{l||l}
+\begin{lstlisting}
+|$[$|x|$]_{rel}$| := choice 1 2;
+repeat |$[$|y|$]_{acq}$| end;
+r1 = |$[$|x|$]_{acq}$|
+r2 = |$[$|y|$]_{acq}$|
+if r1 == r2
+then |$[$|d|$]_{na}$| := 5
+else 0 
+fi
+\end{lstlisting}
+\hspace{.6cm}
+&
+\begin{lstlisting}
+|$[$|y|$]_{rel}$| := choice 1 2;
+repeat |$[$|x|$]_{acq}$| end;
+r3 = |$[$|x|$]_{acq}$|
+r4 = |$[$|y|$]_{acq}$|
+if r3 != r4
+then |$[$|d|$]_{na}$| := 6
+else 0 
+fi
+\end{lstlisting}
+\end{tabular}
+    \end{minipage}
+&
+  \end{tabular}
+\end{minipage}
+\litmusTestEnd
+%% \end{figure*}
