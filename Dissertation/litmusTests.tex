@@ -46,6 +46,21 @@ Requires: #3\\
 \end{minipage}
 }
 
+\newcommand{\mpTemplate}[6]{
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+\begin{equation*}
+\begin{tabular}{c}
+  $\writeInstParam{#1}{f}{0}; \writeInstParam{#2}{d}{0};$ \\
+\begin{tabular}{L || L}
+  \writeInstParam{#3}{d}{5}  & \repeatReadInst{#5}{f} \\
+  \writeInstParam{#4}{f}{1}; & \readInstParam{#6}{a}{d}; \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+\end{minipage}
+}
+
 \newcommand{\lbJoinTemplate}[4]{
 \begin{minipage}[t]{0.3\linewidth}
 \vspace{-.2cm}
@@ -279,135 +294,51 @@ a = 1 \land b = 1 \\
 \litmusTestStart{MP\_rlx+na}{\tick}{NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 0}\\
-\lstinline{  r1 = 5}\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+a = 0 \\
+a = 5 \\
+\kw{stuck} \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rlx}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-repeat |$[$|f|$]_{rlx}$| end;
-r1 = |$[$|d|$]_{na}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\mpTemplate{\rlx}{\na}{\na}{\rlx}{\rlx}{\na}
 \litmusTestEnd
 
 \litmusTestStart{MP\_rel+rlx+na}{\tick}{NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 0}\\
-\lstinline{  r1 = 5}\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+a = 0 \\
+a = 5 \\
+\kw{stuck} \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rlx}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-repeat |$[$|f|$]_{rlx}$| end;
-r1 = |$[$|d|$]_{na}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\mpTemplate{\rlx}{\na}{\na}{\rel}{\rlx}{\na}
 \litmusTestEnd
 
 \litmusTestStart{MP\_rlx+acq+na}{\tick}{NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 0}\\
-\lstinline{  r1 = 5}\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+a = 0 \\
+a = 5 \\
+\kw{stuck} \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rlx}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-repeat |$[$|f|$]_{acq}$| end;
-r1 = |$[$|d|$]_{na}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\mpTemplate{\rlx}{\na}{\na}{\rlx}{\acq}{\na}
 \litmusTestEnd
 
 \litmusTestStart{MP\_rel+acq+na}{\tick}{NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 5}\\
+\[\begin{array}{l}
+a = 5 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-repeat |$[$|f|$]_{acq}$| end;
-r1 = |$[$|d|$]_{na}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\mpTemplate{\rlx}{\na}{\na}{\rel}{\acq}{\na}
 \litmusTestEnd
 
 \litmusTestStart{MP\_rel+acq+na+rlx}{\tick}{Write-fronts + NA + History + Viewfronts}
