@@ -1,0 +1,142 @@
+\newcommand{\nullPtr}{\kw{null}}
+\newcommand{\funcSt}[1]{{\rm #1}}
+
+{\small{
+\textbf{Программа:}
+\vspace{-17pt}
+\[
+\writeInstParam{\na}{cw}{0};
+\writeInstParam{\na}{cr1}{0};
+\writeInstParam{\na}{cr2}{0};
+\writeInstParam{\na}{lhead}{\nullPtr};
+\]
+%% \begin{lstlisting}
+%%                         |$[$|cw|$]_{na}$| := 0; |$[$|cr1|$]_{na}$| := 0; |$[$|cr2|$]_{na}$| := 0; |$[$|lhead|$]_{na}$| := null;
+%% \end{lstlisting}
+\begin{tabular}{L || L || L}
+  \begin{array}{l}
+    \writeInstParam{\rlx}{a}{(1, \nullPtr)}; \\
+    \writeInstParam{\na}{ltail}{a}; \\
+    \writeInstParam{\rel}{lhead}{a}; \\
+    \funcSt{append}(b, 10, ltail); \\
+    \funcSt{append}(c, 100, ltail); \\
+    \funcSt{updateSecondNode}(d, 1000) \\
+  \end{array}
+&
+  \begin{array}{l}
+    \writeInstParam{\na}{sum11}{0}; \\
+    \funcSt{rcuOnline}(cw, cr1); \\
+    \funcSt{traverse}(lhead, cur1, sum11); \\
+    \funcSt{rcuOffline}(cw, cr1); \\
+    \\
+    \writeInstParam{\na}{sum12}{0}; \\
+    \funcSt{rcuOnline}(cw, cr1); \\
+    \funcSt{traverse}(lhead, cur1, sum12); \\
+    \funcSt{rcuOffline}(cw, cr1); \\
+    \\
+    \readInstParam{na}{r11}{sum11}; \\
+    \readInstParam{na}{r11}{sum12} \\
+  \end{array}
+&
+  \begin{array}{l}
+    \writeInstParam{\na}{sum21}{0}; \\
+    \funcSt{rcuOnline}(cw, cr2); \\
+    \funcSt{traverse}(lhead, cur2, sum21); \\
+    \funcSt{rcuOffline}(cw, cr2); \\
+    \\
+    \writeInstParam{\na}{sum22}{0}; \\
+    \funcSt{rcuOnline}(cw, cr2); \\
+    \funcSt{traverse}(lhead, cur2, sum22); \\
+    \funcSt{rcuOffline}(cw, cr2); \\
+    \\
+    \readInstParam{na}{r21}{sum21}; \\
+    \readInstParam{na}{r21}{sum22} \\
+  \end{array}
+\end{tabular}
+
+\vspace{5pt}
+\hrule
+\vspace{5pt}
+
+\textbf{Функции:}
+
+\begin{tabular}{@{}L L l}
+
+\begin{array}{@{}l}
+  \funcSt{append}(loc, value, ltail) \triangleq \\
+  \quad \writeInstParam{\rlx}{loc}{(value, \nullPtr)}; \\
+  \quad \readInstParam{\na}{rt}{ltail}; \\
+  \quad \readInstParam{\rlx}{rtc}{rt}; \\
+  \quad \writeInstParam{\rel}{rt}{(\kw{fst} \; rtc, loc)}; \\
+  \quad \writeInstParam{\na}{ltail}{loc} \\
+  \\
+  \funcSt{updateSecondNode}(loc, value) \triangleq \\
+  \quad \readInstParam{\rlx}{r1}{lhead}; \\
+  \quad \readInstParam{\rlx}{r1c}{r1}; \\
+  \quad \assignInst{r2}{\kw{snd} \; r1c}; \\
+  \quad \readInstParam{\rlx}{r2c}{r2}; \\
+  \quad \assignInst{r3}{\kw{snd} \; r2c}; \\
+  \quad \writeInstParam{\rel}{loc}{(value, r3)}; \\
+  \quad \writeInstParam{\rel}{r1}{(\kw{fst} \; r1c, loc)}; \\
+  \quad \funcSt{sync}(cw, cr1, cr2); \\
+  \quad \kw{delete} \; r2
+\end{array}
+
+&
+
+\begin{array}{l}
+  \funcSt{traverse}(lhead, curNodeLoc, resLoc) \triangleq \\
+  \quad \readInstParam{\acq}{rh}{lhead}; \\
+  \quad \writeInstParam{\na}{curNodeLoc}{rh}; \\
+  \quad \kw{repeat} \\
+  \qquad \readInstParam{\na}{rCurNode}{curNodeLoc}; \\
+  \qquad \kw{if} \; rCurNode \neq \nullPtr \\
+  \qquad \begin{array}[t]{@{}l l}
+         \kw{then}& {\begin{array}[t]{@{}l}
+                      \readInstParam{\acq}{rNode}{rCurNode}; \\
+                      \readInstParam{\na}{rRes}{resLoc}; \\
+                      \assignInst{rVal}{\kw{fst} \; rNode}; \\
+                      \writeInstParam{\na}{resLoc}{rVal + rRes}; \\
+                      \writeInstParam{\na}{curNodeLoc}{\kw{snd} \; rNode}; \\
+                      0
+                    \end{array}} \\
+         \kw{else}& 1 \\
+         \end{array}\\
+  \qquad \kw{fi}
+  \quad \kw{end} \\
+
+\end{array}
+&
+
+\begin{tabular}{@{}l@{}}
+\begin{lstlisting}
+sync(cw, cr1, cr2) |$\triangleq$|
+  rcw  = |$[$|cw|$]_{rlx}$|;
+  rcwn = rcw + 2;
+  |$[$|cw|$]_{rel}$| := rcwn;
+  |\graybox{\texttt{syncWithReader(rcwn, cr1);}}|
+  |\graybox{\texttt{syncWithReader(rcwn, cr2)}}|
+\end{lstlisting}
+\\
+\\
+\begin{lstlisting}
+syncWithReader(rcwn, cr) |$\triangleq$| 
+  repeat |$[$|cr|$]_{acq}$| >= rcwn end
+\end{lstlisting}
+\\
+\\
+\begin{lstlisting}
+rcuOnline(cw, cr) |$\triangleq$| 
+  |$[$|cr|$]_{rlx}$| := |$[$|cw|$]_{acq}$| + 1
+\end{lstlisting}
+\\
+\\
+\begin{lstlisting}
+rcuOffline(cw, cr) |$\triangleq$| 
+  |$[$|cr|$]_{rel}$| := |$[$|cw|$]_{rlx}$|
+\end{lstlisting}
+\end{tabular}
+
+
+\end{tabular}
+}}
