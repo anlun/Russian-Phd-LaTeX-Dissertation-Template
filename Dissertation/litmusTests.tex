@@ -46,6 +46,23 @@ Requires: #3\\
 \end{minipage}
 }
 
+\newcommand{\lbJoinTemplate}[4]{
+\begin{minipage}[t]{0.3\linewidth}
+\vspace{-.2cm}
+\begin{equation*}
+\begin{tabular}{c}
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+\begin{tabular}{L || L || L || L}
+  \readInstParam{#1}{a}{y}; & \skipc & \readInstParam{#3}{b}{x}; & \skipc \\
+  \writeInstParam{\rlx}{z1}{a} & & \writeInstParam{\rlx}{z2}{b} &  \\
+  \multicolumn{2}{c ||}{$\writeInstParam{#2}{x}{1}$} &
+  \multicolumn{2}{c}{$\writeInstParam{#4}{y}{1}$} \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+\end{minipage}
+}
+
 \chapter{Каталог тестов для модели C/C++11}
 \label{sec:litmusTests}
 
@@ -174,34 +191,23 @@ a = 1 \land b = 1\\
 \litmusTestStart{LB\_rlx+use}{\tick}{Postponed Reads + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Allowed outcome:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\[\begin{array}{l}
+a = 1 \land b = 1\\
+\end{array}\]
 \end{minipage}
 %
 \begin{minipage}[t]{0.3\linewidth}
 \vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-|$[$|z1|$]_{rlx}$| := r1;
-|$[$|x|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{rlx}$|;
-|$[$|z2|$]_{rlx}$| := r2;
-|$[$|y|$]_{rlx}$| := 1
-\end{lstlisting}
+\begin{equation*}
+\begin{tabular}{c}
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInstParam{\rlx}{a}{y} & \readInstParam{\rlx}{b}{x} \\
+  \writeInstParam{\rlx}{z1}{a}; & \writeInstParam{\rlx}{z2}{b}; \\
+  \writeInstParam{\rlx}{x}{1}; & \writeInstParam{\rlx}{y}{1}; \\
 \end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
+\end{tabular}
+\end{equation*}
 \end{minipage}
 
 %% Comment:
@@ -212,91 +218,35 @@ r2 = |$[$|x|$]_{rlx}$|;
 \litmusTestStart{LB\_rlx+let}{\tick}{Postponed Reads + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Allowed outcome:\\
-\lstinline{  r1 = 1 |$\land$| r'1 = 2 |$\land$| r2 = 1 |$\land$| r'2 = 2}\\
+\[\begin{array}{l}
+a = 1 \land a' = 2 \land b = 1 \land b' = 2 \\
+\end{array}\]
 \end{minipage}
 %
 \begin{minipage}[t]{0.3\linewidth}
 \vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-r'1 = r1 + 1;
-|$[$|x|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{rlx}$|;
-r'2 = r2 + 1;
-|$[$|y|$]_{rlx}$| := 1
-\end{lstlisting}
+\begin{equation*}
+\begin{tabular}{c}
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInstParam{\rlx}{a}{y} & \readInstParam{\rlx}{b}{x} \\
+  \assignInst{a'}{a + 1}; & \assignInst{b'}{b + 1}; \\
+  \writeInstParam{\rlx}{x}{1}; & \writeInstParam{\rlx}{y}{1}; \\
 \end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
+\end{tabular}
+\end{equation*}
 \end{minipage}
 \litmusTestEnd
 
 \litmusTestStart{LB\_rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}
 \begin{minipage}[t]{0.2\linewidth}
 Allowed outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\[\begin{array}{l}
+a = 1 \land b = 1 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-            |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-|$[$|z1|$]_{rlx}$| := r1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-  0
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{rlx}$|;
-|$[$|z2|$]_{rlx}$| := r2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-  0
-\end{lstlisting}
-\end{tabular}
-
-\vspace{-1pt}
-\begin{tabular}{l||l}
-  \begin{lstlisting}
-            |$[$|x|$]_{rlx}$| := 1
-  \end{lstlisting}
-%% \hspace{.708cm}
-\hspace{2.52em}
-&
-  \begin{lstlisting}
-      |$[$|y|$]_{rlx}$| := 1
-  \end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
-
+\lbJoinTemplate{\rlx}{\rlx}{\rlx}{\rlx}
 %% Unfortunately, our semantics isn't complete for this snippet,
 %% because it can't postpone write, or anything across a join point.
 \litmusTestEnd
@@ -304,111 +254,23 @@ r2 = |$[$|x|$]_{rlx}$|;
 \litmusTestStart{LB\_rel+rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}
 \begin{minipage}[t]{0.2\linewidth}
 Allowed outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\[\begin{array}{l}
+a = 1 \land b = 1 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-            |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-|$[$|z1|$]_{rlx}$| := r1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-  0
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{rlx}$|;
-|$[$|z2|$]_{rlx}$| := r2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-  0
-\end{lstlisting}
-\end{tabular}
-
-\vspace{-1pt}
-\begin{tabular}{l||l}
-  \begin{lstlisting}
-            |$[$|x|$]_{rel}$| := 1
-  \end{lstlisting}
-%% \hspace{.708cm}
-\hspace{2.52em}
-&
-  \begin{lstlisting}
-      |$[$|y|$]_{rel}$| := 1
-  \end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\lbJoinTemplate{\rlx}{\rel}{\rlx}{\rel}
 \litmusTestEnd
 
 \litmusTestStart{LB\_acq+rlx+join}{\fail}{Postponed Reads + History + Viewfronts + JN}
 \begin{minipage}[t]{0.2\linewidth}
 Allowed outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 1}\\
+\[\begin{array}{l}
+a = 1 \land b = 1 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-            |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{acq}$|;
-|$[$|z1|$]_{rlx}$| := r1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-  0
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{acq}$|;
-|$[$|z2|$]_{rlx}$| := r2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-  0
-\end{lstlisting}
-\end{tabular}
-
-\vspace{-1pt}
-\begin{tabular}{l||l}
-  \begin{lstlisting}
-            |$[$|x|$]_{rlx}$| := 1
-  \end{lstlisting}
-%% \hspace{.708cm}
-\hspace{2.52em}
-&
-  \begin{lstlisting}
-      |$[$|y|$]_{rlx}$| := 1
-  \end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\lbJoinTemplate{\acq}{\rlx}{\acq}{\rlx}
 \litmusTestEnd
 
 \section{Message Passing (MP)}
