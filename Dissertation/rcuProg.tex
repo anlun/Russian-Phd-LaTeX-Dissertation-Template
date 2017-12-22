@@ -60,7 +60,7 @@
 
 \textbf{Функции:}
 
-\begin{tabular}{@{}L L l}
+\begin{tabular}{@{}L L@{}}
 
 \begin{array}{@{}l}
   \funcSt{append}(loc, value, ltail) \triangleq \\
@@ -79,7 +79,14 @@
   \quad \writeInstParam{\rel}{loc}{(value, r3)}; \\
   \quad \writeInstParam{\rel}{r1}{(\kw{fst} \; r1c, loc)}; \\
   \quad \funcSt{sync}(cw, cr1, cr2); \\
-  \quad \kw{delete} \; r2
+  \quad \kw{delete} \; r2 \\
+  \\
+  \funcSt{sync}(cw, cr1, cr2) \triangleq \\
+  \quad \readInstParam{\rlx}{rcw}{cw}; \\
+  \quad \assignInst{rcwn}{rcw + 2}; \\
+  \quad \writeInstParam{\rel}{cw}{rcwn}; \\
+  \quad \graybox{\funcSt{syncWithReader}(rcwn, cr1);} \\
+  \quad \graybox{\funcSt{syncWithReader}(rcwn, cr2)} \\
 \end{array}
 
 &
@@ -102,41 +109,19 @@
                     \end{array}} \\
          \kw{else}& 1 \\
          \end{array}\\
-  \qquad \kw{fi}
+  \qquad \kw{fi} \\
   \quad \kw{end} \\
-
+  \\
+  \funcSt{syncWithReader}(rcwn, cr) \triangleq \\
+  \quad \repeatInst{\readInstParam{\acq}{r0}{cr}; r0 >= rcwn} \\
+  \\
+  \funcSt{rcuOnline}(cw, cr) \triangleq \\
+  \quad \readInstParam{\acq}{r0}{cw}; \\
+  \quad \writeInstParam{\rlx}{cr}{r0 + 1} \\
+  \\
+  \funcSt{rcuOffline}(cw, cr) \triangleq \\
+  \quad \readInstParam{\rlx}{r0}{cw}; \\
+  \quad \writeInstParam{\rel}{cr}{r0}
 \end{array}
-&
-
-\begin{tabular}{@{}l@{}}
-\begin{lstlisting}
-sync(cw, cr1, cr2) |$\triangleq$|
-  rcw  = |$[$|cw|$]_{rlx}$|;
-  rcwn = rcw + 2;
-  |$[$|cw|$]_{rel}$| := rcwn;
-  |\graybox{\texttt{syncWithReader(rcwn, cr1);}}|
-  |\graybox{\texttt{syncWithReader(rcwn, cr2)}}|
-\end{lstlisting}
-\\
-\\
-\begin{lstlisting}
-syncWithReader(rcwn, cr) |$\triangleq$| 
-  repeat |$[$|cr|$]_{acq}$| >= rcwn end
-\end{lstlisting}
-\\
-\\
-\begin{lstlisting}
-rcuOnline(cw, cr) |$\triangleq$| 
-  |$[$|cr|$]_{rlx}$| := |$[$|cw|$]_{acq}$| + 1
-\end{lstlisting}
-\\
-\\
-\begin{lstlisting}
-rcuOffline(cw, cr) |$\triangleq$| 
-  |$[$|cr|$]_{rel}$| := |$[$|cw|$]_{rlx}$|
-\end{lstlisting}
-\end{tabular}
-
-
 \end{tabular}
 }}
