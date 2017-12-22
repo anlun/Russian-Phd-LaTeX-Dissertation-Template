@@ -3,7 +3,6 @@
 
 {\small{
 \textbf{Программа:}
-\vspace{-17pt}
 \[
 \writeInstParam{\na}{cw}{0};
 \writeInstParam{\na}{cr1}{0};
@@ -115,13 +114,19 @@
   \funcSt{syncWithReader}(rcwn, cr) \triangleq \\
   \quad \repeatInst{\readInstParam{\acq}{r0}{cr}; r0 >= rcwn} \\
   \\
+  \begin{array}{@{}l @{~~~~}|@{~~~~} l@{}}
+    \begin{array}{@{}l@{}}
   \funcSt{rcuOnline}(cw, cr) \triangleq \\
   \quad \readInstParam{\acq}{r0}{cw}; \\
   \quad \writeInstParam{\rlx}{cr}{r0 + 1} \\
-  \\
+    \end{array}
+  &
+    \begin{array}{@{}l@{}}
   \funcSt{rcuOffline}(cw, cr) \triangleq \\
   \quad \readInstParam{\rlx}{r0}{cw}; \\
   \quad \writeInstParam{\rel}{cr}{r0}
+    \end{array}
+  \end{array}
 \end{array}
 \end{tabular}
 }}
