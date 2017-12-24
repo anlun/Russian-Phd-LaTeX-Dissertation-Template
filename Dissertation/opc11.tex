@@ -1,7 +1,6 @@
 \chapter{Операционная модель памяти C/C++11} \label{sec:opc11}
 В главе описана операционная модель памяти C/C++11 \cite{Podkopaev-al:CoRR16}.
 
-
 Модель представлена как семейство операционных семантик, которые описывают
 различные аспекты модели памяти C/C++11 \cite{Batty-al:POPL11}.
 Все семантики базируются на комбинации двух основных идей: 
@@ -11,8 +10,82 @@
 производить спекулятивные вычисления.
 Модель представлена в виде абстрактной машины и покрывает 
 
-\section{Модель на примерах}
+\section{Основные концепции модели}
 В разделе мы рассмотрим базовые концепции модели на нескольких примерах.
+Начнём мы с программы ${\rm MP\text{-}rel\text{-}acq}$ (см. рис. \ref{fig:MPrelAcq}),
+которую мы уже обсуждали в контексте модели C/C++11.
+В аксиоматической C/C++11 MM программа имеет три сценария поведения (см. рис. \ref{fig:MPrelAcqSem}).
+Рассмотрим один из них:
+\[
+\begin{tikzpicture}[yscale=1,xscale=1.8]
+  \node (01)  at (-2,3) {$p: \wlab{\na}{x}{0}$ };
+  \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
+  \node (1)  at (-2,1.5) {$r: \wlab{\rlx}{x}{1}$ };
+  \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
+  \node (11) at (0,1.5)  {$t: \rlab{\acq}{y}{1}$ };
+  \node (12) at (0,0)  {$u: \rlab{\rlx}{x}{1}$ };
+
+  \draw[po] (1)  edge  (2);
+  \draw[po] (11) edge (12);
+  \draw[po] (01) edge (11);
+  \draw[po] (02) edge (11);
+  %% \draw[hb] (01) edge node[right] {\small $\lHB$} (1);
+  \draw[po] (01) edge (1);
+  \draw[po] (02) edge  (1);
+  %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+  \draw[sw,bend right=20] (2) edge node[below] {\small $\lSW$} (11);
+  \draw[rf] (2) edge node[above] {\small $\lRF$} (11);
+  \draw[rf] (1) edge node[below] {} (12);
+  \draw[mo,bend right=20] (01)  edge node[left] {\small $\lMO$} (1);
+  \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+\end{tikzpicture}
+\]
+
+%% На рис. \ref{fig:MPrelAcq} представлена сама программа и одни из сценариев поведения
+%% этой программы в рамках C/C++11 MM.
+%% \begin{figure}
+%%   \begin{minipage}{.4\textwidth}
+%% \begin{equation*}
+%% %% \tag{MP-rel-acq}
+%% \begin{tabular}{c}
+%%   $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+%% \begin{tabular}{L || L}
+%%   \writeInstParam{\rlx}{x}{1}; & \readInstParam{\acq}{a}{y}; \\
+%%   \writeInstParam{\rel}{y}{1} & \readInstParam{\rlx}{b}{x} \\
+%% \end{tabular}
+%% \end{tabular}
+%% \end{equation*}
+%%   \end{minipage}
+%%   \begin{minipage}{.4\textwidth}
+%% \[
+%% \begin{tikzpicture}[yscale=1,xscale=1.8]
+%%   \node (01)  at (-2,3) {$p: \wlab{\na}{x}{0}$ };
+%%   \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
+%%   \node (1)  at (-2,1.5) {$r: \wlab{\rlx}{x}{1}$ };
+%%   \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
+%%   \node (11) at (0,1.5)  {$t: \rlab{\acq}{y}{1}$ };
+%%   \node (12) at (0,0)  {$u: \rlab{\rlx}{x}{1}$ };
+
+%%   \draw[po] (1)  edge  (2);
+%%   \draw[po] (11) edge (12);
+%%   \draw[po] (01) edge (11);
+%%   \draw[po] (02) edge (11);
+%%   %% \draw[hb] (01) edge node[right] {\small $\lHB$} (1);
+%%   \draw[po] (01) edge (1);
+%%   \draw[po] (02) edge  (1);
+%%   %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
+%%   \draw[sw,bend right=20] (2) edge node[below] {\small $\lSW$} (11);
+%%   \draw[rf] (2) edge node[above] {\small $\lRF$} (11);
+%%   \draw[rf] (1) edge node[below] {} (12);
+%%   \draw[mo,bend right=20] (01)  edge node[left] {\small $\lMO$} (1);
+%%   \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
+%% \end{tikzpicture}
+%% \]
+%%   \end{minipage}
+%% \caption{Программа ${\rm MP\text{-}rel\text{-}acq}$ и её сценарий исполнения в модели C/C++11}
+%% \label{fig:MPrelAcq}
+%% \end{figure}
+
 
 \subsection{Синхронизация потоков. Фронты}
 \subsection{Спекулятивное исполнение. Операционные буферы}

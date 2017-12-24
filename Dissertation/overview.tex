@@ -36,9 +36,12 @@
 %% которая обладает слабым поведением на большинстве современных программных архитектур:
 \begin{equation*}
 \tag{MP}\label{ex:MP}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; ~\valuecom{1} \\
   \writeInst{y}{1} & \readInst{b}{x}~ ~\valuecom{0} \\
+\end{tabular}
 \end{tabular}
 \end{equation*}
 Эта программа является упрощенным примером передачи данных между потоками.
@@ -240,10 +243,13 @@ Power\footnote{Здесь и далее в
 }.
 \begin{equation*}
 \tag{MP-hwsync}\label{ex:MP-hwsync}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; \\
   \hwsync;          &  \hwsync;        \\
   \writeInst{y}{1}  & \readInst{b}{x} \\
+\end{tabular}
 \end{tabular}
 \end{equation*}
 На ряду с $\hwsync$ архитектура Power также предоставляет более слабый барьер $\lwsync$,
@@ -251,10 +257,13 @@ Power\footnote{Здесь и далее в
 Такого барьера также достаточно, чтобы запретить сценарий $a=1, b=0$.
 \begin{equation*}
 \tag{MP-lwsync}\label{ex:MP-hwsync}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; \\
   \lwsync;          &  \lwsync;        \\
   \writeInst{y}{1}  & \readInst{b}{x} \\
+\end{tabular}
 \end{tabular}
 \end{equation*}
 В данном случае схема компиляции, использующая барьер $\lwsync$, является более предпочтительной по сравнению
@@ -473,9 +482,12 @@ $$
 $y$ помечена как изменчивая.
 \begin{equation*}
 \tag{MP-volatile}\label{ex:MPvolatile}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
 \begin{tabular}{L || L L}
   \writeInst{x}{1}; & \readInstVolatile{a}{y}; & \valuefail{1} \\
   \writeInstVolatile{y}{1} & \readInst{b}{x} & \valuefail{0} \\
+\end{tabular}
 \end{tabular}
 \end{equation*}
 Для того, чтобы проверить данное утверждение, построим соответствующий граф.
@@ -577,14 +589,21 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 является частью гонки по данным, то программа имеет неопределенное поведение в C/C++11 MM.
 Приобретающее чтение и высвобождающая запись могут быть использованы для того,
 чтобы запретить результат $a = 1, b = 0$ в версии программы, аналогично синхронизирующим
-обращениям в случае JMM:
+обращениям в случае JMM (см. рис. \ref{fig:MPrelAcq}).
+\begin{figure}
 \begin{equation*}
-\tag{MP-rel-acq}\label{ex:MPrelAcq}
+\label{ex:MPrelAcq}
+\begin{tabular}{c}
+  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
 \begin{tabular}{L || L L}
   \writeInstParam{\rlx}{x}{1}; & \readInstParam{\acq}{a}{y}; & \valuefail{1} \\
   \writeInstParam{\rel}{y}{1} & \readInstParam{\rlx}{b}{x} & \valuefail{0} \\
 \end{tabular}
+\end{tabular}
 \end{equation*}
+\caption{Программа ${\rm MP\text{-}rel\text{-}acq}$}
+\label{fig:MPrelAcq}
+\end{figure}
 При этом, в отличие от синхронизирующих обращений JMM и $\sco$-обращений C/C++11 MM,
 на высвобождающих и приобретающих событиях не существует тотального порядка,
 обязательно учитывающего программный порядок, и, как следствие, следующая программа,
