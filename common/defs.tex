@@ -475,6 +475,7 @@
 \newcommand{\readInstParam}[3]{#2 \;:=_{#1}\;[#3]}
 \newcommand{\writeInstParam}[3]{[#2] \;:=_{#1}\;#3}
 \newcommand{\repeatReadInst}[2]{\kw{repeat} \;[#2]_{#1}\; \kw{end}}
+\newcommand{\casInstParam}[6]{#3\;:=\;\kw{cas}_{#1,#2}(#4, #5, #6)}
 
 \newcommand\ifGoto{\textsf{if}-\textsf{goto}}
 \newcommand{\ifGotoInst}[2]{\textsf{if} \; #1 \; \textsf{goto} \; #2}
@@ -1105,3 +1106,6 @@
 
 \newcommand{\writeInstVolatile}[2]{[#1]\;:=_{\rm volatile}\;#2}
 \newcommand{\readInstVolatile}[2]{#1 \;:=_{\rm volatile}\;[#2]}
+
+\newcommand{\nullPtr}{\kw{null}}
+\newcommand{\funcSt}[1]{{\rm #1}}

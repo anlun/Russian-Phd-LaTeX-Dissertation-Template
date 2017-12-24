@@ -13,56 +13,51 @@ Requires: #3\\
 \vspace{.2cm}
 }
 
-\newcommand{\sbTemplate}[6]{
+\newcommand{\codePrefix}{
 \begin{minipage}[t]{0.3\linewidth}
 \vspace{-.2cm}
 \begin{equation*}
 \begin{tabular}{c}
+}
+
+\newcommand{\codePostfix}{
+\end{tabular}
+\end{equation*}
+\end{minipage}
+}
+
+\newcommand{\sbTemplate}[6]{
+  \codePrefix
   $\writeInstParam{#1}{x}{0}; \writeInstParam{#2}{y}{0};$ \\
 \begin{tabular}{L || L}
   \writeInstParam{#3}{x}{1}; & \writeInstParam{#5}{y}{1}; \\
   \readInstParam{#4}{a}{y} & \readInstParam{#6}{b}{x} \\
 \end{tabular}
-\end{tabular}
-\end{equation*}
-\end{minipage}
+  \codePostfix
 }
 
 \newcommand{\lbTemplate}[6]{
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-\begin{equation*}
-\begin{tabular}{c}
+  \codePrefix
   $\writeInstParam{#1}{x}{0}; \writeInstParam{#2}{y}{0};$ \\
 \begin{tabular}{L || L}
   \readInstParam{#3}{a}{y} & \readInstParam{#5}{b}{x} \\
   \writeInstParam{#4}{x}{1}; & \writeInstParam{#6}{y}{1}; \\
 \end{tabular}
-\end{tabular}
-\end{equation*}
-\end{minipage}
+  \codePostfix
 }
 
 \newcommand{\mpTemplate}[6]{
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-\begin{equation*}
-\begin{tabular}{c}
+  \codePrefix
   $\writeInstParam{#1}{f}{0}; \writeInstParam{#2}{d}{0};$ \\
 \begin{tabular}{L || L}
   \writeInstParam{#3}{d}{5}  & \repeatReadInst{#5}{f} \\
   \writeInstParam{#4}{f}{1}; & \readInstParam{#6}{a}{d}; \\
 \end{tabular}
-\end{tabular}
-\end{equation*}
-\end{minipage}
+  \codePostfix
 }
 
 \newcommand{\lbJoinTemplate}[4]{
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-\begin{equation*}
-\begin{tabular}{c}
+  \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L || L || L}
   \readInstParam{#1}{a}{y}; & \skipc & \readInstParam{#3}{b}{x}; & \skipc \\
@@ -70,9 +65,7 @@ Requires: #3\\
   \multicolumn{2}{c ||}{$\writeInstParam{#2}{x}{1}$} &
   \multicolumn{2}{c}{$\writeInstParam{#4}{y}{1}$} \\
 \end{tabular}
-\end{tabular}
-\end{equation*}
-\end{minipage}
+  \codePostfix
 }
 
 \chapter{Каталог тестов для модели C/C++11}
@@ -208,19 +201,14 @@ a = 1 \land b = 1\\
 \end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-\begin{equation*}
-\begin{tabular}{c}
+\codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
   \readInstParam{\rlx}{a}{y} & \readInstParam{\rlx}{b}{x} \\
   \writeInstParam{\rlx}{z1}{a}; & \writeInstParam{\rlx}{z2}{b}; \\
   \writeInstParam{\rlx}{x}{1}; & \writeInstParam{\rlx}{y}{1}; \\
 \end{tabular}
-\end{tabular}
-\end{equation*}
-\end{minipage}
+\codePostfix
 
 %% Comment:
 %% Unfortunately, our semantics isn't able to reorder writes,
@@ -235,19 +223,15 @@ a = 1 \land a' = 2 \land b = 1 \land b' = 2 \\
 \end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-\begin{equation*}
-\begin{tabular}{c}
+\codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
   \readInstParam{\rlx}{a}{y} & \readInstParam{\rlx}{b}{x} \\
   \assignInst{a'}{a + 1}; & \assignInst{b'}{b + 1}; \\
   \writeInstParam{\rlx}{x}{1}; & \writeInstParam{\rlx}{y}{1}; \\
 \end{tabular}
-\end{tabular}
-\end{equation*}
-\end{minipage}
+\codePostfix
+
 \litmusTestEnd
 
 \litmusTestStart{LB\_rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}
@@ -346,228 +330,153 @@ a = 5 \\
 \end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rel}$| := 1;
-|$[$|f|$]_{rlx}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-repeat |$[$|f|$]_{acq}$| == 2 end;
-r1 = |$[$|d|$]_{na}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rel}{f}{0}; \writeInstParam{\na}{d}{0};$ \\
+  \begin{tabular}{L || L}
+    \writeInstParam{\na}{d}{5}; & \repeatInst{[f]_{\acq} == 2}; \\
+    \writeInstParam{\rel}{f}{1}; & \readInstParam{\na}{a}{d}\\
+    \writeInstParam{\rlx}{f}{2}; & \\
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{MP\_rel+acq+na+rlx\_2}{\tick}{Write-fronts + NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 5 /\ r2 = <0, 1>}\\
+\[\begin{array}{l}
+a = 5 \land b \in \{0, 1\} \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-|$[$|f|$]_{na}$| := 0; |$[$|d|$]_{na}$| := 0; |$[$|x|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rel}$| := 1;
-|$[$|x|$]_{rel}$| := 1;
-|$[$|f|$]_{rlx}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-repeat |$[$|f|$]_{acq}$| == 2 end;
-r1 := |$[$|d|$]_{na}$|;
-r2 := |$[$|x|$]_{rlx}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\na}{f}{0}; \writeInstParam{\na}{d}{0}; \writeInstParam{\na}{x}{0};$ \\
+  \begin{tabular}{L || L}
+    \writeInstParam{\na}{d}{5};  & \repeatInst{[f]_{\acq} == 2}; \\
+    \writeInstParam{\rel}{f}{1}; & \readInstParam{\na}{a}{d}\\
+    \writeInstParam{\rel}{x}{1}; & \readInstParam{\rlx}{b}{x}\\
+    \writeInstParam{\rlx}{f}{2}; & \\
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{MP\_con+na}{\tick}{Consume + NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 0}\\
-\lstinline{  r1 = 5}\\
+\[\begin{array}{l}
+b \in \{0, 5\} \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{con}$| := null; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rel}$| := d
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r0 := |$[$|f|$]_{con}$|;
-if r0 != null
-then r1 = |$[$|r0|$]_{na}$|
-else r1 = 0
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rlx}{f}{\nullPtr}; \writeInstParam{\na}{d}{0};$ \\
+  \begin{tabular}{L || L}
+    \writeInstParam{\na}{d}{5};  & \readInstParam{\con}{a}{f}; \\
+    \writeInstParam{\rel}{f}{d}; &
+      \begin{array}{@{}l}
+        \iteml{a \neq \nullPtr}
+        {\readInstParam{\na}{b}{a}}
+        {\assignInst{b}{0}} \\
+      \end{array}
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{MP\_con+na\_2}{\tick}{Consume + NA + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r2 = 0 /\ r3 = <0, 1>}\\
-\lstinline{  r2 = 5 /\ r3 = <0, 1>}\\
+\[\begin{array}{l}
+b \in \{0, 5\} \land c \in \{0, 1\} \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-|$[$|p|$]_{na}$| := null; |$[$|d|$]_{na}$| := 0; |$[$|x|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1;
-|$[$|d|$]_{na}$| := 1;
-|$[$|p|$]_{rel}$| := d
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|p|$]_{con}$|;
-if   r1 != null
-then r2 = |$[$|r1|$]_{na}$|;
-     r3 = |$[$|x|$]_{rlx}$|
-else r2 = 0; r3 = 0
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\na}{p}{\nullPtr}; \writeInstParam{\na}{d}{0};
+   \writeInstParam{\na}{x}{0};$ \\
+  \begin{tabular}{L || L}
+    \begin{array}{@{}l}
+      \writeInstParam{\rlx}{x}{1}; \\
+      \writeInstParam{\na}{d}{1}; \\
+      \writeInstParam{\rel}{p}{d}; \\
+    \end{array}
+    &
+    \begin{array}{@{}l}
+     \readInstParam{\con}{a}{p}; \\
+      \begin{array}{@{}l}
+        \iteml{a \neq \nullPtr}
+        {\readInstParam{\na}{b}{a}; \\
+         \readInstParam{\rlx}{c}{x}}
+        {\assignInst{b}{0}; \assignInst{c}{0}} \\
+      \end{array}
+    \end{array}
+
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{MP\_cas+rel+acq+na from \cite{Vafeiadis-Narayan:OOPSLA13}}{\tick}{NA + History + Viewfronts}
 \begin{minipage}[t]{0.2\linewidth}
 Impossible outcomes:\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+\kw{stuck}
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rlx}$| := 1; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l@{\ \ \ \ }||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5;
-|$[$|f|$]_{rel}$| := 0
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = cas|$_{acq,rlx}$|(f, 0, 1);
-if r1 == 0
-then |$[$|d|$]_{rlx}$| := 6
-else 0
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = cas|$_{acq,rlx}$|(f, 0, 1);
-if r2 == 0
-then |$[$|d|$]_{rlx}$| := 7
-else 0
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rlx}{f}{1}; \writeInstParam{\na}{d}{0};$ \\
+  \begin{tabular}{L || L || L}
+    \begin{array}{@{}l@{}}
+      \writeInstParam{\na}{d}{5}; \\
+      \writeInstParam{\rel}{f}{0}; \\
+    \end{array}
+    &
+    \begin{array}{@{}l@{}}
+      \casInstParam{\acq}{\rlx}{a}{f}{0}{1}; \\
+      \iteml{a == 0}
+      {\writeInstParam{\rlx}{d}{6}}
+      {0}
+    \end{array}
+    &
+    \begin{array}{@{}l@{}}
+      \casInstParam{\acq}{\rlx}{b}{f}{0}{1}; \\
+      \iteml{b == 0}
+      {\writeInstParam{\rlx}{d}{7}}
+      {0}
+    \end{array}
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{MP\_cas+rel+rlx+na}{\tick}{NA + History + Viewfronts}
 \begin{minipage}[t]{0.2\linewidth}
 Possible outcomes:\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+\kw{stuck}
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|f|$]_{rlx}$| := 1; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l}
-\begin{lstlisting}
-|$[$|d|$]_{na}$| := 5
-|$[$|f|$]_{rel}$| := 0;
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = cas|$_{rlx,rlx}$|(f, 0, 1);
-if r1 == 0
-then |$[$|d|$]_{rlx}$| := 6
-else 0
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = cas|$_{rlx,rlx}$|(f, 0, 1);
-if r2 == 0
-then |$[$|d|$]_{rlx}$| := 7
-else 0
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rlx}{f}{1}; \writeInstParam{\na}{d}{0};$ \\
+  \begin{tabular}{L || L || L}
+    \begin{array}{@{}l@{}}
+      \writeInstParam{\na}{d}{5}; \\
+      \writeInstParam{\rel}{f}{0}; \\
+    \end{array}
+    &
+    \begin{array}{@{}l@{}}
+      \casInstParam{\rlx}{\rlx}{a}{f}{0}{1}; \\
+      \iteml{a == 0}
+      {\writeInstParam{\rlx}{d}{6}}
+      {0}
+    \end{array}
+    &
+    \begin{array}{@{}l@{}}
+      \casInstParam{\rlx}{\rlx}{b}{f}{0}{1}; \\
+      \iteml{b == 0}
+      {\writeInstParam{\rlx}{d}{7}}
+      {0}
+    \end{array}
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \section{Coherence of Read-Read (CoRR)}
