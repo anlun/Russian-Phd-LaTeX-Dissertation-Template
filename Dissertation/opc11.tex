@@ -143,57 +143,35 @@ T1.\Rcur = [x@\tstamp{1}, y@\tstamp{1}] \quad T2.\Rcur = [\graybox{x@\tstamp{1}}
 Расслабленные ($\rlx$) записи также помещают некоторый фронт в соответствующие сообщения,
 но по более сложным правилам, которые будут описаны в разделе \ref{sec:opc11:fullmodel}.
 
-%% Этот фронт используется следующим образом.
-%% Сообщение, которое добавляется
-%% При высвобождающей ($\rel$) записи 
-%% Также у каждого потока появляется по два дополнительных фронта --- приобретающему и
-%% высвобождающему. Приобретающий фронт, также как и базовый, является функцией 
-
-%% На рис. \ref{fig:MPrelAcq} представлена сама программа и одни из сценариев поведения
-%% этой программы в рамках C/C++11 MM.
-%% \begin{figure}
-%%   \begin{minipage}{.4\textwidth}
-%% \begin{equation*}
-%% %% \tag{MP-rel-acq}
-%% \begin{tabular}{c}
-%%   $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
-%% \begin{tabular}{L || L}
-%%   \writeInstParam{\rlx}{x}{1}; & \readInstParam{\acq}{a}{y}; \\
-%%   \writeInstParam{\rel}{y}{1} & \readInstParam{\rlx}{b}{x} \\
-%% \end{tabular}
-%% \end{tabular}
-%% \end{equation*}
-%%   \end{minipage}
-%%   \begin{minipage}{.4\textwidth}
-%% \[
-%% \begin{tikzpicture}[yscale=1,xscale=1.8]
-%%   \node (01)  at (-2,3) {$p: \wlab{\na}{x}{0}$ };
-%%   \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
-%%   \node (1)  at (-2,1.5) {$r: \wlab{\rlx}{x}{1}$ };
-%%   \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
-%%   \node (11) at (0,1.5)  {$t: \rlab{\acq}{y}{1}$ };
-%%   \node (12) at (0,0)  {$u: \rlab{\rlx}{x}{1}$ };
-
-%%   \draw[po] (1)  edge  (2);
-%%   \draw[po] (11) edge (12);
-%%   \draw[po] (01) edge (11);
-%%   \draw[po] (02) edge (11);
-%%   %% \draw[hb] (01) edge node[right] {\small $\lHB$} (1);
-%%   \draw[po] (01) edge (1);
-%%   \draw[po] (02) edge  (1);
-%%   %% \draw[deps,bend left=20] (11)  edge node[right] {\small $\lDEPS$} (12);
-%%   \draw[sw,bend right=20] (2) edge node[below] {\small $\lSW$} (11);
-%%   \draw[rf] (2) edge node[above] {\small $\lRF$} (11);
-%%   \draw[rf] (1) edge node[below] {} (12);
-%%   \draw[mo,bend right=20] (01)  edge node[left] {\small $\lMO$} (1);
-%%   \draw[mo,bend right=90] (02)  edge node[above] {} (2); %{\small $\lCO$} (2);
-%% \end{tikzpicture}
-%% \]
-%%   \end{minipage}
-%% \caption{Программа ${\rm MP\text{-}rel\text{-}acq}$ и её сценарий исполнения в модели C/C++11}
-%% \label{fig:MPrelAcq}
-%% \end{figure}
-
+Рассмотрим сценарий поведения ${\rm MP\text{-}rel\text{-}acq}$, в котором $a = 1$, т.е. происходит синхронизация.
+После того, как выполнены две инициализирующие записи и запущены два потока, память и базовые фронты потоков
+выглядят следующим образом:
+\[
+\begin{array}{l}
+M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0},[y@\tstamp{0}]} \} \\
+T1.\Rcur = [x@\tstamp{0}, y@\tstamp{0}] \quad T2.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]
+\end{array}
+\]
+После исполнения двух записей (левым) потоком $T1$, в память попадает два новых сообщения, одно из которых
+было сделано высвобождающей записью:
+\[
+\begin{array}{l}
+M = \{
+\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0},[y@\tstamp{0}]}, \\
+\qquad \angled{x:1@\tstamp{1}, [x@\tstamp{1}]}, \angled{y:1@\tstamp{1},\graybox{[x@\tstamp{1},y@\tstamp{1}]}}
+ \} \\
+T1.\Rcur = [x@\tstamp{1}, y@\tstamp{1}] \quad T2.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]
+\end{array}
+\]
+После того, как (правый) поток выполняет приобретающее чтение из сообщения 
+$\angled{y:1@\tstamp{1},[x@\tstamp{1},y@\tstamp{1}]}$, его базовый фронт увеличивается по обоим компонентам.
+\[
+\begin{array}{l}
+T2.\Rcur = [\graybox{x@\tstamp{1}}, y@\tstamp{1}]
+\end{array}
+\]
+После этого (правый) поток $T2$ не может прочитать старое сообщение $\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}$.
+Таким образом модель $\OpCpp$ запрещает результат $[a = 1, b = 0]$ для программы ${\rm MP\text{-}rel\text{-}acq}$.
 
 \subsection{Спекулятивное исполнение. Операционные буферы}
 
