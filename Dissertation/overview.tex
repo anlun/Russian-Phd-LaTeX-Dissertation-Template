@@ -592,21 +592,21 @@ $\lHB = (\lPO \cup \lSW)^{+}$).
 является частью гонки по данным, то программа имеет неопределенное поведение в C/C++11 MM.
 Приобретающее чтение и высвобождающая запись могут быть использованы для того,
 чтобы запретить результат $a = 1, b = 0$ в версии программы, аналогично синхронизирующим
-обращениям в случае JMM (см. рис. \ref{fig:MPrelAcq}).
-\begin{figure}
+обращениям в случае JMM: %(см. рис. \ref{fig:MPrelAcq}).
+%% \begin{figure}
 \begin{equation*}
 \label{ex:MPrelAcq}
 \begin{tabular}{c}
-  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L L}
   \writeInstParam{\rlx}{x}{1}; & \readInstParam{\acq}{a}{y}; & \valuefail{1} \\
   \writeInstParam{\rel}{y}{1} & \readInstParam{\rlx}{b}{x} & \valuefail{0} \\
 \end{tabular}
 \end{tabular}
 \end{equation*}
-\caption{Программа ${\rm MP\text{-}rel\text{-}acq}$}
-\label{fig:MPrelAcq}
-\end{figure}
+%% \caption{Программа ${\rm MP\text{-}rel\text{-}acq}$}
+%% \label{fig:MPrelAcq}
+%% \end{figure}
 При этом, в отличие от синхронизирующих обращений JMM и $\sco$-обращений C/C++11 MM,
 на высвобождающих и приобретающих событиях не существует тотального порядка,
 обязательно учитывающего программный порядок, и, как следствие, следующая программа,
@@ -694,8 +694,8 @@ $\lPO$ и $\lSW$ в отсутствии $\con$-чтений (с ними опр
 В частности, среди предзапусков программы ${\rm MP\text{-}rel\text{-}acq}$ будет следующий граф:
 \[
 \begin{tikzpicture}[yscale=1,xscale=1.8]
-  \node (01)  at (-2,2) {$p: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,2) {$q: \wlab{\na}{y}{0}$ };
+  \node (01)  at (-2,2) {$p: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,2) {$q: \wlab{\rlx}{y}{0}$ };
   \node (1)  at (-2,1) {$r: \wlab{\rlx}{x}{1}$ };
   \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
   \node (11) at (0,1)  {$t: \rlab{\acq}{y}{5}$ };
@@ -724,8 +724,8 @@ $\lPO$ и $\lSW$ в отсутствии $\con$-чтений (с ними опр
 есть следующий сценарий поведения (некоторые ребра опушены):
 \[
 \begin{tikzpicture}[yscale=1,xscale=1.8]
-  \node (01)  at (-2,3) {$p: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
+  \node (01)  at (-2,3) {$p: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {$q: \wlab{\rlx}{y}{0}$ };
   \node (1)  at (-2,1.5) {$r: \wlab{\rlx}{x}{1}$ };
   \node (2)  at (-2,0) {$s: \wlab{\rel}{y}{1}$ };
   \node (11) at (0,1.5)  {$t: \rlab{\acq}{y}{1}$ };
@@ -763,8 +763,8 @@ $$
 \begin{figure}
   \begin{tabular}{c c c}
 \begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\na}{y}{0}$ };
+  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\rlx}{y}{0}$ };
   \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \wlab{\rlx}{x}{1}$ };
   \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rel}{y}{1}$ };
   \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\acq}{y}{0}$ };
@@ -787,8 +787,8 @@ $$
 \end{tikzpicture}
  &
 \begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\na}{y}{0}$ };
+  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\rlx}{y}{0}$ };
   \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \wlab{\rlx}{x}{1}$ };
   \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rel}{y}{1}$ };
   \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\acq}{y}{0}$ };
@@ -808,8 +808,8 @@ $$
 \end{tikzpicture}
  &
 \begin{tikzpicture}[yscale=1,xscale=1]
-  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\na}{y}{0}$ };
+  \node (01)  at (-2.5,3) {\smallLabelFont $p: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {\smallLabelFont$q: \wlab{\rlx}{y}{0}$ };
   \node (1)  at (-2.5,1.5) {\smallLabelFont$r: \wlab{\rlx}{x}{1}$ };
   \node (2)  at (-2.5,0) {\smallLabelFont$s: \wlab{\rel}{y}{1}$ };
   \node (11) at (0,1.5)  {\smallLabelFont$t: \rlab{\acq}{y}{1}$ };
@@ -839,7 +839,7 @@ $$
 \begin{equation*}
 \tag{IF-OOTA-rlx}
 \begin{tabular}{c}
-  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
   \readInstParam{\rlx}{a}{x}; & \readInstParam{\rlx}{b}{y}; \\
   \begin{array}{@{}l@{}}
@@ -854,8 +854,8 @@ $$
 Одним из корректных сценариев поведения этой программы в C/C++ MM является следующий граф,
 \[
 \begin{tikzpicture}[yscale=1,xscale=1.8]
-  \node (01)  at (-2.5,3) {$p: \wlab{\na}{x}{0}$ };
-  \node (02)  at (0,3) {$q: \wlab{\na}{y}{0}$ };
+  \node (01)  at (-2.5,3) {$p: \wlab{\rlx}{x}{0}$ };
+  \node (02)  at (0,3) {$q: \wlab{\rlx}{y}{0}$ };
   \node (1)  at (-2.5,1.5) {$r: \rlab{\rlx}{x}{1}$ };
   \node (2)  at (-2.5,0) {$s: \wlab{\rlx}{y}{1}$ };
   \node (11) at (0,1.5)  {$t: \rlab{\rlx}{y}{1}$ };
@@ -896,7 +896,7 @@ $$
 \begin{equation*}
 \tag{IF-notOOTA-rlx}
 \begin{tabular}{c}
-  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
   \readInstParam{\rlx}{a}{x}; & \readInstParam{\rlx}{b}{y}; \\
   \begin{array}{@{}l@{}}
@@ -917,7 +917,7 @@ $$
 \begin{equation*}
 \tag{IF-notOOTA-optimized}
 \begin{tabular}{c}
-  $\writeInstParam{\na}{x}{0}; \writeInstParam{\na}{y}{0};$ \\
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
   \writeInstParam{\rlx}{y}{1}; & \readInstParam{\rlx}{b}{y}; \\
   \readInstParam{\rlx}{a}{x}
