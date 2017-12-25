@@ -174,6 +174,24 @@ T2.\Rcur = [\graybox{x@\tstamp{1}}, y@\tstamp{1}]
 Таким образом модель $\OpCpp$ запрещает результат $[a = 1, b = 0]$ для программы ${\rm MP\text{-}rel\text{-}acq}$.
 
 \subsection{Спекулятивное исполнение. Операционные буферы}
+Тем не менее, не все слабые сценарии поведения программ, наблюдаемые в модели C/C++11, могут быть описаны
+приведенными выше механизмами.
+Одной из таких программ является программа ${\rm LB\text{-}rlx}$ (load buffering, буферизация записи):
+\begin{equation*}
+\tag{LB-rlx}\label{ex:LBrlx}
+\begin{tabular}{c}
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+\begin{tabular}{L || L}
+  \readInstParam{\rlx}{a}{x}; & \readInstParam{\rlx}{b}{y}; \\
+  \writeInstParam{\rlx}{y}{1} & \writeInstParam{\rlx}{x}{1} \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+Модель памяти C/C++11 разрешает сценарий поведения этой программы с результатом $[a = 1, b = 1]$.
+Такой результат требует, чтобы в момент исполнения инструкции $\readInstParam{\rlx}{a}{x}$
+запись, соответствующая инструкции $\writeInstParam{\rlx}{x}{1}$, и аналогично для пары инструкций
+$\readInstParam{\rlx}{b}{y}$ и $\writeInstParam{\rlx}{y}{1}$.
+Таким образом, хотя бы в одном из потоков инструкция записи должна быть исполнена раньше чтения.
 
 \section{Полная модель}
 \label{sec:opc11:fullmodel}
