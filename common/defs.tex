@@ -60,6 +60,7 @@
 \newcommand{\kw}[1]{\textbf{\textcode{#1}}}
 \newcommand{\skipc}{\kw{skip}}
 \newcommand{\ite}[3]{\kw{if}\;#1\:\kw{then}\;#2\;\\ \kw{else}\;#3\;\kw{fi}}
+\newcommand{\itesl}[3]{\kw{if}\;#1\:\kw{then}\;#2\;\kw{else}\;#3\;\kw{fi}}
 \newcommand{\iteml}[3]{
   \kw{if} \; #1\\
   \begin{array}[t]{@{}l@{}l}
@@ -89,7 +90,7 @@
 %% \renewcommand{\comment}[1]{\color{teal}{~~\texttt{/\!\!/}\textit{#1}}}
 
 
-\newcommand{\set}[1]{\{{#1}\}}
+%% \newcommand{\set}[1]{\{{#1}\}}
 \newcommand{\sem}[1]{\llbracket #1 \rrbracket}
 \newcommand{\pfn}{\rightharpoonup}
 \newcommand{\suchthat}{\; | \;}
@@ -167,6 +168,7 @@
 \newcommand{\acq}{{\mathtt{acq}}}
 \newcommand{\con}{{\mathtt{con}}}
 \newcommand{\acqrel}{{\mathtt{acqrel}}}
+\newcommand{\relAcq}{\acqrel}
 \newcommand{\sco}{{\mathtt{sc}}}
 \newcommand{\sto}{{\mathtt{st}}}
 \newcommand{\full}{{\mathtt{sy}}}
@@ -286,7 +288,7 @@
 
 \newcommand{\reorder}[1]{\mathsf{Reorder}({#1})}
 %\newcommand{\deorder}[1]{\mathsf{Deorder}({#1})}
-\newcommand{\remove}[1]{\mathsf{RemoveWR}({#1})}
+%% \newcommand{\remove}[1]{\mathsf{RemoveWR}({#1})}
 \newcommand{\reorderWR}[1]{\mathsf{ReorderWR}({#1})}
 
 \newcommand{\travConfigStep}{\rightarrow_{\rm TC}}
@@ -468,7 +470,8 @@
 \newcommand{\IssuedToMemory}{\textup{\sf mem}}
 \newcommand{\ExclIssuedToMemory}{\textup{\sf excl-mem}}
 
-\newcommand{\readInst }[3][\ExclReadType]{#2 \;:=_{\excl{#1}}\;[#3]}
+\newcommand{\readInst}[3][\ExclReadType]{#2 \;:=_{\excl{#1}}\;[#3]}
+\newcommand{\readExpr}[2]{[#2]_{#1}}
 \newcommand{\fenceInst}[1]{\fence{#1}}
 \newcommand{\dmbSY}{\fenceInst{\SY}}
 \newcommand{\dmbLD}{\fenceInst{\LD}}
@@ -766,7 +769,7 @@
   \newcommand\cpathSY{\cpath^{\SY}}
   \newcommand\cpathLD{\cpath^{\LD}}
   \newcommand\cpathLDSY{\cpath^{\LD\SY}}
-  \newcommand\Path{Path}
+  %% \newcommand\Path{Path}
   
   \newcommand\tapeRead[1]{\textsf{R} \; #1}
   \newcommand\tapeFence[2]{\textsf{F} \; #1 \; #2}
@@ -795,7 +798,7 @@
   \newcommand\stval{\mathit{val}}
   \newcommand\Stval{\mathit{Val}}
   \newcommand\expr{\mathit{expr}}
-  \newcommand\Expr{\mathit{Expr}}
+  %% \newcommand\Expr{\mathit{Expr}}
   \newcommand\z{\mathit{k}}
 
   \newcommand\dmb{\textsf{dmb}}
@@ -1113,6 +1116,71 @@
 \newcommand{\nullPtr}{\kw{null}}
 \newcommand{\funcSt}[1]{{\rm #1}}
 
+\newcommand{\vName}{\mathsf{x}}
+\newcommand{\op}{{\rm op}}
+\newcommand{\Number}{\mathbb{Z}}
+\newcommand{\Choice}[2]{\kw{choice}#1~#2}
+\newcommand{\First}[1]{\kw{fst}~#1}
+\newcommand{\Second}[1]{\kw{snd}~#1}
+\newcommand{\EvalContext}{\mathsf{E}}
+\newcommand{\EvalSpecContext}{\mathsf{E}\alpha}
+\newcommand{\EvalEUContext}{\mathsf{EU}}
+\newcommand{\Pair}[2]{(#1,~#2)}
+
+\newcommand{\locVar}{\iota}
+
+\newcommand{\mval}{\mu}
+%\newcommand{\mvalSubst}{\mu^{\text{\scriptsize{\texttt{subst}}}}}
+\newcommand{\mvalSubst}{\text{\emph{v}}}
+\newcommand{\stMu}{\mu}
+\newcommand{\StMu}{M}
+
+%% \newcommand{\stEta}{\eta}
+\newcommand{\stEta}{M}
+\newcommand{\stEtaLoc}{\eta^{\text{\scriptsize{\texttt{loc}}}}}
+\newcommand{\stPsi}{\psi}
+\newcommand{\stPsiRead}{\psi^{\text{\scriptsize{\texttt{rd}}}}}
+\newcommand{\stPsiWrite}{\psi^{\text{\scriptsize{\texttt{wr}}}}}
+\newcommand{\Path}{\text{\textsf{path}}}
+\newcommand{\stpath}{\pi}
+\newcommand{\Stpath}{\Pi}
+
+\newcommand{\AppendAlpha}{\text{\textsf{append}}}
+\newcommand{\AppendGraph}{\text{\textsf{addToGraph}}}
+\newcommand{\updateDep}{\text{\textsf{updateDep}}}
+\newcommand{\updateSync}{\text{\textsf{updateSync}}}
+\newcommand{\promote}{\text{\textsf{promote}}}
+\newcommand{\remove}{\text{\textsf{remove}}}
+
+\newcommand{\stIota}{\iota}
+\newcommand{\StIota}{I}
+
+\newcommand{\dd}[1]{dd(#1)}
+\newcommand{\annotateDD}[4]{\text{\textsf{annotate}}(#1,~#2,~#3,~#4)}
+\newcommand{\annotateF}{\text{\textsf{annotate}}()}
+
+\newcommand{\stSigma}{\R}
+\newcommand{\stSigmaDD}{\sigma^{\text{\scriptsize{\texttt{dd}}}}}
+\newcommand{\StSigma}{\Sigma}
+\newcommand{\stSC}{\sigma^{\text{\scriptsize{\texttt{sc}}}}}
+\newcommand{\stNA}{\sigma^{\text{\scriptsize{\texttt{na}}}}}
+%% \newcommand{\stSigmaRead}{\sigma_{\text{\scriptsize{\texttt{rd}}}}}
+\newcommand{\stSigmaWrite}{\sigma_{\text{\scriptsize{\texttt{wr}}}}}
+\newcommand{\stSigmaWriteNew}{\sigma'_{\text{\scriptsize{\texttt{wr}}}}}
+\newcommand{\stSigmaSync}{\sigma_{\text{\scriptsize{\texttt{sync}}}}}
+\newcommand{\stSigmaEmpty}{()}
+
+\newcommand{\stSigmaRead}{\R_{\text{\scriptsize{\texttt{rd}}}}}
+
+\newcommand{\stTau}{\tau} 
+\newcommand{\StTau}{T} 
+
+\newcommand{\writeDefVal}{0}
+\newcommand{\NextTau}[2]{Next\stTau(#1, #2)}
+\newcommand{\lastt}{\text{\textsf{LastTS}}}
+\newcommand{\LastTau}[2]{\lastt(#1, #2)}
+\newcommand{\cellHistory}{}
+
 \newcommand{\stPhi}{\phi} 
 \newcommand{\stAlpha}{\alpha}
 \newcommand{\stGamma}{\gamma} 
@@ -1121,5 +1189,64 @@
 \newcommand{\stObservedWrites}{\omega}
 % Shortcuts
 \newcommand{\arrayBlock}[1]{\begin{array}{c}#1\end{array}}
+\newcommand{\auxX}{\xi}
 
-\newcommand{\vName}{\mathsf{x}}
+\newcommand{\AST}{\mathsf{s}}
+\newcommand{\RT}{\AST_{\text{\textsf{RT}}}}
+\newcommand{\Expr}{\mathsf{e}}
+
+\newcommand{\RM}{\mathsf{RM}}
+\newcommand{\RMrlx}{\mathsf{rlx}}
+\newcommand{\WM}{\mathsf{WM}}
+\newcommand{\SM}{\mathsf{SM}}
+\newcommand{\FM}{\mathsf{FM}}
+
+\newcommand{\casWord}{\kw{cas}}
+
+\newcommand{\ReadRM}{\mathsf{Read}_{\text{\scriptsize{\texttt{RM}}}}}
+\newcommand{\ReadAcq}{\mathsf{Read}_{\text{\scriptsize{\texttt{acq}}}}}
+\newcommand{\ReadNa}{\mathsf{Read}_{\text{\scriptsize{\texttt{na}}}}}
+\newcommand{\WriteWM}{\mathsf{Write}_{\text{\scriptsize{\texttt{WM}}}}}
+\newcommand{\WriteRel}{\mathsf{Write}_{\text{\scriptsize{\texttt{rel}}}}}
+\newcommand{\WriteNa}{\mathsf{Write}_{\text{\scriptsize{\texttt{na}}}}}
+\newcommand{\CasSMFM}{\casWord_{\text{\scriptsize{\texttt{SM, FM}}}}}
+
+%% \newcommand{\Write}[3]{[#2]_{\mathsf{#1}} := #3}
+%% \newcommand{\Read}[2]{[#2]_{\mathsf{#1}}}
+%% \newcommand{\ReadF}[3]{[#2]_{\mathsf{#1,~#3}}}
+\newcommand{\Cas}[5]{\casWord_{\mathsf{#1}, \mathsf{#2}}(#3, #4, #5)}
+\newcommand{\CasF}[6]{\casWord_{\mathsf{#1}, \mathsf{#2}, \mathsf{#6}}(#3, #4, #5)}
+
+\newcommand{\lstmath}[1]{\text{\lstinline{#1}}}
+
+\newcommand{\Ret}[1]{#1}
+
+\newcommand{\hole}{[~]}
+\newcommand{\IfThenElse}[3]{\itesl{#1}{#2}{#3}}
+\newcommand{\Repeat}[1]{\repeatInst{#1}}
+\newcommand{\Par}[2]{\kw{par}~#1~#2}
+\newcommand{\Spw}[2]{\kw{spw}~#1~#2}
+%% \newcommand{\Spw}[2]{#1~\|~#2}
+%% \newcommand{\Bind}[3]{#1~\leftarrow~#2;~#3}
+\newcommand{\Bind}[3]{{#1} := {#2};~{#3}}
+\newcommand{\Continuation}{\mathsf{K}}
+\newcommand{\ContinuationBody}[2]{\lambda~#1~#2}
+\newcommand{\Stuck}{\kw{stuck}}
+
+%% \newcommand{\seqCstM}{\lstmath{sc}}
+%% \newcommand{\relAcqM}{\lstmath{relAcq}}
+%% \newcommand{\relM}{\lstmath{rel}}
+%% \newcommand{\acqM}{\lstmath{acq}}
+%% \newcommand{\rlxM}{\lstmath{rlx}}
+%% \newcommand{\naM}{\lstmath{na}}
+%% \newcommand{\conM}{\lstmath{con}}
+
+\newcommand{\spawn}[2]{\text{\textsf{spawn}}(#1,~#2)}
+\newcommand{\joinP}[2]{\text{\textsf{join}}(#1,~#2)}
+
+% syntactic substitution of #1 for #2 in #3
+\newcommand{\subst}[2]{[#1/#2]}
+\newcommand{\mapto}[2]{#1 \to #2}
+\newcommand{\evalsto}{\hookrightarrow}
+
+\newcommand{\prarrow}{\rightharpoonup}

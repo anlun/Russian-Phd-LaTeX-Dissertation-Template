@@ -426,7 +426,7 @@ $\na$-записи в $\loc$ (т.е. его базовый фронт по $\loc
     \iteml{a \neq \nullPtr}
           {\readInstParam{\na}{b}{a}; \\
            \readInstParam{\rlx}{c}{x}}
-          {\assignInst{b}{0}; \\ \assignInst{c}{0};}
+          {\assignInst{b}{0}; \\ \assignInst{c}{0}}
   \end{array}
 \end{tabular}
 \end{tabular}
@@ -639,7 +639,291 @@ $[\loc'@\tau']$, где $\loc'$ и $\tau'$ связаны с сообщение�
 
 \section{Формальное определение модели}
 \label{sec:opc11:formal}
-В разделе приводится математическое определение операционной модели C/C++11.
+В разделе приводится математическое определение операционной модели C/C++11,
+начиная с определения синтаксиса языка, для которого задана модель,
+представления памяти и фронтов.
+
+\subsection{Синтаксис языка модели и базовые правила редукции}
+Синтаксис языка модели представлен на рис. \ref{fig:opc11:syntax}.
+Мета-переменная $\Expr$ представляет выражения, которые могут быть
+целыми числами $z$, локациями $\loc$, неизменяемыми локальными
+переменными $\vName$, парами, проекциями пар или бинарными выражениями.
+Конструкция $\kw{choice}$ является недетерминированным выбором между двумя
+выражениями.
+
+\begin{figure}%[t]\small
+\[\begin{array}{rcl}
+   %% \multicolumn{3}{c}{\text{\textbf{Statements and Expressions}}} 
+   %% \\[3pt] 
+\Expr   & ::= & \vName \mid z~(\in \Number) \mid \Expr_{1}~\op~\Expr_{2}
+                \mid \Choice~\Expr_{1}~\Expr_{2} \\
+        &     & \First{\Expr} \mid \Second{\Expr} \mid \Pair{\Expr_{1}}{\Expr_{2}} \mid \locVar\\
+\op     & ::= & + \mid - \mid * \mid / \mid \% \mid \texttt{==} \mid \neq \\
+\locVar & ::= & \loc \mid \vName \\
+\loc    & \text{---} & \text{идентификатор локации} \\
+\vName  & \text{---} & \text{локальная переменная} \\ 
+\mvalSubst & ::= & \loc \mid z \mid \Pair{\mvalSubst_{1}}{\mvalSubst_{2}} \\  
+\\
+\AST & ::=  & \Ret{\Expr} \mid\Bind{\vName}{\AST_{1}}{\AST_{2}} \mid
+              \Spw{\AST_{1}}{\AST_{2}}  \mid\\
+     &      & \itesl{\Expr}{\AST_{1}}{\AST_{2}} \mid
+              \repeatInst{\AST} \mid \\
+     &      & \readExpr{\RM}{\locVar} \mid
+              \writeInstParam{\WM}{\locVar}{\Expr} 
+              \mid \Cas{SM}{FM}{\locVar}{\Expr_{1}}{\Expr_{2}} \\
+\RT & ::=  & \Stuck \mid \Par{\AST_{1}}{\AST_{2}}\\
+% \\
+% \auxX   & \text{---} & \text{a generic state (to be defined)}\\ 
+              \\
+\RM   & ::= & \sco \mid \acq \mid \con \mid \rlx \mid \na \\
+\WM   & ::= & \sco \mid \rel \mid \rlx \mid \na \\
+\SM   & ::= & \sco \mid \relAcq \mid \rel \mid \acq \mid \con \mid \rlx \\
+\FM   & ::= & \sco \mid \acq \mid \con \mid \rlx
+\end{array}\]
+\caption{Синтаксис операций и выражений языка модели $\OpCpp$}
+\label{fig:opc11:syntax}
+\end{figure}
+
+Программы представляются как операторы $\AST$, где $\Bind{\vName}{\AST_{1}}{\AST_{2}}$ --- это let-выражение,
+$\Spw{\AST_{1}}{\AST_{2}}$ --- параллельная композиция потоков,
+$\readExpr{\RM}{\locVar}$ --- выражение, читающее из памяти.
+В наших примерах мы также используем $\skipc$ как альтернативное представление константного выражения $0$;
+$\readInstParam{\RM}{\vName}{\locVar}$ и $\assignInst{\vName}{\Expr}$ для обозначения
+$\Bind{\vName}{\readExpr{\RM}{\locVar}}{\Ret{\vName}}$ и $\Bind{\vName}{\Expr}{\Ret{\vName}}$;
+$\AST_{1}; \AST_{2}$ вместо $\Bind{\vName'}{\AST_{1}}{\AST_{2}}$, где $\vName'$ не встречается в $\AST_{2}$;
+а также $\AST_{1} {\sf ||} \AST_{2}$ для обозначения $\Spw{\AST_{1}}{\AST_{2}}$.
+
+Результатом полностью вычисленной программы является либо значение $\mvalSubst$,
+либо значение времени исполнения (run-time value) $\Stuck$, которое символизирует, что-то пошло не так ---
+в исполнении найдена гонка по данным, или была попытка чтения из неинициализированной переменной.
+Другой конструкцией времени исполнения является $\Par{\AST_{1}}{\AST_{2}}$, которая получается
+в результате редукции $\Spw{\AST_{1}}{\AST_{2}}$ и представляет находящиеся в исполнении потоки.
+На шаге операционной семантики, который редуцирует $\Spw{\AST_{1}}{\AST_{2}}$ в $\Par{\AST_{1}}{\AST_{2}}$,
+происходит необходимая инициализация компонент машины $\OpCpp$.
+
+Мета-переменная $\auxX$ представляет динамическое состояние машины с точностью до программы; оно описано ниже.
+Вычисление программы $\AST$ в машине $\OpCpp$ начинается со стартового состояния $\angled{\AST, \auxX_{init}}$,
+где $\auxX_{init}$ содержит пустую память и пустой базовый фронт для единственного стартового потока.
+Переходы машины заданы в редукционном стиле \cite{Felleisen-Hieb:TCS92}, и большинство из них имеют
+следующую форму:
+\begin{mathpar}
+\inferrule{
+  \dots
+}
+{{\tup{\EvalContext[\AST], \auxX}}  \astep{}
+ {\tup{\EvalContext[\AST'], \auxX'}}}
+\end{mathpar}
+где $\EvalContext$ --- это \emph{редукционный контекст}, заданный так: 
+%
+{
+\[\begin{array}{rcl}
+   %% \multicolumn{3}{c}{\text{\textbf{Evaluation contexts}}} 
+   %% \\[3pt]
+\EvalContext   & ::= & \hole
+                         \mid \Bind{\vName}{\EvalContext}{\AST}  \mid \Par{\EvalContext}{\AST}
+                       \mid \Par{\AST}{\EvalContext}. \\  
+%% \EvalEUContext & ::= & \hole \mid (\EvalEUContext) \mid
+%%                          \EvalEUContext~\op~\Expr \mid
+%%                          \Expr~\op~\EvalEUContext \\
+%%                &     &   \mid \Pair{\mval}{\EvalEUContext}
+%%                          \mid \Pair{\EvalEUContext}{\mval} \\ 
+%%                &     &   \mid \First{\EvalEUContext}
+%%                          \mid \Second{\EvalEUContext} \\ 
+%%                &     &   \mid \Choice{~\EvalEUContext}{\Expr} \mid
+%%                          \Choice{~\Expr}{\EvalEUContext} \\
+%%                &     &   \mid \Bind{\vName}{\EvalEUContext}{\AST} \\
+%%                &     &   \mid \IfThenElse{\EvalEUContext}{\AST_{1}}{\AST_{2}} \\
+%%                &     &   \mid \Write{\WM}{\locVar}{\EvalEUContext} \\
+%%                &     &   \mid \Cas{SM}{FM}{\locVar}{\EvalEUContext}{\mval}
+%%                          \mid \Cas{SM}{FM}{\locVar}{\mval}{\EvalEUContext} \\
+\end{array}\]
+}
+Если в момент исполнения программы запущено более одного потока, т.е. в программном выражении
+присутствует узел $\kw{par}$, то программное выражение может быть разбито на пару контекст и подпрограмма
+недетерминированно несколькими способами.
+
+\begin{figure*}
+\begin{mathpar}
+\inferrule[Subst]{\quad
+}
+{
+\angled{\EvalContext[\Bind{\vName}{\Ret{\mvalSubst}}{\AST}], \auxX} 
+ \astep{}
+\angled{\EvalContext[\AST\subst{\vName}{\mvalSubst}], \auxX}
+} \\
+
+\inferrule[If-False]{\quad}
+{
+ \angled{\EvalContext[\itesl{0}{\AST_{1}}{\AST_{2}}], \auxX}
+ \astep{}
+ \angled{\EvalContext[\AST_{2}]], \auxX}
+} \\
+\inferrule[If-True]{n \neq 0}
+{
+ \angled{\EvalContext[\itesl{n}{\AST_{1}}{\AST_{2}}], \auxX}
+ \astep{}
+ \angled{\EvalContext[\AST_{1}]], \auxX}
+} \\
+
+\inferrule[Repeat-Unroll]{
+  \vName \text{ -- новая переменная}
+}
+{
+ \angled{\EvalContext[\Repeat{\AST}], \auxX}
+ \astep{} \\
+ \quad \angled{\EvalContext[\Bind{\vName}{\AST}
+                 {\IfThenElse{\vName}{\Ret{\vName}}
+                              {\Repeat{\AST}}}],
+            \auxX}
+} \\
+
+\inferrule[Spawn]{
+\auxX' = \spawn{\EvalContext}{\auxX}}
+{
+\angled{\EvalContext[\Spw{\AST_{1}}{\AST_{2}}], \auxX}
+ \astep{}
+\angled{\EvalContext[\Par{\AST_{1}}{\AST_{2}}], \auxX'}
+} \and
+
+\inferrule[Join]{
+\auxX' = \joinP{\EvalContext}{\auxX}
+}{
+\angled{\EvalContext[\Par{\Ret{\mvalSubst_{1}}}{\Ret{\mvalSubst_{2}}}], \auxX}
+ \astep{}
+\angled{\EvalContext[\Ret{\Pair{\mvalSubst_{1}}{\mvalSubst_{2}}}], \auxX'}
+} \\
+
+\inferrule[Choice-Fst]{\quad
+}{
+  \angled{\EvalContext[\EvalEUContext[\Choice{~\Expr_{1}}{\Expr_{2}}]], \auxX} \astep{} %\\
+  \angled{\EvalContext[\EvalEUContext[\Expr_{1}]], \auxX}
+} \\
+
+\inferrule[Choice-Snd]{\quad
+}{
+  \angled{\EvalContext[\EvalEUContext[\Choice{~\Expr_{1}}{\Expr_{2}}]], \auxX} \astep{} %\\
+  \angled{\EvalContext[\EvalEUContext[\Expr_{2}]], \auxX}
+} \\
+\end{mathpar}
+\caption{Базовые правила модели $\OpCpp$}
+\label{fig:opc11:baseSem}
+\end{figure*}
+Базовые правила семантики, которые не затрагивают операций над памятью, приведены на рисунке \ref{fig:opc11:baseSem}.
+Из них интерес представляют правила ${\rm Spawn}$ и ${\rm Join}$, которые описывают старт и соединение дочерних
+потоков соответственно. Эти правила модифицируют компоненты состояния машины $\OpCpp$, которые являются локальными для
+потоков, например, базовый фронт и операционный буфер.
+Конкретные представления правил ${\rm Spawn}$ и ${\rm Join}$ зависят от многопоточных аспектов модели,
+которые определяют мета-функции ${\sf spawn}$ и ${\sf join}$.
+
+\subsection{Представление памяти и фронтов}
+В самом базовом представлении состояние $\auxX$ машины $\OpCpp$ включает в себя память $M$ и функцию
+$\stPsiRead$, которая по идентификатору потока $\stpath$ возвращает его базовый фронт
+(см. рис. \ref{fig:auxXrelAcq}).
+
+\begin{figure}
+\[\begin{array}{l r c l}
+\text{Состояние} & \auxX      & ::= & \angled{\stEta, \stPsiRead} \\
+\text{Память} &\stEta     & ::= & (\loc, \stTau) \prarrow \angled{\mvalSubst, \stSigma}\\ 
+%% \stEtaLoc  & ::= & \stTau \prarrow \angled{\mvalSubst, \stSigma}\\
+\text{Функция базового фронта} & \stPsiRead & ::= & \stpath \prarrow \stSigma\\
+\text{Фронт} & \stSigma   & ::= & \loc \prarrow \stTau\\
+\text{Идентификатор потока} & \stpath    & \text{---} & (l|r)^{*}\\
+\text{Метка времени} & \stTau \in \mathbb{N}   & \text{---} & \text{timestamp}
+\end{array}\]
+\caption{Базовое состояние машины $\OpCpp$}
+\label{fig:auxXrelAcq}
+\end{figure}
+
+Память $\stEta$ это частичная функция, которая по локации и метке времени возвращает
+пару сохраненное значение и синхронизационный фронт.
+Разные аспекты модели используют фронты по-разному, но каждый фронт является частичной
+функцией, которая по локации возвращает некоторую метку времени.
+Функция базового фронта возвращает базовый фронт потока по его идентификатору $\stpath$,
+где идентификатор потока --- это список направлений лево (l) / право (r), который показывает,
+как найти подвыражение потока во всем выражении программы, проходя по вершинам $\kw{par}$.
+Это путь уникально идентифицирует поток.
+Для вычисления пути по редукционному контексту мы используем вспомогательную функцию $\textsf{path}$.
+
+Стартующие дочерние потоки наследуют базовый фронт родительского потока, что
+в терминах самой простой версии функции ${\sf spawn}$ определяется следующим образом:
+%
+\[
+\spawn{\EvalContext}{\angled{\stEta,\stPsiRead}} \triangleq
+\angled{\stEta, \stPsiRead
+[\stpath\:l \mapsto \stSigmaRead,~\stpath\:r \mapsto \stSigmaRead]},
+\]
+где $\stpath = {\sf path}(\EvalContext)$ и $\stSigmaRead = \stPsiRead(\stpath)$.
+Когда потоки соединяются, базовый фронт их родительского потока становится покомпонентным
+максимумом базовых фронтов дочерних потоков:
+\[
+\joinP{\EvalContext}{\angled{\AST,\stPsiRead}} =
+\angled{\AST, \stPsiRead[\stpath \mapsto \stSigmaRead^{l} \sqcup \stSigmaRead^{r}]},
+\]
+%
+где $\stpath = \Path(\EvalContext)$,
+$\stSigmaRead^{l} = \stPsiRead(\stpath\:l)$ и
+$\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[Read-Uninit]{
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad
+  \stSigmaRead = \stPsiRead(\stpath) \quad \stSigmaRead(\loc) = \bot
+  }{
+\angled{\EvalContext[\readExpr{\RM}{\loc}], \auxX} \astep{} 
+\angled{\Stuck, \auxX_{init}}
+  }\\
+
+  \inferrule[CAS-Uninit]{
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) 
+  \quad
+  \stSigmaRead = \stPsiRead(\stpath) \quad \stSigmaRead(\loc) = \bot
+  }{
+  \angled{\EvalContext[\Cas{\SM}{\FM}{\loc}{\Expr_{1}}{\Expr_{2}}], \auxX} \astep{} 
+  \angled{\Stuck, \auxX_{init}}
+  }
+\end{mathpar}
+\caption{Правила чтения из неинициализированной локации}
+\label{fig:uninit-stuckRules}
+\end{figure}
+
+Далее мы определяем первый набор правил о ``плохих'' сценариях поведения ---
+чтение из неинициализированной локации (см. рис. \ref{fig:uninit-stuckRules}).
+Эти правила срабатывают в том случае, если поток, пытающийся прочитать значение из локации $\loc$,
+не осведомлен ни об одной записи в неё, т.е. его базовый фронт не определён для $\loc$.
+Как частный случай, правила применимы, если в локацию не было сделано ни одной записи в принципе.
+
+\subsection{Высвобождающие и приобретающие операции}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[WriteRel]{
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad
+  \stTau = \NextTau{\stEta}{\loc} \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
+  \auxX' = \angled{\stEta[(\loc, \stTau) \mapsto (\mvalSubst, \stSigma)],
+                   \stPsiRead[\stpath \mapsto \stSigma]}
+  }{
+\angled{\EvalContext[\Write{\rel}{\loc}{\mvalSubst}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+
+  \inferrule[ReadAcq]{
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad 
+  \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \stSigmaRead(\loc) \leq \stTau \\
+  \auxX' = \angled{\stEta, \stPsiRead[\stpath \mapsto \stSigmaRead \sqcup \stSigma]}
+  }{
+\angled{\EvalContext[\readExpr{\acq}{\loc}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  }
+\end{mathpar}
+\caption{Правила высвобождающей записи и приобретающего чтения}
+\label{fig:rel/acq-sem}
+\end{figure}
+
 
 \section{Интерпретация и тестирование модели}
 
