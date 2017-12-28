@@ -828,7 +828,7 @@ $\stPsiRead$, которая по идентификатору потока $\st
 \text{Функция базового фронта} & \stPsiRead & ::= & \stpath \prarrow \stSigma\\
 \text{Фронт} & \stSigma   & ::= & \loc \prarrow \stTau\\
 \text{Идентификатор потока} & \stpath    & \text{---} & (l|r)^{*}\\
-\text{Метка времени} & \stTau \in \mathbb{N}   & \text{---} & \text{timestamp}
+\text{Метка времени} & \stTau & \in & \mathbb{N} \\ 
 \end{array}\]
 \caption{Базовое состояние машины $\OpCpp$}
 \label{fig:auxXrelAcq}
@@ -893,7 +893,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
 не осведомлен ни об одной записи в неё, т.е. его базовый фронт не определён для $\loc$.
 Как частный случай, правила применимы, если в локацию не было сделано ни одной записи в принципе.
 
-\subsection{Высвобождающие и приобретающие операции}
+\subsection{Высвобождающие и приобретающие обращения}
 
 \begin{figure}
 \begin{mathpar}
@@ -905,7 +905,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
   \auxX' = \angled{\stEta[(\loc, \stTau) \mapsto (\mvalSubst, \stSigma)],
                    \stPsiRead[\stpath \mapsto \stSigma]}
   }{
-\angled{\EvalContext[\Write{\rel}{\loc}{\mvalSubst}], \auxX} \astep{} 
+\angled{\EvalContext[\writeInstParam{\rel}{\loc}{\mvalSubst}], \auxX} \astep{} 
 \angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
   } \\
 
@@ -924,6 +924,165 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
 \label{fig:rel/acq-sem}
 \end{figure}
 
+Правила, описывающие поведение высвобождающих записей и приобретающих чтений, приведены на рис. \ref{fig:rel/acq-sem}.
+Высвобождающая запись добавляет в память новую запись $(\loc, \tau) \mapsto (\mvalSubst, \stSigma)$, где
+$\mvalSubst$ --- записываемое значение, а $\stSigma$ --- фронт добавленного сообщения, который далее может быть
+использован для синхронизации с другими потоками.
+Сам фронт сообщения является базовым фронтом потока, который проводит запись, после совершения этой записи,
+т.е. обновлённым на $[\loc@\tau]$.
+
+Правило обработки приобретающего чтения является недетерминированным, поскольку выбирает из памяти запись
+$(\loc, \tau) \mapsto (\mvalSubst, \stSigma)$,
+метка времени $\tau$ которой больше либо равно значению базового фронта потока по этой локации, $\stSigmaRead(\loc)$.
+Значение $\mvalSubst$ заменяет инструкцию чтения внутри редукционного контекста $\EvalContext$,
+а базовый фронт потока $\stSigmaRead$ комбинируется с прочитанным фронтом сообщения $\stSigma$.
+\app{TODO: описать CAS правила.}
+
+\subsection{$\sco$-инструкции}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[WriteSC]{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stSC}} \quad \stpath = \Path(\EvalContext) \quad
+  \stTau = \NextTau{\stEta}{\loc} \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
+  \auxX' = \angled{\stEta[(\loc, \stTau) \mapsto (\mvalSubst, \stSigma)],
+                   \stPsiRead[\stpath \mapsto \stSigma], \graybox{\stSC[\loc \mapsto \stTau]}}
+  }{
+\angled{\EvalContext[\writeInstParam{\sco}{\loc}{\mvalSubst}]
+, \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+
+  \inferrule[ReadSC]{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stSC}} \quad \stpath = \Path(\EvalContext) \quad 
+  \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \graybox{\mathsf{max}(\stSigmaRead(\loc), \stSC(\loc)) \leq \stTau} \\
+  \auxX' = \angled{\stEta, \stPsiRead[\stpath \mapsto \stSigmaRead \sqcup \stSigma],
+                   \graybox{\stSC}}
+  }{
+\angled{\EvalContext[\readExpr{\acq}{\loc}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  }
+\end{mathpar}
+\caption{Правила обработки $\sco$-инструкций}
+\label{fig:sc-sem}
+\end{figure}
+
+Для выражения редукционных правил $\sco$-инструкций в состояние машины $\OpCpp$
+нужно добавить дополнительную компоненту --- глобальный \emph{$\sco$-фронт}, $\stSC$:
+\[\begin{array}{rcl}
+\auxX & ::= & \angled{..., \stSC}
+\end{array}\]
+Этот фронт по локации определяет максимальную метку времени среди сообщений в эту локацию,
+которые были сделаны с помощью $\sco$-записи.
+
+Правила обработки $\sco$-инструкций приведены на рис. \ref{fig:sc-sem}.
+Они совпадают с правилами для высвобождающих записей и приобретающих чтений с рис. \ref{fig:rel/acq-sem}
+с точностью до частей, выделенных серым цветом.
+Так, правило $\sco$-записи обновляет $\sco$-фронт машины, чтобы по целевой локации $\loc$ он
+возвращал метку времени добавленной записи, а правило $\sco$-чтения проверяет, что метка времени
+выбранного сообщения не меньше, чем значение $\sco$-фронта по целевой локации.
+
+\subsection{Неатомарные обращения}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[WriteNA]{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stNA}} \quad \stpath = \Path(\EvalContext) \\
+  \stTau = \NextTau{\stEta}{\loc} \\
+  \stSigmaRead = \stPsiRead(\stpath) \\
+  \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
+  \graybox{\stSigmaRead(\loc) \equiv \LastTau{\stEta}{\loc}} \\
+  \auxX' = \angled{\stEta[(\loc, \stTau) \mapsto (\mvalSubst, \graybox{\stSigmaEmpty})],
+                   \stPsiRead[\stpath \mapsto \stSigma], \graybox{\stNA[\loc \mapsto \stTau]}}
+  }{
+\angled{\EvalContext[\writeInstParam{\na}{\loc}{\mvalSubst}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+
+  \inferrule[ReadNA]{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stNA}} \\
+  \stpath = \Path(\EvalContext) \\
+  \graybox{\stTau = \LastTau{\stEta}{\loc}} \\
+  \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
+  \graybox{\stTau \equiv \stSigmaRead(\loc)}  \\
+  \auxX' = \angled{\stEta, \graybox{\stPsiRead}, \graybox{\stNA}}
+  }{
+\angled{\EvalContext[\readExpr{\na}{\loc}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+  
+  \inferrule[ReadNA-stuck1]{
+    \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
+    \stpath = \Path(\EvalContext) \\
+    \stSigmaRead = \stPsiRead(\stpath) \\
+    \stSigmaRead(\loc) \neq \LastTau{\stEta}{\loc}
+  }{
+    \angled{\EvalContext[\readExpr{\na}{\loc}], \auxX} \astep{}
+    \angled{\Stuck, \auxX_{init}}
+  } \\
+
+  \inferrule[WriteNA-stuck1]{
+    \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
+    \stpath = \Path(\EvalContext) \\
+    \stSigmaRead = \stPsiRead(\stpath) \\
+    \stSigmaRead(\loc) \neq \LastTau{\stEta}{\loc}
+  }{
+    \angled{\EvalContext[\writeInstParam{\na}{\loc}{\mvalSubst}], \auxX} \astep{}
+    \angled{\Stuck, \auxX_{init}}
+  } \\
+
+  \inferrule[ReadNA-stuck2]{
+    \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
+    \stpath = \Path(\EvalContext) \\
+    \stSigmaRead = \stPsiRead(\stpath) \\
+    \stSigmaRead(\loc) < \stNA(\loc)
+  }{
+    \angled{\EvalContext[\readExpr{\RM}{\loc}], \auxX} \astep{}
+    \angled{\Stuck, \auxX_{init}}
+  } \\
+
+  \inferrule[WriteNA-stuck2]{
+    \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
+    \stpath = \Path(\EvalContext) \\
+    \stSigmaRead = \stPsiRead(\stpath) \\
+    \stSigmaRead(\loc) < \stNA(\loc)
+  }{
+    \angled{\EvalContext[\writeInstParam{\WM}{\loc}{\mvalSubst}], \auxX} \astep{}
+    \angled{\Stuck, \auxX_{init}}
+  } \\
+\end{mathpar}
+\caption{Правила обработки неатомарных обращений и идентификации гонок по данным}
+\label{fig:na-sem}
+\end{figure}
+
+Для обработки неатомарных чтений и записей мы добавляем глобальный $\na$-фронт в состояние машины:
+\[\begin{array}{rcl}
+\auxX & ::= & \angled{..., \stNA}
+\end{array}\]
+Аналогично $\sco$-фронту, $\na$-фронт по локации возвращает максимальную метку времени $\na$-записи
+в неё, а сам фронт обновляется в правиле $\na$-записи.
+
+Предназначением $\na$-фронта является поиск гонок по данным, которые включают неатомарные обращения к памяти.
+При выполнении $\na$-обращения (см. правила ${\rm ReadNA}$ и ${\rm WriteNA}$ на рис. \ref{fig:na-sem})
+происходит проверка, что выполняющий обращение поток осведомлён о последнем сообщении в целевую локацию.
+Если данное требование не выполняется, то в программе присутствует гонка, и программа имеет неопределённое
+поведение (см. правила ${\rm ReadNA\text{-}stuck1}$ и ${\rm WriteNA\text{-}stuck1}$).
+Кроме того, если поток выполняет какое-то, необязательно неатомарное, обращение к локации $\loc$, о последней
+$\na$-записи в которую он не осведомлён, т.е. его базовый фронт $\stSigmaRead$ по $\loc$ меньше,
+чем $\stNA(\loc)$, то это также идентифицирует состояние гонки
+(см. правила ${\rm ReadNA\text{-}stuck2}$ и ${\rm WriteNA\text{-}stuck2}$).
+
+В отличие от рассмотренных ранее высвобождающих и $\sco$-записей, $\na$-запись не может быть использована
+для синхронизации (даже как часть высвобождающей цепочки), поэтому её сообщение имеет пустой фронт.
+Аналогично, $\na$-чтение игнорирует фронт прочитанного им сообщения.
+
+\subsection{Расслабленные обращения}
+
+\subsection{Отложенные операции и спекулятивное исполнение}
 
 \section{Интерпретация и тестирование модели}
 
