@@ -1,6 +1,6 @@
 \chapter{Операционная модель памяти C/C++11} \label{sec:opc11}
 В главе описана операционная модель памяти C/C++11 \cite{Podkopaev-al:CoRR16}, или \OpCpp,
-и реализованный интерпретатор для неё \app{TODO: \url{}}.
+и реализованный интерпретатор для неё \cite{opCppCode}.
 Сама модель представлена как семейство аспектов, каждый из которых описывает некоторую особенность
 изначальной модели C/C++11 \cite{Batty-al:POPL11}.
 Такое представление позволяет упрощать модель для задач, в которых рассматривается только подмножество
@@ -23,7 +23,8 @@
 Далее в разделе \ref{sec:opc11:fullmodel} рассматриваются части модели, которые описывают
 поведение $\sco$-инструкций, неатомарных обращений к памяти, потребляющих чтений, а также
 высвобождающих цепочек (release sequences).
-\app{TODO}
+Приводится математическое описание предложенной модели (раздел \ref{sec:opc11:formal}).
+В заключении главы приводятся рассуждения о свойствах модели (раздел \label{fig:opc11:results}).
 
 \section{Основные концепции модели}
 \label{sec:opc11:base}
@@ -897,7 +898,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
 
 \begin{figure}
 \begin{mathpar}
-  \inferrule[WriteRel]{
+  \inferrule[Write-Release]{
   \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad
   \stTau = \NextTau{\stEta}{\loc} \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
@@ -909,7 +910,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
 \angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
   } \\
 
-  \inferrule[ReadAcq]{
+  \inferrule[Read-Acquire]{
   \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad 
   \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
@@ -936,7 +937,7 @@ $(\loc, \tau) \mapsto (\mvalSubst, \stSigma)$,
 метка времени $\tau$ которой больше либо равно значению базового фронта потока по этой локации, $\stSigmaRead(\loc)$.
 Значение $\mvalSubst$ заменяет инструкцию чтения внутри редукционного контекста $\EvalContext$,
 а базовый фронт потока $\stSigmaRead$ комбинируется с прочитанным фронтом сообщения $\stSigma$.
-\app{TODO: описать CAS правила.}
+Здесь и далее правила для CAS инструкций опущены; они могут быть найдены в реализации интерпретатора \cite{opCppCode}.
 
 \subsection{$\sco$-инструкции}
 
@@ -1082,9 +1083,318 @@ $\na$-записи в которую он не осведомлён, т.е. ег
 
 \subsection{Расслабленные обращения}
 
+\begin{figure}
+\begin{mathpar}
+  \inferrule[Read-Relaxed]{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Path(\EvalContext) \quad 
+  \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \stSigmaRead(\loc) \leq \stTau \\
+  \auxX' = \angled{\stEta, \stPsiRead[\stpath \mapsto \stSigmaRead \sqcup \graybox{[\loc@\stTau]}], \graybox{\stPsiWrite}}
+  }{
+\angled{\EvalContext[\readExpr{\rlx}{\loc}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+
+  \inferrule[Write-Relaxed]{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Path(\EvalContext) \quad
+  \stTau = \NextTau{\stEta}{\loc} \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
+  \graybox{\stTau_{\rel} = \stPsiWrite(\stpath)(\loc)} \\
+  \graybox{(\_, \stSigmaSync) = \stEta(\loc, \stTau_{\rel})}\\
+  \auxX' = \angled{\stEta[(\loc, \stTau) \mapsto (\mvalSubst, \graybox{\stSigmaSync}[\loc \mapsto \stTau])],
+                   \stPsiRead[\stpath \mapsto \stSigma], \graybox{\stPsiWrite}}
+  }{
+\angled{\EvalContext[\writeInstParam{\rlx}{\loc}{\mvalSubst}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+
+  \inferrule[Write-Release']{
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Path(\EvalContext) \quad
+  \stTau = \NextTau{\stEta}{\loc} \\
+  \stSigmaRead = \stPsiRead(\stpath) \quad
+  \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
+  \graybox{\stSigmaWrite' = \stPsiWrite(\stpath)[\loc \mapsto \stTau]}\\
+  \auxX' = \angled{\stEta[(\loc, \stTau) \mapsto (\mvalSubst, \stSigma)],
+                   \stPsiRead[\stpath \mapsto \stSigma], \graybox{\stPsiWrite[\stpath \mapsto \stSigmaWrite']}}
+  }{
+\angled{\EvalContext[\writeInstParam{\rel}{\loc}{\mvalSubst}], \auxX} \astep{} 
+\angled{\EvalContext[\Ret{\mvalSubst}], \auxX'}
+  } \\
+\end{mathpar}
+\caption{Правила расслабленных обращений}
+\label{fig:rlx-sem}
+\end{figure}
+
+Расслабленные чтения не обновляют базовый фронт потока на фронт прочитанного сообщения
+(см. правило ${\rm Read	ext{-}Relaxed}$ на рис. \ref{fig:rlx-sem}), это отличает их от
+приобретающих чтений.
+
+Для поддержки расслабленных записей в состояние машины $\OpCpp$ нужно внести дополнительную компоненту, $\stPsiWrite$:
+%
+\[\begin{array}{rcl}
+\auxX      & ::= & \angled{..., \stPsiWrite}
+\end{array}\]
+%
+$\stPsiWrite$ --- это функция, которая по идентификатору потока возвращает его \emph{фронт записи}, $\stSigmaWrite$.
+Фронт записи для каждой локации хранит метку времени последней высвобождающей записи, сделанной потоком в эту локацию.
+Когда поток выполняет расслабленную запись в локацию $\loc$ с меткой времени $\tau$
+(см. правило ${\rm Write	ext{-}Relaxed}$ на рис. \ref{fig:rlx-sem}),
+то в добавляемое сообщение записывается фронт, равный комбинации $[\loc@\tau]$ и фронта сообщения, на который указывает
+$\stSigmaWrite(\loc)$.
+Для поддержки описанного механизма нужно также внести небольшое изменение в правило обработки высвобождающей записи
+(см. правило ${\rm Write	ext{-}Release'}$ на рис. \ref{fig:rlx-sem}): после выполнения данного правила фронт записи потока
+по целевой локации возвращает метку времени добавленного сообщения. Аналогичные изменения нужно внести в другие
+схожие правила, в частности, в ${\rm WriteSC}$.
+
+Кроме того, мета-функции, связанные с запуском и соединением потоков, также требуют доопределения:
+\[
+\begin{array}{r c l}
+\spawn{\EvalContext}{\angled{\stEta,\stPsiRead,\stPsiWrite}} & = &
+\angled{\stEta,
+\stPsiRead[\stpath\:l \mapsto \stSigmaRead,~\stpath\:r \mapsto \stSigmaRead], \\
+& & \quad ~~~ \graybox{\stPsiWrite[\stpath\:l \mapsto \bot,~\stpath\:r \mapsto \bot]}} \\
+
+\joinP{\EvalContext}{\angled{\stEta, \stPsiRead, \stPsiWrite}} & = &
+\angled{\stEta, \stPsiRead[\stpath \mapsto \stSigmaRead^{l} \sqcup \stSigmaRead^{r}],
+  \graybox{\stPsiWrite[\stpath \mapsto \bot]}}
+\end{array}
+\]
+Дочерние потоки при запуске, также как и родительский после соединения, не наследуют
+фронты записи, т.к., согласно оригинальной модели C/C++11 \cite{Batty-al:POPL11},
+высвобождающие цепочки не могут выходить за пределы потока напрямую%
+\footnote{Высвобождающие цепочки могут ``покидать'' поток с помощью CAS-операций.}.
+
 \subsection{Отложенные операции и спекулятивное исполнение}
 
+Поддержка отложенных операций и спекулятивного исполнения в машине $\OpCpp$ осуществляется
+с помощью двух компонент состояния:
+\[\begin{array}{r c l}
+\auxX             & ::=        & \angled{..., \stPhi, \stGamma} \\
+\end{array}\]
+Основной из них является функция $\stPhi$, которая по идентификатору потока $\stpath$ возвращает его иерархический
+операционный буфер $\stAlpha$ отложенный операций $\stPostOp$:
+\[\begin{array}{r l}
+    \stPhi    ::= & \stpath \prarrow \stAlpha \\
+    \stAlpha  ::= & \stPostOp^{*} \\
+    \stPostOp ::= & read\angled{\vName,\locVar,\RM} \mid
+                    write\angled{\vName,\locVar,\WM,\Expr} \mid
+                    bind\angled{\vName,\Expr} \mid
+                    if\angled{\vName,\Expr,\stAlpha,\stAlpha}\\
+\end{array}\]
+Каждая отложенная операция $\stPostOp$ обладает уникальным идентификатором, символьным значением $\vName$.
+Отложенные операции чтения, $read\angled{\vName,\locVar,\RM}$, хранят выражение для вычисления целевой локации, $\locvar$%
+\footnote{Целевая локация отложенной операции может зависеть от других ещё не вычисленных отложенных операций.},
+а также модификатор чтения, $\RM$.
+В случае отложенной записи также хранится и выражение $\Expr$, результат вычисления которого будет записан как целевое значение.
+Для представления отложенного присваивания в локальную переменную используется конструкция $bind\angled{\vName, \Expr}$, которая
+может быть использована, чтобы не форсировать вычисление отложенного чтения:
+\[
+\readInstParam{\rlx}{a}{x}; \assignInst{b}{a + 1}; \dots
+\]
+Для представления информации о спекулятивном исполнении веток условного оператора используется конструкция
+$if\angled{\vName,\Expr,\stAlpha_1,\stAlpha_2}$,
+где $\Expr$ является представлением условия, а $\stAlpha_1$ и $\stAlpha_2$ --- вложенных буферов отложенных операций
+веток $\kw{then}$ и $\kw{else}$ соответственно.
+Редукционный контекст $\EvalSpecContext$, внутри которого возможно спекулятивное исполнение инструкций, представлен
+следующей грамматикой:
+\[\begin{array}{rcl}
+\EvalSpecContext & ::= & \hole \mid
+                         \Bind{\vName}{\EvalSpecContext}{\AST} \mid
+    \IfThenElse{\vName}{\EvalSpecContext}{\AST}\mid \\
+&& \IfThenElse{\vName}{\AST}{\EvalSpecContext}
+\end{array}\]
+У конкретного подвыражения редукционного контекста символическое значение $\vName$, представляющее условие спекулятивно
+исполняемой конструкции, должно совпадать с идентификатором соответствующей записи $if\angled{\vName,\Expr,\stAlpha_1,\stAlpha_2}$
+в буфере отложенных операций.
+
+Вторая компонента состояния машины $\OpCpp$, $\stGamma$, представляет ограничения, накладываемые на приобретающие чтения,
+и является списком троек вида $\angled{\loc, \stTau, \vName}$.
+Присутствие тройки $\angled{\loc, \stTau, \vName}$ в списке $\stGamma$ запрещает чтение из памяти сообщения $(\loc, \stTau)$,
+пока отложенная операция с символическим значением $\vName$ не будет выполнена.
+
+В ходе исполнения программы любая инструкция чтения, записи или присваивания может быть
+отложена, даже если она находится под условным оператором, путём добавления
+соответствующей записи в операционный буфер.
+Правила по откладыванию исполнения инструкций приведены на рис. \ref{fig:postpone-sem}.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[Write-Postpone]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+  \vName \text{ --- новое символическое значение} \\
+  \stAlpha = \stPhi(\stpath) \\
+  \auxX' = \angled{\stEta, \stPsiRead,
+\stPhi[\stpath \mapsto \AppendAlpha(\stAlpha, \EvalSpecContext, write\angled{\vName, \locVar, \WM, \Expr})],
+  \stGamma} \\
+  }{
+\angled{\EvalContext[\EvalSpecContext[\writeInstParam{\WM}{\locVar}{\Expr}]], \auxX} \astep{} 
+\angled{\EvalContext[\EvalSpecContext[\Ret{\vName}]], \auxX'}
+  } \\
+
+  \inferrule[Read-Postpone]{
+    \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+    \vName \text{ --- новое символическое значение} \\
+     \stAlpha = \stPhi(\stpath) \\
+     \auxX' = \angled{\stEta, \stPsiRead,
+     \stPhi[\stpath \mapsto \AppendAlpha(\stAlpha, \EvalSpecContext, read\angled{\vName, \locVar, \RM})],
+     \stGamma} \\
+  }{
+\angled{\EvalContext[\EvalSpecContext[\readExpr{\RM}{\locVar}]], \auxX} \astep{} 
+\angled{\EvalContext[\EvalSpecContext[\Ret{\vName}]], \auxX'}
+  } \\
+
+  \inferrule[Let-Postpone]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\ \Expr~\text{зависит от отложенной операции}\\
+  \vName \text{ --- новое символическое значение} \\
+  \stAlpha = \stPhi(\stpath) \\
+  \auxX' = \angled{\stEta, \stPsiRead,
+\stPhi[\stpath \mapsto \AppendAlpha(\stAlpha, \EvalSpecContext, let\angled{\vName,\Expr})],
+   \stGamma} \\
+  }{
+    \angled{\EvalContext[\EvalSpecContext[\Bind{\vName'}{\Expr}{\AST}]], \auxX} \astep{} 
+    \angled{\EvalContext[\EvalSpecContext\subst{\vName'}{\vName}], \auxX'}
+  } 
+\end{mathpar}
+\caption{Правила по откладыванию исполнения инструкций чтения, записи и присваивания}
+\label{fig:postpone-sem}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[Write-Resolve]{
+  \auxX = \angled{\stEta, \dots, \stPhi, \stGamma} \\ ... \\
+  write\angled{\vName, \loc, \WM, \mvalSubst}\;\text{в списке}\;\stPhi(\stpath) \\
+  \text{и не конфликтует с предшествующими элементами списка} \\
+  %% \forall \stpath', \not\exists (\vName', \vName) \in \stObservedWrites(\stpath') \\
+  \stPhi' = \remove(\stPhi, \stpath, write\angled{\vName, \loc, \WM, \mvalSubst}) \\
+  %% \stObservedWrites' = \remove(\stObservedWrites, \vName)\\
+ \stGamma' = \updateDep(\vName, \WM, \stPsiWrite, \loc, \stTau, \stGamma, \stPhi(\stpath))\\ %, \stObservedWrites(\stpath)) \\
+ \stEta' = \updateSync(\vName, \WM, \stSigma, \stGamma, \stEta) \\
+ \auxX' = \angled{\stEta'[(\loc, \stTau) \mapsto (\mvalSubst, \stSigma)], \dots,
+\stPhi'[\mvalSubst/\vName], \stGamma'} \\
+}{
+\angled{\AST, \auxX} \astep{}
+\angled{\AST[\mvalSubst/\vName], \auxX'}
+}
+
+  \inferrule[Read-Resolve]{
+  \auxX = \angled{\stEta, \dots, \stPhi, \stGamma} \\ ... \\
+  read\angled{\vName, \loc, \RM}\;\text{внутри }\;\stPhi(\stpath) \\
+  \text{и не конфликтует с предшествующими элементами} \\
+   \\
+  %% \not \exists \vName' \in \stObservedWrites(\stpath), \vName'\;\text{is a write to}\;\loc \\
+  \stPhi' = \remove(\stPhi, \stpath, read\angled{\vName, \loc, \RM}) \\
+  \stGamma' = \stGamma \setminus \{\angled{\_, \_, \vName}\} \\
+  \auxX' = \angled{\stEta, \dots,
+\stPhi'[\mvalSubst/\vName], \stGamma'} \\
+  }{
+\angled{\AST, \auxX} \astep{}
+\angled{\AST[\mvalSubst/\vName], \auxX'}
+  } \\
+
+  \inferrule[Let-Resolve]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+  bind\angled{\vName, \mvalSubst}\;\text{внутри}\;\stPhi(\stpath) \\
+   \\
+  %% \not \exists \vName' \in \stObservedWrites(\stpath), \vName'\;\text{is a write to}\;\loc \\
+  \stPhi' = \remove(\stPhi, \stpath, bind\angled{\vName, \mvalSubst}) \\
+  \auxX' = \angled{\stEta, \stPsiRead,
+\stPhi'[\mvalSubst/\vName], \stGamma} \\
+  }{
+\angled{\AST, \auxX} \astep{}
+\angled{\AST[\mvalSubst/\vName], \auxX'}
+  }
+
+\end{mathpar}
+\caption{Правила по выполнению отложенных инструкций чтения, записи и присваивания}
+\label{fig:resolve-sem}
+\end{figure}
+
+После того, как операция была отложена, она может быть выполнена (см. правила на рис. \ref{fig:resolve-sem}).
+В правилах для записи и чтения опущены стандартные части, связанные с обновлением базового фронта и фронта записи.
+Рассмотрим подробнее правило ${\rm Write\text{-}Resolve}$.
+В правиле (недетерминированно) выбирается элемент буфера отложенных операций, соответствующий некоторой инструкции
+записи, причём этот элемент обязан быть на первом уровне буфера. Без последнего требования семантика бы имела
+``значения из воздуха''.
+Кроме того, перед выбранным элементом списка не должно быть элементов, которые находятся в конфликте с ним,
+таких как приобретающее чтение или запись в ту же локацию.
+Из новой компоненты отложенных операций убирается соответствующий элемент
+($\stPhi' = \remove(\stPhi, \stpath, write\angled{\vName, \loc, \WM, \mvalSubst})$),
+обновляются фронты зависимых сообщений согласно $\stGamma$-компоненте
+($\stEta' = \updateSync(\vName, \WM, \stSigma, \stGamma, \stEta)$),
+а из самой $\stGamma$-компоненты удаляются зависимости
+($\stGamma' = \updateDep(\vName, \WM, \stPsiWrite, \loc, \stTau, \stGamma, \stPhi(\stpath))$).
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[Write-Promote]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+  if\angled{\vName'', \Expr, \stAlpha_1, \stAlpha_2 }\;\text{внутри}\;\stPhi(\stpath)\\\\
+  write\angled{\vName, \loc, \WM, \mvalSubst}\;\text{в списке}\; \stAlpha_1 \\
+  \text{и не конфликтует с предшествующими элементами списка} \\\\
+  write\angled{\vName', \loc, \WM, \mvalSubst}\;\text{в списке}\; \stAlpha_2 \\
+  \text{и не конфликтует с предшествующими элементами списка} \\\\
+  \stPhi' = \promote(\vName, \vName', \stPhi) \\
+  \stGamma' = \stGamma[\vName'/\vName]
+  }{
+\angled{\AST, \auxX} \astep{} \angled{\AST[\vName'/\vName], \auxX'}
+  }
+\end{mathpar}
+\caption{Правило по переносу отложенной записи на предыдущий уровень вложенности буфера отложенных операций}
+\label{fig:promote-sem}
+\end{figure}
+
+Отдельно стоит отметить правило, которое позволяет вынести отложенные инструкции записи,
+повторяющиеся в ветках спекулятивно исполняемого условного оператора, на предыдущий уровень вложенности
+буфера отложенных операций (см. рис. \ref{fig:promote-sem}).
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule[If-Speculation-Init]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+  \Expr\;\text{зависит от отложенной операции} \\
+  \vName \text{ --- новое символическое значение} \\
+  \stAlpha = \stPhi(\stpath) \\
+  \auxX' = \angled{\stEta, \stPsiRead,
+\stPhi[\stpath \mapsto \AppendAlpha(\stAlpha, \EvalSpecContext,
+  if\angled{\vName,\Expr, \angled{}, \angled{}})], \stGamma} \\
+  }{
+  \angled{\EvalContext[\EvalSpecContext[\IfThenElse{\Expr}{\AST_{1}}{\AST_{2}}]], \auxX} \astep{} \\\\
+  \angled{\EvalContext[\EvalSpecContext[\IfThenElse{\vName}{\AST_{1}}{\AST_{2}}]], \auxX'} \\
+  } \\
+  
+  \inferrule[If-Resolve-True]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+  if\angled{\vName, z, \stAlpha_1, \stAlpha_2} \in \stPhi(\stpath) \\
+  z \neq 0\\
+  \stPhi' = \stPhi[if\angled{\vName, z, \stAlpha_1, \stAlpha_2} / \stAlpha_1] \\
+  \auxX' = \angled{\stEta, \stPsiRead, \stPhi', \stGamma}
+  }{
+\angled{\EvalContext[\EvalSpecContext[\IfThenElse{\vName}{\AST_{1}}{\AST_{2}}]], \auxX} \astep{}
+\angled{\EvalContext[\EvalSpecContext[\AST_{1}]], \auxX'}
+  } \\
+
+  \inferrule[If-Resolve-False]{
+  \auxX = \angled{\stEta, \stPsiRead, \stPhi, \stGamma} \\
+  if\angled{\vName, 0, \stAlpha_1, \stAlpha_2} \in \stPhi(\stpath) \\
+  \stPhi' = \stPhi[if\angled{\vName, z, \stAlpha_1, \stAlpha_2} / \stAlpha_2] \\
+  \auxX' = \angled{\stEta, \stPsiRead, \stPhi', \stGamma}
+  }{
+\angled{\EvalContext[\EvalSpecContext[\IfThenElse{\vName}{\AST_{1}}{\AST_{2}}]], \auxX} \astep{}
+\angled{\EvalContext[\EvalSpecContext[\AST_{2}]], \auxX'}
+  } \\
+\end{mathpar}
+\caption{Правила начала и завершения спекулятивного исполнения условного оператора}
+\label{fig:spec-if-sem}
+\end{figure}
+Правила обработки условного оператора (начало и завершение спекулятивного исполнения) приведены на рис. \ref{fig:spec-if-sem}.
+
+ 
 \section{Интерпретация и тестирование модели}
+\label{fig:opc11:interpreter}
+\app{TODO}
 
 \subsection{Тестирование алгоритма RCU}
 
@@ -1100,3 +1410,5 @@ $\na$-записи в которую он не осведомлён, т.е. ег
 \end{figure*}
 
 \section{Свойства модели. Выводы}
+\label{fig:opc11:results}
+\app{TODO}
