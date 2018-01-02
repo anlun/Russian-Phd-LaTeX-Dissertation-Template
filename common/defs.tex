@@ -11,6 +11,7 @@
 
 \newcommand{\valuecom}[1]{\textcolor{green!60!black}{// #1}}
 \newcommand{\valuefail}[1]{\textcolor{red!60!black}{// #1}}
+\newcommand{\valueneg}[1]{\valuefail{#1}}
 \newcolumntype{L}{>{$}l<{$}} % math-mode version of "l" column type
 
 \declaretheorem[name=Теорема,style=default,numberwithin=section]{thm}
@@ -474,6 +475,7 @@
 \newcommand{\readExpr}[2]{[#2]_{#1}}
 \newcommand{\fenceInst}[1]{\fence{#1}}
 \newcommand{\dmbSY}{\fenceInst{\SY}}
+\newcommand{\dmbST}{\fenceInst{\ST}}
 \newcommand{\dmbLD}{\fenceInst{\LD}}
 
 \newcommand{\readInstParam}[3]{#2 \;:=_{#1}\;[#3]}
