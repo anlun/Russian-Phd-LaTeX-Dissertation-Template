@@ -180,7 +180,7 @@ ARM машина состоит из двух компонент: \emph{подс
 \end{definition}
 
 Отметим, что в этом доказательстве мы рассматриваем ослабленную, т.е. допускающую большее число сценариев поведения, версию
-модели ARMv8 POP \cite{Flur-al:POPL17}, в которой подсистема управления не отсылает запросы, соответствующие барьеру $\dmbLD$,
+модели ARMv8 POP \cite{Flur-al:POPL16}, в которой подсистема управления не отсылает запросы, соответствующие барьеру $\dmbLD$,
 в подсистему памяти%
 \footnote{
   Почему рассмотренная модель допускает большее число поведений?
@@ -191,6 +191,77 @@ ARM машина состоит из двух компонент: \emph{подс
 }.
 Поскольку нам удалось доказать корректность компиляции в ослабленную версию модели, то корректность компиляции сохраняется
 и для изначальной модели.
+
+Теперь рассмотрим сценарий поведения программы ${\rm ARM\text{-}weak}$,
+в котором получается результат $[a = 1]$:
+\begin{equation*}
+\tag{ARM-weak}
+\begin{tabular}{c}
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
+\begin{tabular}{L || L || L}
+  \readInst{a}{x}; \; \valuecom{1} & \readInst{b}{x}; & \readInst{c}{y}; \\
+  \writeInst{x}{1}                 & \writeInst{y}{b} & \writeInst{x}{c} \\
+\end{tabular}
+\end{tabular}
+\end{equation*}
+Такой результат получается в модели ARMv8 POP, если у первого и второго потоков
+есть общий буфер, который не виден третьему потоку.
+
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale = 1, transform shape]
+    \storageThreeThreads
+    \node[right] at (2.25, -0.4) {\storageFont $\readInst{b}{x}$};
+    \node[right] at (2.25, -0.8) {\storageFont $\writeInst{x}{1}$};
+    \node[right] at (2.25, -1.2) {\storageFont $\readInst{a}{x}$};
+    \node at (4.125, -2.7) {\storageFont $\writeInst{x}{0}; \writeInst{y}{0}$};
+\end{tikzpicture}
+  \caption{}
+\end{center}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale = 1, transform shape]
+    \storageThreeThreads
+    \node[right] at (2.25, -0.6) {\storageFont $\writeInst{x}{1}$};
+    \node[right] at (2.25, -1) {\storageFont $\readInst{a}{x}$};
+    \node at (4.125, -2.7) {\storageFont $\writeInst{x}{0}; \writeInst{y}{1}$};
+\end{tikzpicture}
+  \caption{}
+\end{center}
+\end{subfigure}
+
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale = 1, transform shape]
+    \storageThreeThreads
+    \node[right] at (2.25, -0.6) {\storageFont $\writeInst{x}{1}$};
+    \node[right] at (2.25, -1) {\storageFont $\readInst{a}{x}$};
+    \node[right] at (4.125, -1.8) {\storageFont $\readInst{c}{y}$};
+    \node at (4.125, -2.7) {\storageFont $\writeInst{x}{0}; \writeInst{y}{1}$};
+\end{tikzpicture}
+  \caption{}
+\end{center}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale = 1, transform shape]
+    \storageThreeThreads
+    \node[right] at (2.25, -0.6) {\storageFont $\writeInst{x}{1}$};
+    \node[right] at (2.25, -1) {\storageFont $\readInst{a}{x}$};
+    \node[right] at (4.125, -1.8) {\storageFont $\writeInst{x}{1}$};
+    \node at (4.125, -2.7) {\storageFont $\writeInst{x}{0}; \writeInst{y}{1}$};
+\end{tikzpicture}
+  \caption{}
+\end{center}
+\end{subfigure}
+\caption{Состояние подсистемы памяти ARMv8 POP при исполнении программы
+  ${\rm ARM\text{-}weak}$}
+\label{fig:armvpop:armweakstorage}
+\end{figure}
+
+\subsection{Абстрактная подсистема памяти: POP}
 
 \section{Идея и структура доказательства корректности компиляции}
 \label{sec:armpop:highlevel}
