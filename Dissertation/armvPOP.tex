@@ -310,14 +310,201 @@ $\Prop$ --- это функция, которая по идентификато�
 то мы пишем $\e <_{\Ord} \e'$.
 
 Для того, чтобы понять, как подсистема POP работает и соотносится с подсистемой Flowing,
-мы рассмотрим исполнение следующей программы:
+мы рассмотрим слабый сценарий поведения следующей программы с результатом $[a = 1, b = 1, c = 0]$:
 \begin{equation*}
-\tag{WRC+data+addr}\label{ex:WRC+data+addr}
-\begin{tabular}{L || L || L}
-\writeInst{x}{1}; & \readInst{a}{x}; ~ \valuecom{1} & \readInst{b}{y}; \; \valuecom{1} \\
-          & \writeInst{y}{a};                & \readInst{c}{x + b * 0}; \; \valuecom{0}  \\
+\tag{WRC-data-addr}\label{ex:WRC+data+addr}
+\begin{tabular}{L || Ll || Ll}
+\writeInst{x}{1}; & \readInst{a}{x};  & \valuecom{1} & \readInst{b}{y}; & \valuecom{1} \\
+                  & \writeInst{y}{a}  &              & \readInst{c}{x + b * 0} & \valuecom{0}  \\
 \end{tabular}
 \end{equation*}
+В данной программе подсистема управления модели ARMv8 POP во втором и третьем потоках
+не может отправить запросы, относящиеся ко второй строчке, пока не получит ответ на первые
+инструкции, поскольку во втором потоке между инструкциями существует зависимость по данным,
+а в третьем --- мнимая (fake) зависимость по адресу.
+Таким образом, эффект слабого сценария поведения в ARMv8 POP должен быть получен за счёт
+подсистемы памяти. 
+
+Для того, чтобы воспроизвести упомянутый результат, в рамках подсистемы Flowing нужно
+выбрать такую же топологию буферов, как и для слабого сценария поведения программы
+${\rm ARM\text{-}weak}$: должен быть буфер, общий для первого и второго потоков.
+
+\begin{figure}
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[baseline=-20pt,scale = 1, transform shape]
+  \storageThreeThreadsWRC
+  \node[right] at (1  ,  0) {\storageFont $m: \writeInst{x}{1}$};
+  \node[right] at (3.5,  0) {\storageFont $n: \readInst{a}{x}$};
+  \node[right] at (6  ,  0) {\storageFont $o: \readInst{b}{y}$};
+  \node at (4.125, -2.7) {\storageFont $k: \writeInst{x}{0}; \; l: \writeInst{y}{0}$};
+\end{tikzpicture}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:1}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\parbox{63mm}{$\begin{array}{@{}r@{~}l@{}}
+  \Evt      &= \{k, l, m, n, o\} \\
+  \Ord      &= \{ (k, m), (k, n), (l, o) \} \\
+  \Prop(T1) &= \{k, l, m\} \\
+  \Prop(T2) &= \{k, l, n\} \\
+  \Prop(T3) &= \{k, l, o\} \\
+\end{array}$}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:2}
+  \end{subfigure}
+  \hrule
+
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[baseline=-20pt,scale = 1, transform shape]
+    \storageThreeThreadsWRC
+    \node[right] at (2.25, -1.0) {\storageFont $m: \writeInst{x}{1}$};
+    \node[right] at (3.5 ,    0) {\storageFont $n: \readInst{a}{x}$};
+    \node[right] at (6    ,   0) {\storageFont $o: \readInst{b}{y}$};
+    \node at (4.125, -2.7) {\storageFont $k: \writeInst{x}{0}; \; l: \writeInst{y}{0}$};
+\end{tikzpicture}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:3}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\parbox{63mm}{$\begin{array}{@{}r@{~}l@{}}
+  \Evt      &= \{k, l, m, n, o\} \\
+  \Ord      &= \{ (k, m), (k, n), \\
+            & ~~\quad (l, o), \graybox{(m, n)} \} \\
+  \Prop(T1) &= \{k, l, m\} \\
+  \Prop(T2) &= \{k, l, n, \graybox{m}\} \\
+  \Prop(T3) &= \{k, l, o\} \\
+\end{array}$}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:4}
+  \end{subfigure}
+  \hrule
+
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[baseline=-20pt,scale = 1, transform shape]
+    \storageThreeThreadsWRC
+    \node[right] at (2.25, -1.2) {\storageFont $m: \writeInst{x}{1}$};
+    \node[right] at (2.25, -0.8) {\storageFont $n: \readInst{a}{x}$};
+    \node[right] at (6    ,   0) {\storageFont $o: \readInst{b}{y}$};
+    \node at (4.125, -2.7) {\storageFont $k: \writeInst{x}{0}; \; l: \writeInst{y}{0}$};
+\end{tikzpicture}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:5}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\parbox{63mm}{$\begin{array}{@{}r@{~}l@{}}
+  \Evt      &= \{k, l, m, n, o\} \\
+  \Ord      &= \{ (k, m), (k, n), \\
+            & ~~\quad (l, o), (m, n) \} \\
+  \Prop(T1) &= \{k, l, m, \graybox{n} \} \\
+  \Prop(T2) &= \{k, l, n, m\} \\
+  \Prop(T3) &= \{k, l, o\} \\
+\end{array}$}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:6}
+  \end{subfigure}
+  \caption{Состояние подсистем Flowing и POP при исполнении программы ${\rm WRC\text{-}data\text{-}addr}$}
+\end{figure}
+\begin{figure}\ContinuedFloat
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[baseline=-20pt,scale = 1, transform shape]
+    \storageThreeThreadsWRC
+    \node[right] at (2.25, -1.0) {\storageFont $m: \writeInst{x}{1}$};
+    \node[right] at (3.5,     0) {\storageFont $p: \writeInst{y}{1}$};
+    \node[right] at (6    ,   0) {\storageFont $o: \readInst{b}{y}$};
+    \node at (4.125, -2.7) {\storageFont $k: \writeInst{x}{0}; \; l: \writeInst{y}{0}$};
+\end{tikzpicture}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:7}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\parbox{63mm}{$\begin{array}{@{}r@{~}l@{}}
+  \Evt      &= \{k, l, m, o, \graybox{p}\} \\
+  \Ord      &= \{ (k, m), (l, o), \graybox{(l, p)} \} \\
+  \Prop(T1) &= \{k, l, m\} \\
+  \Prop(T2) &= \{k, l, m, \graybox{p}\} \\
+  \Prop(T3) &= \{k, l, o\} \\
+\end{array}$}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:8}
+  \end{subfigure}
+  \hrule
+
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[baseline=-20pt,scale = 1, transform shape]
+    \storageThreeThreadsWRC
+    \node[right] at (2.25, -1.0) {\storageFont $m: \writeInst{x}{1}$};
+    \node[right] at (6    ,   0) {\storageFont $o: \readInst{b}{y}$};
+    \node at (4.125, -2.7) {\storageFont $k: \writeInst{x}{0}; \; p: \writeInst{y}{1}$};
+\end{tikzpicture}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:9}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\parbox{63mm}{$\begin{array}{@{}r@{~}l@{}}
+  \Evt      &= \{k, l, m, o, p\} \\
+  \Ord      &= \{ (k, m), (l, o), \\
+            & ~~\quad (l, p), \graybox{(p, o)} \} \\
+  \Prop(T1) &= \{k, l, m, \graybox{p}\} \\
+  \Prop(T2) &= \{k, l, m, p\} \\
+  \Prop(T3) &= \{k, l, o, \graybox{p}\} \\
+\end{array}$}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:10}
+  \end{subfigure}
+  \hrule
+
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[baseline=-20pt,scale = 1, transform shape]
+    \storageThreeThreadsWRC
+    \node[right] at (2.25, -1.0) {\storageFont $m: \writeInst{x}{1}$};
+    \node[right] at (6    ,   0) {\storageFont \phantom{$o: \readInst{b}{y}$}};
+    \node[right] at (4.125,  -2) {\storageFont $o: \readInst{b}{y}$};
+    \node at (4.125, -2.7) {\storageFont $k: \writeInst{x}{0}; \; p: \writeInst{y}{1}$};
+\end{tikzpicture}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:11}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+\begin{center}
+\parbox{63mm}{$\begin{array}{@{}r@{~}l@{}}
+  \Evt      &= \{k, l, m, o, p\} \\
+  \Ord      &= \{ (k, m), (l, o), \\
+            & ~~\quad (l, p), (p, o) \} \\
+  \Prop(T1) &= \{k, l, m, p, \graybox{o}\} \\
+  \Prop(T2) &= \{k, l, m, p, \graybox{o}\} \\
+  \Prop(T3) &= \{k, l, o, p\} \\
+\end{array}$}
+\end{center}
+    \caption{}
+    \label{fig:armvpop:flpop:12}
+  \end{subfigure}
+
+  \caption{Состояние подсистем Flowing и POP при исполнении программы ${\rm WRC\text{-}data\text{-}addr}$ (продолжение)}
+  \label{fig:armvpop:flpop}
+\end{figure}
+
 
 \section{Идея и структура доказательства корректности компиляции}
 \label{sec:armpop:highlevel}
