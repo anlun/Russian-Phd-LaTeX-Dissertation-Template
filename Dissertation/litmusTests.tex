@@ -484,87 +484,61 @@ Possible outcomes:\\
 \litmusTestStart{CoRR\_rlx}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Impossible outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 2 |$\land$| r3 = 2 |$\land$| r4 = 1}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 1 |$\land$| r3 = 1 |$\land$| r4 = 2}\\
+\[\begin{array}{l}
+a = 1 \land b = 2 \land c = 2 \land d = 1 \\
+a = 1 \land b = 2 \land c = 2 \land d = 1 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-                    |$[$|x|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|x|$]_{rlx}$|;
-r2 = |$[$|x|$]_{rlx}$|
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r3 = |$[$|x|$]_{rlx}$|;
-r4 = |$[$|x|$]_{rlx}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0};$ \\
+  \begin{tabular}{L || L || L || L}
+    \begin{array}{@{}c@{}}
+      \writeInstParam{\rlx}{x}{1}
+    \end{array} & 
+    \begin{array}{@{}c@{}}
+      \writeInstParam{\rlx}{x}{2}
+    \end{array} & 
+    \begin{array}{@{}c@{}}
+      \readInstParam{\rlx}{a}{x}; \\
+      \readInstParam{\rlx}{b}{x}
+    \end{array} & 
+    \begin{array}{@{}c@{}}
+      \readInstParam{\rlx}{c}{x}; \\
+      \readInstParam{\rlx}{d}{x}
+    \end{array} 
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{CoRR\_rel+acq}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Impossible outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 2 |$\land$| r3 = 2 |$\land$| r4 = 1}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 1 |$\land$| r3 = 1 |$\land$| r4 = 2}\\
+\[\begin{array}{l}
+a = 1 \land b = 2 \land c = 2 \land d = 1 \\
+a = 1 \land b = 2 \land c = 2 \land d = 1 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-                   |$[$|x|$]_{rel}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|x|$]_{acq}$|;
-r2 = |$[$|x|$]_{acq}$|
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r3 = |$[$|x|$]_{acq}$|;
-r4 = |$[$|x|$]_{acq}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rel}{x}{0};$ \\
+  \begin{tabular}{L || L || L || L}
+    \begin{array}{@{}c@{}}
+      \writeInstParam{\rel}{x}{1}
+    \end{array} & 
+    \begin{array}{@{}c@{}}
+      \writeInstParam{\rel}{x}{2}
+    \end{array} & 
+    \begin{array}{@{}c@{}}
+      \readInstParam{\acq}{a}{x}; \\
+      \readInstParam{\acq}{b}{x}
+    \end{array} & 
+    \begin{array}{@{}c@{}}
+      \readInstParam{\acq}{c}{x}; \\
+      \readInstParam{\acq}{d}{x}
+    \end{array} 
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \section{Independent Reads of Independent Writes (IRIW)}

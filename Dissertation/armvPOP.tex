@@ -810,6 +810,53 @@ ARMv8 POP и её произвольного сценария поведения
 \section{Формальное определение модели ARMv8 POP}
 \label{sec:armpop:armmodel}
 
+\begin{figure}
+%% \begin{minipage}{.49\textwidth}
+  \begin{center}
+$\begin{array}{l @{~} r @{~} l}
+\Carm    & : & \ListOf{\StmtARM} \\  
+\StmtARM & ::= & \readInst{\reg}{\expr} \\
+         & |   & \writeInst{\expr_0}{\expr_1} \\
+         & |   & \fenceInst{\Ftype} \\
+         & |   & \ifGotoInst{\expr}{\z} \\
+         & |   & \assignInst{\reg}{\expr} \mid \nop \\
+\Ftype   & ::= & \SY \mid \LD\\
+\expr    & ::= & \reg \mid \loc \mid uop \; \expr \\
+         & |   & bop \; \expr_0 \; \expr_1 \\
+         & :   & \Expr \\
+\reg : \Reg & - & a, b, c, ...  \quad \; \text{(local variables)} \\
+\loc : \Loc & - & x, y, z, ... \quad \text{(locations)} \\
+uop, bop & - & \text{arithmetic operations} \\
+\z       & \in & \mathbb{Z}
+\end{array}$
+  \end{center}
+\caption{Синтаксис программ в модели ARMv8 POP}
+\label{fig:syn-arm}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+$\begin{array}{l @{~} r @{~} l}
+\tapeCell & ::= & \tapeRead{\Rstate} \mid \tapeWrite{\Wstate} \\
+          & |   & \tapeFence{\Fstate}{\Ftype} \\
+          & |   & \tapeIfGoto{\IfState}{\z} \mid \tapeAssign \mid \tapeNop \\
+          & :   & \TapeCell \\
+\\
+\satisfiedState & ::= & \Plain \mid \SatisfiedInFlight \mid \Committed \\
+\Rstate & ::= & \None \mid \Issued{\loc} \\
+        & |   & \tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId}{\cpath}{\loc}{\stval}} \\
+\Wstate   & ::= & \None \\
+          & |   & \tapePending{\loc}{\stval} \\
+         & |   & \tapeWriteCommitted{bool}{\loc}{\stval}\\
+\Fstate  & ::= & \None \mid \Committed\\
+\IfState & ::= & \None \mid \Taken \mid \Ignored \; \\
+\stval   :  \Stval  &  = & \Loc \cup \mathbb{Z} \\
+\end{array}$
+  \end{center}
+\caption{Язык состояния исполнения инструкций в ARMv8 POP}
+\label{fig:tape-arm}
+\end{figure}
+
 \section{Формальное определение ``обещающей'' модели}
 \label{sec:armpop:promisemodel}
 
