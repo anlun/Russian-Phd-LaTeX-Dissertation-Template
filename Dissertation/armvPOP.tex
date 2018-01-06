@@ -597,8 +597,9 @@ $\e' \in \Prop(T)$, и который также не может быть пер
 После исполнения инициализирующих записей и старта потоков память и базовые фронты потоков имеют следующие значения:
 \[
 \begin{array}{l}
-M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]}\} \\
-T1.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]; \quad T2.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]
+M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]}\}; \\
+T1.\Rcur = [x@\tstamp{0}, y@\tstamp{0}];
+\quad T2.\Rcur = [x@\tstamp{0}, y@\tstamp{0}].
 \end{array}
 \]
 После того, как левый поток выполняет обе записи, в памяти появляются два новых сообщения
@@ -606,8 +607,8 @@ T1.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]; \quad T2.\Rcur = [x@\tstamp{0}, y@\tsta
 \[
 \begin{array}{l}
 M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [x@\tstamp{0}]},\\
-\quad \quad \quad \graybox{\angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}}, \graybox{\angled{y:1@\tstamp{1}, [x@\tstamp{0}, y@\tstamp{1}]}}\} \\
-T1.\Rcur = [x@\graybox{\tstamp{1}}, y@\graybox{\tstamp{1}}]; \quad T2.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]
+\quad \quad \quad \graybox{\angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}}, \graybox{\angled{y:1@\tstamp{1}, [x@\tstamp{0}, y@\tstamp{1}]}}\}; \\
+T1.\Rcur = [x@\graybox{\tstamp{1}}, y@\graybox{\tstamp{1}}]; \quad T2.\Rcur = [x@\tstamp{0}, y@\tstamp{0}].
 \end{array}
 \]
 Теперь второй поток может прочитать новое сообщение $\angled{y:1@\tstamp{1}, [x@\tstamp{0}, y@\tstamp{1}]}$ и
@@ -636,7 +637,7 @@ T1.\Rcur = [x@\graybox{\tstamp{1}}, y@\graybox{\tstamp{1}}]; \quad T2.\Rcur = [x
 обещающую модель, далее \emph{обещающая машина}, или \emph{машина \Promise}, выглядит следующим образом:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]}\} } \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]}\} }; \\
 T1.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]; & 
 T1.\Racq = [x@\tstamp{0}, y@\tstamp{0}]; & 
 T1.\Rrel = [x@\tstamp{0}, y@\tstamp{0}];           \\
@@ -650,7 +651,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 \[
 \begin{array}{l l l}
 \multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},
-  \graybox{\angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}} \} } \\
+  \graybox{\angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}} \} }; \\
 T1.\Rcur = [x@\graybox{\tstamp{1}}, y@\tstamp{0}]; & 
 T1.\Racq = [x@\graybox{\tstamp{1}}, y@\tstamp{0}]; & 
 T1.\Rrel = [x@\tstamp{0}, y@\tstamp{0}];           \\
@@ -667,7 +668,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 \[
 \begin{array}{l l l}
 \multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},
-  \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]} \}} \\
+  \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]} \}}; \\
 T1.\Rcur = [x@\tstamp{1}, y@\tstamp{0}];           &
 T1.\Racq = [x@\tstamp{1}, y@\tstamp{0}];           &
 T1.\Rrel = [x@\graybox{\tstamp{1}}, y@\tstamp{0}]; \\
@@ -679,7 +680,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 После этого первый поток выполняет вторую запись по тем же правилам, что и первую:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},} \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},}; \\
 \multicolumn{3}{l}{
 \quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \graybox{\angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]}} \}} \\
 T1.\Rcur = [x@\tstamp{1}, y@\graybox{\tstamp{1}}]; &
@@ -695,7 +696,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 $[x@\tstamp{1}, y@\tstamp{1}]$, как это было и в модели $\OpCpp$:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},} \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},}; \\
 \multicolumn{3}{l}{
 \quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]} \}} \\
 T1.\Rcur = [x@\tstamp{1}, y@\tstamp{1}]; &
@@ -710,7 +711,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 базовый фронт $\Rcur$ второго потока становится равным приобретающему фронту $\Racq$:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},} \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},}; \\
 \multicolumn{3}{l}{
 \quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]} \}} \\
 T1.\Rcur = [x@\tstamp{1}, y@\tstamp{1}]; &
