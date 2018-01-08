@@ -957,6 +957,54 @@ $\begin{array}{l @{~} r @{~} l}
 \label{fig:tape-arm}
 \end{figure}
 
+В этом разделе мы описываем нашу формализацию модели ARMv8 POP, которая в \cite{Flur-al:POPL16}
+описывается лишь словесно.
+Синтаксис программ, на которых определена модель, приведён на рис. \ref{fig:syn-arm}.
+Программа представляется как функция $\Cfarm : \Tid \rightarrow \ListOf{\StmtARM}$, которая по
+идентификатору потока возвращает список его инструкций.
+Инструкции имеют следующие типы: чтение ($\readInst{\reg}{\expr}$), запись ($\writeInst{\expr_0}{\expr_1}$),
+барьер памяти ($\fenceInst{\Ftype}$), условный переход ($\ifGotoInst{\expr}{\z}$),
+присваивание в локальную переменную ($\assignInst{\reg}{\expr}$),
+пустая операция ($\nop$).
+
+Подсистема управления машины ARMv8 POP может исполнять инструкции не по порядку и спекулятивно.
+Поскольку в языке присутствуют циклы, каждая инструкция может быть исполнена несколько раз и в разных
+контекстах.
+Чтобы различать исполнения инструкций, мы будем использовать термин \emph{экземпляр инструкции} (instruction instance).
+
+Более того, инструкций она исполняет за несколько шагов, причём шаги исполнения разных
+инструкций могут перемежаться.
+Мы представляем состояние исполнения экземпляра инструкции (instruction instance) с помощью конструкции
+$\tapeCell$ (см. рис. \ref{fig:tape-arm}), чей синтаксис симметричен синтаксису инструкций.
+
+Исполнение инструкции чтения $\Rstate$ может быть в одном из трёх состояний:
+(i)   $\None$, инструкция загружена или её исполнение начато сначала;
+(ii)  $\Issued{\loc}$, отправлен запрос в подсистему памяти;
+(iii) $\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId}{ \cpath}{ \loc}{\stval}}$,
+      запрос получил ответ от 
+
+%% A read instance, $\Rstate$, might be in one of the three following states:
+%% (i)   $\None$, the read is fetched or restarted;
+%% (ii)  $\Issued{\loc}$, the read has a load request from the location $\loc$ in the storage subsystem;
+%% (iii) $\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId}{ \cpath}{ \loc}{\stval}}$, the read has been
+%% satisfied from a write instance $(\tId, \cpath)$ with a value $\stval$.
+%% The $\satisfiedState$ field denotes if the read is satisfied by an in-flight, \ie, not yet
+%% committed to the storage, write ($\SatisfiedInFlight$), the read is satisfied from the committed write
+%% ($\Plain$), or the read is satisfied from the committed write and is committed itself ($\Committed$).
+
+%% A write instance, $\Wstate$, might be
+%% (i)   $\None$, similarly to the read state;
+%% (ii)  $\tapePending{\loc}{\stval}$, the address and the value of the write is determined and
+%% a read from the same thread may read from it;
+%% (iii) $\tapeWriteCommitted{bool}{\loc}{\stval}$, the write is committed and, if $bool = true$,
+%% issued to the storage subsystem (otherwise, it is observable only by same thread read instructions).
+
+%% A fence instance, $\Fstate$, might be either committed ($\Committed$) or not ($\None$).
+%% A conditional branch instance, $\IfState$, signifies that the control flow either jumps to
+%% $\z$ positions ahead ($\Taken$), proceeds to the next instruction ($\Ignored$), or is still undecided ($\None$).
+%% Assignments and $\nop$s instances are just fetched, but not executed.
+%% %% ($\tapeAssign$ and $\tapeNop$ respectively).
+
 \section{Формальное определение обещающей модели}
 \label{sec:armpop:promisemodel}
 
