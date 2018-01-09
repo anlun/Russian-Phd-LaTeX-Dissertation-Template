@@ -1052,11 +1052,132 @@ $\begin{array}{l @{~} r @{~} l}
 Экземпляры присваивания и пустой операции только подгружаются и не исполняются, поэтому
 их состояния не имеют параметров.
 
-%% A fence instance, $\Fstate$, might be either committed ($\Committed$) or not ($\None$).
-%% A conditional branch instance, $\IfState$, signifies that the control flow either jumps to
-%% $\z$ positions ahead ($\Taken$), proceeds to the next instruction ($\Ignored$), or is still undecided ($\None$).
-%% Assignments and $\nop$s instances are just fetched, but not executed.
-%% %% ($\tapeAssign$ and $\tapeNop$ respectively).
+Стоит отметить, что поскольку в каждый момент несколько экземпляров
+(разных) инструкций могут исполняться в одном потоке, невозможно определить
+конкретное значение локальной переменной в целом --- оно может варьироваться в
+контексте разных экземпляров.
+
+\begin{table}
+\[
+\begin{tabular}{L | L | L | L }
+%% \textbf{\#} & \Carm & \tape & \Path & \regst(\Carm, \tape, \cpath) & \regstcom(\Carm, \tape, \cpath)\\
+i & \Carm[i] & \cpath & \tape(\cpath) \\
+\hline
+0 & \readInst{a}{x}; & 0       & \tapeRead{\None} \\
+1 & \writeInst{y}{a}; & 0,1     & \tapeWrite{\None} \\
+2 & \readInst{a}{z}; & 0,1,2   & \tapeRead{(\tapeSatisfied{\Plain}{\stRequestWrite{8_{\tId}}{[0,1,2,3]}{z}{9}})}\\
+3 & \writeInst{w}{a}; & 0,1,2,3 & \tapeWrite{\None}\\
+\end{tabular}
+\]
+\caption{Пример состояния подсистемы управления модели ARMv8 POP}
+\label{tbl:armvpop:tapeex}
+\end{table}
+
+Рассмотрим пример плёнки (см. таб. \ref{tbl:armvpop:tapeex}).
+Здесь программа состоит из четырёх инструкций (столбец $\Carm[i]$),
+каждая из которых имеет по запущенному экземпляру (столбец $\tape(\cpath)$).
+При этом экземпляр инструкции чтения $\readInst{a}{z}$ получил ответ со значением $9$,
+то время как экземпляр $\readInst{a}{x}$ ещё не отправил запрос.
+Как следствие, переменная $a$ имеет значение $9$ на пути $[0,1,2,3]$
+(после экземпляра чтения $\readInst{a}{z}$) и не определена на других путях.
+
+\begin{figure}
+\[
+\begin{array}{l}
+  \quad \regst(\Carm, \tape, []) = \regstcom(\Carm, \tape, []) = \bot; \\
+  \quad \forall i. \; \regst(\Carm, \tape, [i]) = \regstcom(\Carm, \tape, [i]) = \bot; \\
+  \quad \forall i, j. \; \Carm[i] = ``\readInst{\reg}{\expr}" \Rightarrow \\
+  \qquad \regst\comShift(\Carm, \tape, \cpath:i:j) = \regst\comShift(\Carm, \tape, \cpath:i)[\reg \mapsto m] \land \\
+  \qquad \regstcom(\Carm, \tape, \cpath:i:j) = \regstcom(\Carm, \tape, \cpath:i)[\reg \mapsto m_{com}], \text{где} \\
+  \qquad \quad m = \stval, m_{com} = \stval, \\
+  \qquad \qquad \textIfRus \tape(\cpath) = \tapeRead{\tapeSatisfied{\Committed}{\stRequestWrite{\_}{ \_}{ \_}{\stval}}}; \\
+  \qquad \quad \graybox{m = \stval, m_{com} = \bot,} \\
+  \qquad \qquad
+    \graybox{\textIfRus \tape(\cpath) = \tapeRead{\tapeSatisfied{\satisfiedState}{\stRequestWrite{\_}{ \_}{ \_}{\stval}}},
+              \satisfiedState \not = \Committed;} \\
+  \qquad \quad m = \bot, m_{com} = \bot, \\
+  \qquad \qquad \textIfRus \tape(\cpath) = \tapeRead{\Rstate}, \Rstate \in \{ \None, \Issued{\_} \}; \\
+  \quad \forall i, j. \; \Carm[i] = ``\assignInst{\reg}{\expr}" \Rightarrow \\
+  \qquad \regst\comShift(\Carm, \tape, \cpath:i:j) = \regst\comShift(\Carm, \tape, \cpath:i)[a \mapsto \semf{\expr}{\cpath:i}] \land \\
+  \qquad \regstcom(\Carm, \tape, \cpath:i:j) = \regstcom(\Carm, \tape, \cpath:i)[a \mapsto \semfcom{\expr}{\cpath:i}]; \\
+  %% \quad \forall i, j, \Carm[i] = ``\reg_0 = \expr \; \# \; \reg_1", \\
+  %% \qquad \regst\comShift(\Carm, \tape, \cpath:i:j) = \regst\comShift(\Carm, \tape, \cpath:i)[a \mapsto m], \\
+  %% \qquad \regstcom(\Carm, \tape, \cpath:i:j) = \regstcom(\Carm, \tape, \cpath:i)[a \mapsto m_{com}], где \\
+  %% \qquad \quad m \comShift = \textIfRus \semf{\reg_1}{\cpath:i} \not = \bot \; \textThen \semf{\expr}{\cpath:i} \; \textElse \bot, \\
+  %% \qquad \quad m_{com} = \textIfRus \semfcom{\reg_1}{\cpath:i} \not = \bot \; \textThen \semfcom{\expr}{\cpath:i} \; \textElse \bot; \\
+  \quad \forall i, j. \; \regst\comShift(\Carm, \tape, \cpath:i:j) = \regst\comShift(\Carm, \tape, \cpath:i) \land \\
+  \qquad \quad \; \regstcom(\Carm, \tape, \cpath:i:j) = \regstcom(\Carm, \tape, \cpath:i), \text{иначе}.
+\end{array}
+\]
+  \caption{Функции вычисления состояния переменных $\regst$ и $\regstcom$}
+  \label{fig:armvpop:regst}
+\end{figure}
+
+Мы вводим две функции
+$\regst, \regstcom:$
+$(\ListOf{\StmtARM} \times \Tape \times \Path) \rightarrow (\Reg \rightharpoonup \Stval)$,
+где $\regst(\Carm,\tape,\cpath)$ и $\regstcom(\Carm,\tape,\cpath)$
+представляют состояние локальных переменных, актуальное для экземпляра с путём $\cpath$,
+т.е. сразу ``перед'' его исполнением (см. рис. \ref{fig:armvpop:regst}).
+Отличие между функциями , которое выделено серым на рис. \ref{fig:armvpop:regst},
+заключается в том, что $\regst$ учитывает все экземпляры чтения,
+на которые получены ответы, тогда как $\regstcom$ --- только завершённые (committed).
+Значение функций $\regst$ и $\regstcom$ для примера из таб. \ref{tbl:armvpop:tapeex}
+приведено в таб. \ref{tbl:armvpop:regstex}.
+
+\begin{table}
+\[
+\begin{array}{l | l | l}
+%% \textbf{\#} & \Carm & \tape & \Path & \regst(\Carm, \tape, \cpath) & \regstcom(\Carm, \tape, \cpath)\\
+\cpath & \regst(\Carm, \tape, \cpath) & \regstcom(\Carm, \tape, \cpath)\\
+\hline
+ 0       & \bot & \bot \\
+ 0,1     & \bot & \bot \\
+ 0,1,2   & \bot & \bot  \\
+ 0,1,2,3 & [a \mapsto 9] & \bot \\
+\end{array}
+\]
+  \caption{Значение функций $\regst$ и $\regstcom$ для примера из таб. \ref{tbl:armvpop:tapeex}}
+  \label{tbl:armvpop:regstex}
+\end{table}
+
+Функции значения переменных естественным образом обобщаются на функции вычисления
+значения выражений $\Expr \rightharpoonup \Stval$.
+Когда значения параметров $\Carm$, $\tape$ (и $\cpath$) очевидны из контекста,
+мы обозначаем эти функции $\semf{-}{\cpath}$ и $\semfcom{-}{\cpath}$
+(или $\semf{-}{}$ и $\semfcom{-}{}$).
+
+Состояние подсистемы памяти $\Mpop$ состоит из трёх компонент $\angled{ \Evt, \Ord, \Prop }$, где
+$\Evt \subseteq \RequestSet$ --- множество запросов в подсистеме,
+$\Ord \subseteq \Evt \times \Evt$ --- частичный порядок на запросах, и
+$\Prop \subseteq  \Tid \times \Evt$ --- функция, которая по идентификатору потока возвращает
+множество запросов, о которых он осведомлён.
+Запрос $\Request$ является тройкой $\stRequest{\tId}{\cpath}{\RequestInfo}$, где
+$\tId$ --- идентификатор потока, который отправил это запрос,
+$\cpath$ --- путь до соответствующего экземпляра инструкции, и
+$\RequestInfo$ --- информация о типе и параметрах запроса:
+\[ \RequestInfo ::= \reqInfoRead{\loc} \mid \reqInfoWrite{\loc}{\stval} \mid \reqInfoFence.\]
+Так, запрос чтения параметризован целевой локацией, тогда как запрос записи --- целевой
+локацией и записываемым значением.
+
+Полное состояние машины ARMv8 POP $\StateARM$ это тройка $\angled{\Mpop, \IssuingOrderf, \tapef}$,
+где $\Mpop$ --- это состояние подсистемы памяти,
+$\IssuingOrderf : \Tid \rightarrow \ListOf{\RequestSet}$ --- это функция, которая
+для потока возвращает упорядоченный список отправленных им запросов чтения, и
+$\tapef : \Tid \rightarrow \Tape$ представляет плёнки потоков (состояние подсистемы управления).
+Компонента $\IssuingOrderf$ используется для решения конфликтов, вызванных
+отправлением запросов чтения к одной локации не по порядку
+(подробнее описано ниже в правиле \transenv{Получения ответа на чтение}).
+
+Изначальное состояние машины ARMv8 POP имеет инициализирующие записи во все локации
+$\Evt^{\rm init} \triangleq \{ \stRequestWrite{0_{\tId}}{[]}{\loc}{0} \mid \loc \in \Loc \}$,
+где соответствующие запросы не упорядочены, и о них осведомлены все потоки:
+\[
+\sinit \triangleq
+  \angled{\Mpop = \angled{\Evt^{\rm init}, \emptyset, \Tid \times \Evt^{\rm init}},
+          \IssuingOrderf = \lambda \tId. \; [],
+          \tapef = \lambda \tId. \; \bot}.
+\]
 
 \section{Формальное определение обещающей модели}
 \label{sec:armpop:promisemodel}

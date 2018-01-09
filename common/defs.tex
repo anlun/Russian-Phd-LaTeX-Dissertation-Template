@@ -702,13 +702,14 @@
   \newcommand\promTStepgen[1]{\xrightarrow[\Promise \; \tId]{#1}}
   \newcommand\promTStep{\xrightarrow[\Promise \; \tId]{}}
 
-  \newcommand\semState[2]{|[#1|] ^{#2}}
-  \newcommand\semf[2]{|[#1|] ^{#2}}
-  \newcommand\semfcom[2]{|[#1|] ^{#2}_\mathsf{com}}
-  \newcommand\sembr[1]{|[#1|]}
+  \newcommand\semState[2]{\llbracket#1\rrbracket ^{#2}}
+  \newcommand\semf[2]{\llbracket#1\rrbracket ^{#2}}
+  \newcommand\semfcom[2]{\llbracket#1\rrbracket ^{#2}_\mathsf{com}}
+  \newcommand\sembr[1]{\llbracket#1\rrbracket}
   \newcommand\PreExecutions{{\rm PreExecs}}
 
   \newcommand\textIf{\text{\underline{if}} \;}
+  \newcommand\textIfRus{\text{\underline{если}} \;}
   \newcommand\textElif{\text{\underline{elif}} \;}
   \newcommand\textElse{\text{\underline{else}} \;}
   \newcommand\textThen{\text{\underline{then}} \;}

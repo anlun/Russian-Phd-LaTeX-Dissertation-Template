@@ -30,10 +30,10 @@ justification=centering,            % Центрирование подписе�
 
 %%% Таблицы %%%
 \ifnumequal{\value{tabcap}}{0}{%
-    \newcommand{\tabcapalign}{\raggedright}  % по левому краю страницы или аналога parbox
+    \newcommand{\tabcapalign}{\centering}
 
     \DeclareCaptionFormat{tablecaption}{\tabcapalign #1#2#3}
-    \captionsetup[table]{labelsep=emdash}        % тире как разделитель идентификатора с номером от наименования
+    \captionsetup[table]{labelsep=\figlabelsep}        % тире как разделитель идентификатора с номером от наименования
 }{%
     \ifnumequal{\value{tablaba}}{0}{%
         \newcommand{\tabcapalign}{\raggedright}  % по левому краю страницы или аналога parbox
