@@ -1179,6 +1179,77 @@ $\Evt^{\rm init} \triangleq \{ \stRequestWrite{0_{\tId}}{[]}{\loc}{0} \mid \loc 
           \tapef = \lambda \tId. \; \bot}.
 \]
 
+Наша формализация машины ARMv8 POP имеет 12 правил перехода по состояниям.
+Эти переходы в математической нотации приведены в приложении \ref{sec:armpopTrans}.
+Ниже мы приводим неформальное описание правил переходов.
+\begin{description}
+\item[Подгрузка инструкции $\tId \; \cpath$] (fetch instruction)
+  добавляет экземпляр инструкции с состоянием $\None$
+  в плёнку $\tape$ потока  $\tId$.
+
+\item[Уведомление потока $\tId$ о запросе $\e$] (propagation)
+  добавляет $\e$ во множество $\Mpop.\Prop(\tId)$.
+  Правило проверяет, что поток уведомлён о всех запросах $\e'$, т.ч. $\e' <_{\Ord} \e$.
+  Правило также добавляет по ребру $(\e, \e'')$ в $\Ord$ для каждого запроса $\e''$,
+  который не переупорядочиваем с $\e$, и о котором осведомлён поток $\e.\tId$,
+  но не поток $\tId$.
+
+\item[Выбор ветки условного перехода $\tId \; \cpath$] (branch commit)
+  выполняет экземпляр инструкции условного перехода $\ifGoto$ и
+  удаляет одну из веток спекулятивного исполнения из плёнки потока $\tId$ вместе
+  с соответствующими ей запросами из подсистемы памяти.
+
+\item[Завершение барьера $\LD \; \tId \; \cpath$] (fence commit)
+  проверяет, что предшествующие экземпляры чтения завершены (committed),
+  и помечает экземпляр барьера как выполненный.
+\item[Завершение барьера $\SY \; \tId \; \cpath$]
+  проверяет, что все предшествующие экземпляры завершены,
+  помечает экземпляр барьера как выполненный, и отправляет запрос барьера
+  в подсистему памяти.
+
+\item[Write pending $\tId \; \cpath \; \loc \; \stval$] sets the write instruction
+instance to $\tapePending{\loc}{\stval}$, where $\loc$ and $\stval$ are an address and a value
+calculated by the corresponding evaluator.
+
+\item[Write commit $\tId \; \cpath \; \loc \; \stval$] sets the write instruction
+instance to $\tapeWriteCommitted{\_}{\loc}{\stval}$.
+It issues a write request to the storage in case there is no following committed writes
+to the same location in thread's $\tape$.
+It restarts some satisfied load instances, which read from the same location,
+and their dataflow dependents to preserve coherence.
+Previous branch operators and fences have to be committed.
+All previous instructions must have fully determined addresses, \ie, each address in a
+previous instruction instance has to be determined by the corresponding $com$-evaluator.
+
+\item[Read issue $\tId \; \cpath \; \loc$] sends a read request to the storage, and adds it to
+the list of issued read requests (the $\IssuingOrderf(\tId)$ component).
+It requires that previous fences are committed.
+
+\item[Read satisfy $\tId \; \cpath \; \tId' \; \cpath' \; \loc \; \stval$] and
+\transenv{Read satisfy (fail) $\tId \; \cpath \; \tId' \; \cpath' \; \loc \; \stval$} 
+get the read request $\stRequestRead{\tId}{\cpath}{\loc}$ satisfied from the write request
+$\stRequestWrite{\tId'}{\cpath'}{\loc}{\stval}$, if there are no requests between them in the storage.
+The transitions delete the read request from the storage.
+If there are no previous read instances, which issued a read request to the same location
+after  the $(\tId, \cpath)$ instance (according to $\IssuingOrderf(\tId)$) and have been
+satisfied from a different write, the former transition might be applied.
+It assigns the instruction instance to $\tapeSatisfied{\Plain}{\stRequestWrite{\tId'}{\cpath'}{\loc}{\stval}}$
+and restarts some $\cpath$-following reads from the same location (and their dataflow dependents)
+to preserve coherence.
+Otherwise, the latter transition might be applied, which restarts the $(\tId, \cpath)$ instruction
+instance.
+
+\item[Read satisfy from in-flight write $\tId \; \cpath \; \cpath' \; \loc \; \stval$]
+assigns the corresponding instruction instance to $\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{\cpath'}{\loc}{\stval}}$,
+if there is a previous pending write $(\tId, \cpath')$ and there are no writes to the same location in between
+the write and the read, as well as there are no same location reads satisfied from another write. It restarts
+some $\cpath$-following reads as in the case of the transition \transenv{Read satisfy}.
+
+\item[Read commit $\tId \; \cpath$] checks that previous branches and fences are committed,
+all previous instruction instances have a fully determined addresses, and assigns the instruction instance
+to $\tapeSatisfied{\Committed}{\_}$.
+\end{description}
+
 \section{Формальное определение обещающей модели}
 \label{sec:armpop:promisemodel}
 
