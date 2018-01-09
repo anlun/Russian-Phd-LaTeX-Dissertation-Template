@@ -1187,7 +1187,7 @@ $\Evt^{\rm init} \triangleq \{ \stRequestWrite{0_{\tId}}{[]}{\loc}{0} \mid \loc 
   добавляет экземпляр инструкции с состоянием $\None$
   в плёнку $\tape$ потока  $\tId$.
 
-\item[Уведомление потока $\tId$ о запросе $\e$] (propagation)
+\item[Уведомление потока $\tId$ о запросе $\e$] (propagate)
   добавляет $\e$ во множество $\Mpop.\Prop(\tId)$.
   Правило проверяет, что поток уведомлён о всех запросах $\e'$, т.ч. $\e' <_{\Ord} \e$.
   Правило также добавляет по ребру $(\e, \e'')$ в $\Ord$ для каждого запроса $\e''$,
@@ -1206,48 +1206,65 @@ $\Evt^{\rm init} \triangleq \{ \stRequestWrite{0_{\tId}}{[]}{\loc}{0} \mid \loc 
   проверяет, что все предшествующие экземпляры завершены,
   помечает экземпляр барьера как выполненный, и отправляет запрос барьера
   в подсистему памяти.
+  
+\item[Подготовка записи $\tId \; \cpath \; \loc \; \stval$] (write pending)
+  устанавливает состояние экземпляра записи к $\tapePending{\loc}{\stval}$,
+  где $\loc$ и $\stval$ являются целевой локацией и записываемым значением,
+  которые вычисляются по соответствующим выражениям в коде инструкции.
 
-\item[Write pending $\tId \; \cpath \; \loc \; \stval$] sets the write instruction
-instance to $\tapePending{\loc}{\stval}$, where $\loc$ and $\stval$ are an address and a value
-calculated by the corresponding evaluator.
+\item[Завершение записи $\tId \; \cpath \; \loc \; \stval$] (write commit)
+  устанавливает состояние экземпляра записи к $\tapeWriteCommitted{\_}{\loc}{\stval}$.
+  Это правило также отправляет соответствующий запрос в подсистему памяти,
+  но только в том случае, если в плёнке потока нет последующего экземпляра записи
+  в ту же локацию, исполнение которого завершено.
+  Кроме того, правило перезапускает некоторые исполнения экземпляров чтения, целевой
+  локацией которых является $\loc$, а также экземпляры произвольных типов, зависящие
+  от этих экземпляров чтения.
+  Правило имеет несколько ограничений.
+  Так, исполнение всех экземпляров барьеров памяти и условных
+  переходов, предшествующих экземпляру $(\tId, \cpath)$, должно быть завершено;
+  все предшествующие экземпляры должны иметь полностью вычисленные целевые
+  локации (fully determined addresses), т.е. соответствующие выражения адресов
+  должны быть вычисляемы к значению с помощью функции $\regstcom$.
 
-\item[Write commit $\tId \; \cpath \; \loc \; \stval$] sets the write instruction
-instance to $\tapeWriteCommitted{\_}{\loc}{\stval}$.
-It issues a write request to the storage in case there is no following committed writes
-to the same location in thread's $\tape$.
-It restarts some satisfied load instances, which read from the same location,
-and their dataflow dependents to preserve coherence.
-Previous branch operators and fences have to be committed.
-All previous instructions must have fully determined addresses, \ie, each address in a
-previous instruction instance has to be determined by the corresponding $com$-evaluator.
+\item[Отправка запроса на чтение $\tId \; \cpath \; \loc$] (read issue)
+  добавляет соответствующий запрос в подсистему хранения, а также в список отправленных
+  запросов (компонента $\IssuingOrderf(\tId)$).
+  Правило требует, чтобы исполнение предшествующих экземпляров барьеров было завершено.
 
-\item[Read issue $\tId \; \cpath \; \loc$] sends a read request to the storage, and adds it to
-the list of issued read requests (the $\IssuingOrderf(\tId)$ component).
-It requires that previous fences are committed.
+\item[Получение ответа на чтение $\tId \; \cpath \; \tId' \; \cpath' \; \loc \; \stval$]
+  (read satisfy) и 
+\transenv{Игнорирование ответа на чтение $\tId \; \cpath \; \tId' \; \cpath' \; \loc \; \stval$} 
+  (read satisfy fail)
+получает ответ на запрос $\stRequestRead{\tId}{\cpath}{\loc}$ из запроса записи
+$\stRequestWrite{\tId'}{\cpath'}{\loc}{\stval}$, если между ними нет запроса в отношении $\Ord$.
+Правила переходов удаляют запрос на чтение из подсистемы памяти.
+Если в плёнке потока не присутствует предшествующего экземпляра чтения из той же локации,
+которой отправил запрос в подсистему памяти после экземпляра $(\tId, \cpath)$
+(что определяется с помощью компоненты $\IssuingOrderf(\tId)$)
+и получил ответ от другого запроса записи, то применяется переход
+\transenv{Получение ответа на чтение}. Этот переход присваивает экземпляру чтения
+состояние $\tapeSatisfied{\Plain}{\stRequestWrite{\tId'}{\cpath'}{\loc}{\stval}}$
+и перезапускает некоторые последующие экземпляры чтения из той же локации вместе с зависимостями,
+если это требуется для восстановления корректности.
+Если условие не выполняется, то применяется переход \transenv{Игнорирование ответа на чтение},
+который перезапускает экземпляр $(\tId, \cpath)$.
 
-\item[Read satisfy $\tId \; \cpath \; \tId' \; \cpath' \; \loc \; \stval$] and
-\transenv{Read satisfy (fail) $\tId \; \cpath \; \tId' \; \cpath' \; \loc \; \stval$} 
-get the read request $\stRequestRead{\tId}{\cpath}{\loc}$ satisfied from the write request
-$\stRequestWrite{\tId'}{\cpath'}{\loc}{\stval}$, if there are no requests between them in the storage.
-The transitions delete the read request from the storage.
-If there are no previous read instances, which issued a read request to the same location
-after  the $(\tId, \cpath)$ instance (according to $\IssuingOrderf(\tId)$) and have been
-satisfied from a different write, the former transition might be applied.
-It assigns the instruction instance to $\tapeSatisfied{\Plain}{\stRequestWrite{\tId'}{\cpath'}{\loc}{\stval}}$
-and restarts some $\cpath$-following reads from the same location (and their dataflow dependents)
-to preserve coherence.
-Otherwise, the latter transition might be applied, which restarts the $(\tId, \cpath)$ instruction
-instance.
+\item[Получение ответа на чтение от подготовленной записи
+  $\tId \; \cpath \; \cpath' \; \loc \; \stval$]
+  (read satisfy from in-flight write)
+устанавливает состояние экземпляра чтения в
+$\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{\cpath'}{\loc}{\stval}}$
+при условии, что существует подготовленный незавершенный экземпляр записи $(\tId, \cpath')$,
+и не существует экземпляра записи в ту же локацию между ними или экземпляра чтения из той же
+локации, который получил ответ от другой записи.
+Это правило также, как и правило \transenv{Получение ответа на чтение},
+перезапускает некоторые последующие экземпляры чтения.
 
-\item[Read satisfy from in-flight write $\tId \; \cpath \; \cpath' \; \loc \; \stval$]
-assigns the corresponding instruction instance to $\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{\cpath'}{\loc}{\stval}}$,
-if there is a previous pending write $(\tId, \cpath')$ and there are no writes to the same location in between
-the write and the read, as well as there are no same location reads satisfied from another write. It restarts
-some $\cpath$-following reads as in the case of the transition \transenv{Read satisfy}.
-
-\item[Read commit $\tId \; \cpath$] checks that previous branches and fences are committed,
-all previous instruction instances have a fully determined addresses, and assigns the instruction instance
-to $\tapeSatisfied{\Committed}{\_}$.
+\item[Завершение чтения $\tId \; \cpath$] (read commit)
+  проверяет, что все предшествующие экземпляры барьеров памяти и условных переходов завершены,
+  все предшествующие экземпляры имеют полностью определённые адреса, и
+  присваивает экземпляру состояние $\tapeSatisfied{\Committed}{\_}$.
 \end{description}
 
 \section{Формальное определение обещающей модели}
