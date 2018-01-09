@@ -983,9 +983,17 @@ uop, bop & - & \text{arithmetic operations} \\
 вершины с двумя исходящими ребрами представляют условные переходы, условие
 которых ещё не вычислено.
 
+Каждый экземпляр инструкции идентифицируется парой $(\tId,\cpath)$,
+где $\tId$~---~это идентификатор потока,
+а $\cpath : \Path \triangleq \ListOf{\mathbb{N}}$ --- это путь в дереве подсистемы управления
+от его корня до экземпляра. Этот путь кодируется как список позиций инструкций, соответствующих
+предшествующим экземплярам. Так, путём экземпляра $a$ на рис. \ref{fig:armvpop:dag} является
+список $[0]$, экземпляра $b$ --- $[0,1]$, а экземпляра $f$ --- $[0,1,8,9]$.
 
-Каждый экземпляр идентифицируется парой $(\tId,\cpath)$, где $\tId$ --- это идентификатор потока,
-а $\cpath$ --- это путь в потоке управления до экземпляра. П
+Граф состояния подсистемы управления кодируется как \emph{плёнка}
+$\tape : \Tape \triangleq \Path \rightharpoonup \TapeCell$ --- частичная функция, которая по пути экземпляра
+возвращает его состояние. Корректная плёнка является префикс-замкнутой: если она определена для
+некоторого пути, то она определена и для префикса этого пути.
 
 \begin{figure}
   \begin{center}
@@ -1010,9 +1018,8 @@ $\begin{array}{l @{~} r @{~} l}
 \label{fig:tape-arm}
 \end{figure}
 
-
-Состояние экземпляра представляется с помощью \emph{ячейки плёнки} $\tapeCell$ (см. рис. \ref{fig:tape-arm}),
-чей синтаксис симметричен синтаксису инструкций.
+Состояние экземпляра представляется с помощью \emph{ячейки плёнки} $\tapeCell: \TapeCell$ (см. рис. \ref{fig:tape-arm}),
+чей синтаксис симметричен синтаксису инструкций. Рассмотрим возможные состояния экземпляра в зависимости от его типа.
 
 %% Исполнение каждого экземпляра начинается с \emph{выборки} (fetching) --- добавления соответствующей
 %% записи 
@@ -1020,23 +1027,30 @@ $\begin{array}{l @{~} r @{~} l}
 (i)   $\None$, экземпляр только загружен или его исполнение начато сначала;
 (ii)  $\Issued{\loc}$, экземпляр отправил запрос в подсистему памяти;
 (iii) $\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId}{ \cpath}{ \loc}{\stval}}$,
-      экземпляр запрос получил ответ от 
+      экземпляра получил ответ от экземпляра записи $(\tId, \cpath)$ со значением $\stval$.
+      Поле $\satisfiedState$ сигнализирует об одной из трёх ситуаций:
+      чтение произведено из экземпляра записи, исполнение которого ещё не завершено
+      ($\SatisfiedInFlight$);
+      чтение произведено из завершенного экземпляра записи ($\Plain$); или
+      чтение произведено из завершенного экземпляра записи, и исполнение самого
+      экземпляра чтения завершено ($\Committed$).
 
-%% A read instance, $\Rstate$, might be in one of the three following states:
-%% (i)   $\None$, the read is fetched or restarted;
-%% (ii)  $\Issued{\loc}$, the read has a load request from the location $\loc$ in the storage subsystem;
-%% (iii) $\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId}{ \cpath}{ \loc}{\stval}}$, the read has been
-%% satisfied from a write instance $(\tId, \cpath)$ with a value $\stval$.
-%% The $\satisfiedState$ field denotes if the read is satisfied by an in-flight, \ie, not yet
-%% committed to the storage, write ($\SatisfiedInFlight$), the read is satisfied from the committed write
-%% ($\Plain$), or the read is satisfied from the committed write and is committed itself ($\Committed$).
+Экземпляр инструкции записи $\Wstate$ может быть также в одном из трёх состояний:
+(i)   $\None$;
+(ii)  $\tapePending{\loc}{\stval}$, целевые адрес и значение экземпляра определены,
+и экземпляры чтения из того же потока могут читать из этого экземпляра записи;
+(iii) $\tapeWriteCommitted{bool}{\loc}{\stval}$, исполнение экземпляра завершено,
+и если $bool = true$, то соответствующий запрос отправлен в подсистему памяти,
+иначе --- экземпляр может быть прочитан только экземплярами чтения того же потока.
 
-%% A write instance, $\Wstate$, might be
-%% (i)   $\None$, similarly to the read state;
-%% (ii)  $\tapePending{\loc}{\stval}$, the address and the value of the write is determined and
-%% a read from the same thread may read from it;
-%% (iii) $\tapeWriteCommitted{bool}{\loc}{\stval}$, the write is committed and, if $bool = true$,
-%% issued to the storage subsystem (otherwise, it is observable only by same thread read instructions).
+Исполнение экземпляра барьера памяти $\Fstate$ может быть либо завершено 
+($\Committed$), либо нет ($\None$).
+Состояние экземпляра условного перехода $\IfState$ указывает, что
+либо условие было вычислено к не нулевому значению, и переход на $\z$ позиций в 
+списке инструкций произошёл ($\Taken$); либо --- к нулевому значению, и переход произошёл
+к следующей инструкции ($\Ignored$); либо выбор ещё не сделан ($\None$).
+Экземпляры присваивания и пустой операции только подгружаются и не исполняются, поэтому
+их состояния не имеют параметров.
 
 %% A fence instance, $\Fstate$, might be either committed ($\Committed$) or not ($\None$).
 %% A conditional branch instance, $\IfState$, signifies that the control flow either jumps to

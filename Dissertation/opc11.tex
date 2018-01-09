@@ -927,14 +927,14 @@ $\stPsiRead$, которая по идентификатору потока $\st
 \angled{\AST, \stPsiRead[\stpath \mapsto \stSigmaRead^{l} \sqcup \stSigmaRead^{r}]},
 \]
 %
-где $\stpath = \Path(\EvalContext)$,
+где $\stpath = \Pathf(\EvalContext)$,
 $\stSigmaRead^{l} = \stPsiRead(\stpath\:l)$ и
 $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
 
 \begin{figure}
 \begin{mathpar}
   \inferrule[Read-Uninit]{
-  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Pathf(\EvalContext) \quad
   \stSigmaRead = \stPsiRead(\stpath) \quad \stSigmaRead(\loc) = \bot
   }{
 \angled{\EvalContext[\readExpr{\RM}{\loc}], \auxX} \astep{} 
@@ -942,7 +942,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
   }\\
 
   \inferrule[CAS-Uninit]{
-  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) 
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Pathf(\EvalContext) 
   \quad
   \stSigmaRead = \stPsiRead(\stpath) \quad \stSigmaRead(\loc) = \bot
   }{
@@ -966,7 +966,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
 \begin{figure}
 \begin{mathpar}
   \inferrule[Write-Release]{
-  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Pathf(\EvalContext) \quad
   \stTau = \NextTau{\stEta}{\loc} \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
@@ -978,7 +978,7 @@ $\stSigmaRead^{r} = \stPsiRead(\stpath\:r)$.
   } \\
 
   \inferrule[Read-Acquire]{
-  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Path(\EvalContext) \quad 
+  \auxX = \angled{\stEta, \stPsiRead} \quad \stpath = \Pathf(\EvalContext) \quad 
   \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \stSigmaRead(\loc) \leq \stTau \\
@@ -1014,7 +1014,7 @@ $\stSigmaRead(\loc)$.
 \begin{figure}
 \begin{mathpar}
   \inferrule[WriteSC]{
-  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stSC}} \quad \stpath = \Path(\EvalContext) \quad
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stSC}} \quad \stpath = \Pathf(\EvalContext) \quad
   \stTau = \NextTau{\stEta}{\loc} \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
@@ -1027,7 +1027,7 @@ $\stSigmaRead(\loc)$.
   } \\
 
   \inferrule[ReadSC]{
-  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stSC}} \quad \stpath = \Path(\EvalContext) \quad 
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stSC}} \quad \stpath = \Pathf(\EvalContext) \quad 
   \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \graybox{\mathsf{max}(\stSigmaRead(\loc), \stSC(\loc)) \leq \stTau} \\
@@ -1063,7 +1063,7 @@ $\stSigmaRead(\loc)$.
 \begin{figure}
 \begin{mathpar}
   \inferrule[WriteNA]{
-  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stNA}} \quad \stpath = \Path(\EvalContext) \\
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stNA}} \quad \stpath = \Pathf(\EvalContext) \\
   \stTau = \NextTau{\stEta}{\loc} \\
   \stSigmaRead = \stPsiRead(\stpath) \\
   \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
@@ -1077,7 +1077,7 @@ $\stSigmaRead(\loc)$.
 
   \inferrule[ReadNA]{
   \auxX = \angled{\stEta, \stPsiRead, \graybox{\stNA}} \\
-  \stpath = \Path(\EvalContext) \\
+  \stpath = \Pathf(\EvalContext) \\
   \graybox{\stTau = \LastTau{\stEta}{\loc}} \\
   \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
   \graybox{\stTau \equiv \stSigmaRead(\loc)}  \\
@@ -1089,7 +1089,7 @@ $\stSigmaRead(\loc)$.
   
   \inferrule[ReadNA-stuck1]{
     \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
-    \stpath = \Path(\EvalContext) \\
+    \stpath = \Pathf(\EvalContext) \\
     \stSigmaRead = \stPsiRead(\stpath) \\
     \stSigmaRead(\loc) \neq \LastTau{\stEta}{\loc}
   }{
@@ -1099,7 +1099,7 @@ $\stSigmaRead(\loc)$.
 
   \inferrule[WriteNA-stuck1]{
     \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
-    \stpath = \Path(\EvalContext) \\
+    \stpath = \Pathf(\EvalContext) \\
     \stSigmaRead = \stPsiRead(\stpath) \\
     \stSigmaRead(\loc) \neq \LastTau{\stEta}{\loc}
   }{
@@ -1109,7 +1109,7 @@ $\stSigmaRead(\loc)$.
 
   \inferrule[ReadNA-stuck2]{
     \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
-    \stpath = \Path(\EvalContext) \\
+    \stpath = \Pathf(\EvalContext) \\
     \stSigmaRead = \stPsiRead(\stpath) \\
     \stSigmaRead(\loc) < \stNA(\loc)
   }{
@@ -1119,7 +1119,7 @@ $\stSigmaRead(\loc)$.
 
   \inferrule[WriteNA-stuck2]{
     \auxX = \angled{\stEta, \stPsiRead, \stNA} \\
-    \stpath = \Path(\EvalContext) \\
+    \stpath = \Pathf(\EvalContext) \\
     \stSigmaRead = \stPsiRead(\stpath) \\
     \stSigmaRead(\loc) < \stNA(\loc)
   }{
@@ -1159,7 +1159,7 @@ $\na$-записи в которую он не осведомлён, т.е. ег
 \begin{figure}
 \begin{mathpar}
   \inferrule[Read-Relaxed]{
-  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Path(\EvalContext) \quad 
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Pathf(\EvalContext) \quad 
   \stEta(\loc, \stTau) = (\mvalSubst, \stSigma) \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \stSigmaRead(\loc) \leq \stTau \\
@@ -1170,7 +1170,7 @@ $\na$-записи в которую он не осведомлён, т.е. ег
   } \\
 
   \inferrule[Write-Relaxed]{
-  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Path(\EvalContext) \quad
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Pathf(\EvalContext) \quad
   \stTau = \NextTau{\stEta}{\loc} \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
@@ -1184,7 +1184,7 @@ $\na$-записи в которую он не осведомлён, т.е. ег
   } \\
 
   \inferrule[Write-Release']{
-  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Path(\EvalContext) \quad
+  \auxX = \angled{\stEta, \stPsiRead, \graybox{\stPsiWrite}} \quad \stpath = \Pathf(\EvalContext) \quad
   \stTau = \NextTau{\stEta}{\loc} \\
   \stSigmaRead = \stPsiRead(\stpath) \quad
   \stSigma = \stSigmaRead[\loc \mapsto \stTau] \\
