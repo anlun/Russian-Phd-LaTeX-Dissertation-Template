@@ -1,0 +1,417 @@
+\chapter{Правила переходов и вспомогательные функции машины ARMv8 POP}
+\label{sec:armpopTrans}
+
+{\small
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad \tape(\cpath) = \bot \quad
+  \lastInstr{\cpath} < size(\Carm) \\
+  \exists \cpath'. (\tape(\cpath') \not = \bot \lor \cpath' = []) \land \cpath \in \nextPathCom{\cpath'}{\Carm}{\tape} \\
+  \tape' \triangleq \tape[\cpath \mapsto \getNewTapeCell(\Carm[\lastInstr{\cpath}])]
+}{
+  \Cfarm[\tId \mapsto \Carm] \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Fetch instruction} \; \tId \; \cpath}
+    \angled{\Mpop, \IssuingOrderf, \tapef[\tId \mapsto \tape']}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \e \in \Evt \quad \lnot\Prop(\tId,\e) \quad \forall \e' <_{\Ord} \e. \; \Prop(\tId,\e') \quad
+  \Prop' \triangleq \Prop \cup \{ (\tId, \e) \} \\
+  \Ord' \triangleq (\Ord \cup \{ (\e, \e') \mid \Prop(\tId,\e') \land \lnot \Prop(\e.\tId,\e'),
+  \notReorderableRel{\e}{\e'}, \lnot (\e' <_{\Ord} \e) \})^{+}
+}{
+  \Cfarm \vdash
+    \angled{\Mcomp{\Evt}{\Ord}{\Prop}, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Propagate} \; \e \; \tId}
+    \angled{\Mcomp{\Evt}{\Ord'}{\Prop'}, \IssuingOrderf, \tapef}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad \tape(\cpath) = \tapeIfGoto{\None}{\z} \quad
+  \stval \triangleq |[\expr|] _{com} \in \mathbb{Z} \\
+  \prevBrCommitted(\cpath, \tape) \\
+  (\IfState, \tape') \triangleq \tapeUpdIf(\stval, \z, \cpath, \tape) \\
+  \Mpop' \triangleq \deleteUpdReads(\tId, \tape', \Mpop) \\
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Branch commit} \; \tId \; \cpath}
+    \angled{\Mpop', \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tapef(\tId, \cpath) = \tapeFence{\None}{\LD} \quad
+  \tapef' \triangleq \tapef[(\tId, \cpath) \mapsto \tapeFence{\Committed}{\LD}] \\
+  \prevReadsCommitted(\cpath, \tapef(\tId)) \quad
+  \prevFencesCommitted(\cpath, \tape(\tId)) \\
+  \prevBrCommitted(\cpath, \tapef(\tId)) \\
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Fence commit} \; \LD \; \tId \; \cpath}
+    \angled{\Mpop, \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tapef(\tId, \cpath) = \tapeFence{\None}{\SY} \quad
+  \tapef' \triangleq \tapef[(\tId, \cpath) \mapsto \tapeFence{\Committed}{\SY}] \\
+  \prevInstrCommitted(\cpath, \tapef(\tId)) \\
+  %% \tape' \triangleq \tape[\cpath \mapsto \tapeFence{\Committed}{\Ftype}] \quad
+  \Mpop' \triangleq \acceptRequest(\stRequestFence{\tId}{ \cpath}, \Mpop)
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Fence commit} \; \SY \; \tId \; \cpath}
+    \angled{\Mpop', \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tapef(\tId, \cpath) = \tapeWrite{\None} \quad
+  \Cfarm(\tId)[\lastInstr{\cpath}] = ``[\expr_0] := \expr_1" \\
+  |[\expr_0|] = \loc \quad |[\expr_1|] = \stval \quad
+  \tapef' = \tapef[(\tId, \cpath) \mapsto \tapeWrite{(\tapePending{\loc}{\stval})}]
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Write pending} \; \tId \; \cpath \; \loc \; \stval}
+    \angled{\Mpop, \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad \tape(\cpath) = \tapeWrite{(\tapePending{\loc}{\stval})} \quad \Carm \triangleq \Cfarm(\tId) \\
+  \Carm[\lastInstr{\cpath}] = ``[\expr_0] := \expr_1" \quad |[\expr_0|] _{com} = \loc \quad |[\expr_1|] _{com} = \stval \\
+  \prevFencesCommitted(\cpath, \tape) \quad
+  \prevBrCommitted(\cpath, \tape) \\
+  \prevCmdDetermined(\cpath, \tape) \quad
+  \prevNoRestart(\loc, \cpath, \tape)\\
+  im \triangleq \noFollowingWcom(\loc, \cpath, \tape) \\
+  \tape' \triangleq \tapeUpdWcom(im, \loc, \stval, \Carm, \tId, \cpath, \tape) \\
+  \tapef' = \tapef[\tId \mapsto \tape'] \quad
+  \Mpop'' \triangleq \deleteUpdReads(\tId, \tape', \Mpop) \\
+  \Mpop' \triangleq \textIf im \; \textThen \acceptRequest(\stRequestWrite{\tId}{ \cpath}{\loc}{\stval}, \Mpop'') \; \textElse \Mpop'' 
+}{
+  \angled{\Mpop, \IssuingOrderf, \tapef, \Cfarm}
+  \armStepWriteCommitPLoc
+  \angled{\Mpop', \IssuingOrderf, \tapef', \Cfarm}
+}
+
+%% \inference{
+%%   \tape \triangleq \tapef(\tId) \quad \tape(\cpath) = \tapeWrite{(\tapePending{x}{\stval})} \quad \Carm \triangleq \Cfarm(\tId) \\
+%%   \Carm[\lastInstr{\cpath}] = ``[\expr_0] := \expr_1" \quad |[\expr_0|] _{com} = x \quad |[\expr_1|] _{com} = \stval \\
+%%   \prevFencesCommitted(\cpath, \tape) \quad
+%%   \prevBrCommitted(\cpath, \tape) \\
+%%   \prevCmdDetermined(\cpath, \tape) \quad
+%%   \prevNoRestart(x, \cpath, \tape)\\
+%%   im \triangleq \noFollowingWcom(x, \cpath, \tape) \\
+%%   \tape' \triangleq \tapeUpdWcom(im, x, \stval, \Carm, \tId, \cpath, \tape) \\
+%%   \tapef' = \tapef[\tId \mapsto \tape'] \quad
+%%   \Mpop'' \triangleq \deleteUpdReads(\tId, \tape', \Mpop) \\
+%%   \Mpop' \triangleq \textIf im \; \textThen \acceptRequest(\stRequestWrite{\tId}{ \cpath}{ x}{\stval}, \Mpop'') \; \textElse \Mpop'' 
+%% }{
+%%   \angled{\Mpop, \IssuingOrderf, \tapef, \Cfarm}
+%%   \armStepWriteCommitP
+%%   \angled{\Mpop', \IssuingOrderf, \tapef', \Cfarm}
+%% }
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad \tape(\cpath) = \tapeRead{\None} \\
+   \Cfarm(\tId)[\lastInstr{\cpath}] = ``\reg = [\expr]" \quad |[\expr|] = \loc \quad
+  \e \triangleq \stRequestRead{\tId}{\cpath}{\loc} \\
+  \tapef' = \tapef[(\tId, \cpath) \mapsto \tapeRead{(\Issued{\loc})}] \quad \prevFencesCommitted(\cpath, \tape) \\
+  \IssuingOrder' \triangleq append(\e, \IssuingOrderf(\tId)) \quad
+  \IssuingOrderf' = \IssuingOrderf[\tId \mapsto \IssuingOrder'] \quad
+  \Mpop' \triangleq \acceptRequest(\e, \Mpop)
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Read issue} \; \tId \; \cpath \; \loc}
+    \angled{\Mpop', \IssuingOrderf', \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad
+  \tape(\cpath) = \tapeRead{(\Issued{\loc})} \quad
+  \e \triangleq \stRequestRead{\tId}{ \cpath}{\loc} \quad \e' \triangleq \stRequestWrite{\tId'}{ \cpath'}{\loc}{\stval} \\
+     \angled{\Evt, \Ord, \Prop} \triangleq \Mpop \quad
+  \{\e, \e'\} \subseteq \Evt \quad \e' <_{\Ord} \e \quad
+  \samePropagated(\e, \e', \Prop) \\
+  \forall \e^{*}, \e' <_{\Ord} \e^{*} <_{\Ord} \e, get\loc(\e^{*}) \not = \loc \land \fullyPropagated(\e^{*}, \Prop) \\
+  \lnot \prevReadFromOther(\loc, \e', \tId, \cpath, \IssuingOrderf(\tId)) \\
+  \tape' \triangleq \tapeUpdRsat(\Plain, \loc, \stval, \Carm, \tId, \cpath, \tId', \cpath', \tape) \\
+  \tapef' = \tapef[\tId \mapsto \tape'] \quad \Mpop' \triangleq \deleteUpdReads(\tId, \tape', \Mpop) \\
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPrSatLoc
+    \angled{\Mpop', \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad
+  \tape(\cpath) = \tapeRead{(\Issued{\loc})} \quad
+  \e \triangleq \stRequestRead{\tId}{ \cpath}{\loc} \quad \e' \triangleq \stRequestWrite{\tId'}{ \cpath'}{\loc}{\stval} \\
+     \angled{\Evt, \Ord, \Prop} \triangleq \Mpop \quad
+  \{\e, \e'\} \subseteq \Evt \quad \e' <_{\Ord} \e \quad
+  \samePropagated(\e, \e', \Prop) \\
+  \forall \e^{*}, \e' <_{\Ord} \e^{*} <_{\Ord} \e, get\loc(\e^{*}) \not = \loc \land \fullyPropagated(\e^{*}, \Prop) \\
+  \prevReadFromOther(\loc, \e', \tId, \cpath, \IssuingOrderf(\tId)) \\
+  \tape' \triangleq \tape[\cpath \mapsto \tapeRead{\None}] \quad \tapef' = \tapef[\tId \mapsto \tape'] \\
+  \Mpop' \triangleq \deleteUpdReads(\tId, \tape', \Mpop) \\
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPrSatFailLoc
+    \angled{\Mpop', \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad
+  \tape(\cpath) = \tapeRead{\None} \quad \tape(\cpath') = \tapeWrite{(\tapePending{\loc}{\stval})} \\
+  \cpath' < \cpath \quad \Carm \triangleq \Cfarm(\tId) \quad
+    \Carm[\lastInstr{\cpath}] = ``\reg = [\expr]" \quad |[\expr|]^{\cpath} = \loc \\
+  \noWritesBetween(\loc, \Carm, \cpath', \cpath, \tape) \\
+  \noDiffReadsBetween(\loc, \tId, \cpath', \cpath, \tape) \\
+  \tape' \triangleq \tapeUpdRsat(\SatisfiedInFlight, \loc, \stval, \Carm, \tId, \cpath, \tId, \cpath', \tape) \\
+  \tapef' = \tapef[\tId \mapsto \tape'] \quad \Mpop \triangleq \deleteUpdReads(\tId, \tape', \Mpop) \\
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPrInFlightSatLoc
+    \angled{\Mpop', \IssuingOrderf, \tapef'}
+}
+
+\vspace{.5cm}
+
+\inference{
+  \tape \triangleq \tapef(\tId) \quad
+  \tape(\cpath) = \tapeRead{(\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId'}{ \cpath'}{\loc}{\stval}})} \\
+  \satisfiedState \not = \Committed \quad \Carm \triangleq \Cfarm(\tId) \quad
+  \prevCmdDetermined(\cpath, \tape) \\
+  \prevFencesCommitted(\cpath, \tape) \quad
+  \prevBrCommitted(\cpath, \tape) \\
+  \cpath'' = \mathsf{max}\{ \cpath^{*} < \cpath | \Carm[\lastInstr{\cpath^{*}}] = ``[\expr_0] := \expr_1", |[\expr_0|] ^{\cpath^{*}} _{com} = \loc \} \\
+  \textIf (\tId', \cpath') = (\tId, \cpath'') \; \textThen \tape(\cpath') \; \text{is fully determined}
+                                                   \; \textElse \tape(\cpath') \; \text{is committed} \\
+  \readsBetweenCommitted(\cpath'', \cpath, \tape, \Carm) \\
+  \tape' \triangleq \tape[\cpath \mapsto \tapeRead{(\tapeSatisfied{\Committed}{\stRequestWrite{\tId'}{ \cpath'}{\loc}{\stval}})}] \quad
+  \tapef' = \tapef[\tId \mapsto \tape'] \\
+}{
+  \Cfarm \vdash
+    \angled{\Mpop, \IssuingOrderf, \tapef}
+    \armStepPgen{\transenv{Read commit} \; \tId \; \cpath}
+    \angled{\Mpop, \IssuingOrderf, \tapef'}
+}
+
+\[
+\begin{array}{l}
+\prevInstrCommitted(\cpath, \tape) \triangleq \forall \cpath' < \cpath, \tape(\cpath') \; \text{is committed}. \\
+\prevReadsCommitted(\cpath, \tape) \triangleq
+  \forall \cpath' < \cpath, \tape(\cpath') = \tapeRead{\_} => \tape(\cpath') \; \text{is committed}. \\
+\prevFencesCommitted(\cpath, \tape) \triangleq
+  \forall \cpath' < \cpath, \tape(\cpath') = \tapeFence{\Fstate}{\_} => \Fstate = \Committed. \\
+\prevBrCommitted(\cpath, \tape) \triangleq
+  \forall \cpath' < \cpath, \tape(\cpath') = \tapeIfGoto{\IfState}{\_} => \IfState \not = \None. \\
+\prevCmdDetermined(\cpath, \tape) \triangleq
+  \forall \cpath' < \cpath, \tape(\cpath') \; \text{has a fully determined address}. \\
+\prevNoRestart(\loc, \cpath, \tape) \triangleq \\
+\quad \forall \cpath' < \cpath, \reg, \expr, \tape(\cpath') = \tapeRead{\Rstate},
+      \Carm[\lastInstr{\cpath'}] = ``\reg = [\expr]", |[\expr|] = \loc => \\
+\quad \quad \Rstate = \tapeSatisfied{\_}{\_} \; \land \tape(\cpath') \; \text{can't be restarted}. \\
+\\
+\noFollowingWcom(\loc, \cpath, \tape) \triangleq
+  \nexists \cpath' > \cpath, \; \tape(\cpath') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})}. \\
+%% \\
+%% \checkReorderings{S} \triangleq S \setminus \{ (\e_0, \e_1) \mid \reorderableRel{\e_0}{\e_1} \}. \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\tapeUpdIf(\stval, \z, \cpath, \tape) \triangleq \\
+\quad \text{let} \; \IfState \triangleq
+      \textIf \stval \not = 0 \; \textThen \Taken \; \textElse \Ignored \; \text{in} \\
+\quad \text{let} \; \cpath_{drop} \triangleq
+      \textIf \stval \not = 0 \;
+      \textThen \mathsf{append}(\lastInstr{\cpath} + 1, \cpath) \;
+      \textElse \mathsf{append}(\lastInstr{\cpath} + k, \cpath) \; \text{in} \\
+\quad (\IfState, \lambda \; \cpath' -> \\
+\quad \quad \textIf \mathsf{prefix}(\cpath_{drop}, \cpath') \; \textThen \bot \\
+\quad \quad \textElif \cpath' = \cpath \; \textThen \tapeIfGoto{\IfState}{\z} \\
+\quad \quad \textElse \tape(\cpath')). \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\readsBetweenCommitted(\cpath'', \cpath, \tape, \Carm) \triangleq \\
+\quad \forall \cpath^{*} > \cpath'', \cpath^{*} < \cpath, \\
+\quad \quad \Carm[\lastInstr{\cpath^{*}}] = ``\reg = [\expr]", |[\expr|] ^{\cpath^{*}} _{com} = x =>
+            \tape(\cpath^{*}) \; \text{is committed}. \\
+\\
+\noWritesBetween(\loc, \Carm, \cpath', \cpath, \tape) \triangleq \\
+\quad \not \exists \cpath^{*} > \cpath', \cpath^{*} < \cpath, \Carm[\lastInstr{\cpath^{*}}] = ``[\expr_0] := \expr_1",
+      |[\expr_0|]^{\cpath^{*}} = \loc.\\
+\\
+\noDiffReadsBetween(\loc, \tId', \cpath', \cpath, \tape) \triangleq \\
+\quad \not \exists \tId'' \not = \tId', \cpath'' \not = \cpath', \cpath^{*} > \cpath', \cpath^{*} < \cpath,
+      \tape(\cpath^{*}) = \tapeRead{(\tapeSatisfied{\_}{\stRequestWrite{\tId''}{ \cpath''}{\loc}{\_}})}. \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\deleteUpdReads(\tId, \tape, \angled{\Evt, \Ord, \Prop}) \triangleq \\
+\quad \textLet \textit{to-delete} \triangleq
+\{ \e \in \Evt \mid \e.\tId = \tId, \tape'(\e.\cpath) \not = \tapeRead{(\Issued{\_})} \} \; \textIn \\
+\quad \textLet \Evt' \triangleq \Evt \setminus \textit{to-delete} \; \textIn \\
+\quad \textLet \Prop' = \Prop \setminus (\mathbb{N} \times \textit{to-delete}) \; \textIn \\
+\quad \textLet \Ord'  = (\checkReorderings{\Ord \setminus (\Evt \times \textit{to-delete} \cup \textit{to-delete} \times \Evt)})^{+}
+ \; \textIn \\
+\quad \angled{\Evt', \Ord', \Prop'}. \\
+\\
+\acceptRequest(\e, \angled{\Evt, \Ord, \Prop}) \triangleq \\
+\quad \textLet \Evt' = \Evt \cup \{ \e \} \; \textIn \\
+\quad \textLet \Prop' = \Prop[\tId \mapsto \Prop(\tId) \cup \{ \e \}]  \; \textIn \\
+\quad \textLet \Ord'  = (\Ord \cup \{(\e', \e) | \e' \in \Prop(\tId), \notReorderableRel{\e'}{\e} \})^{+} \; \textIn \\
+\quad \angled{\Evt', \Ord', \Prop'}.
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\samePropagated(\e, \e', \Prop) \triangleq \;
+\{ \tId \mid \Prop(\tId, e) \} = \{ \tId \mid \Prop(\tId, e') \} \\
+\fullyPropagated(\e, \Prop) \triangleq \;
+\forall \tId, \Prop(\tId, e) \lor \nexists e'. \Prop(\tId, e'). \\
+get\loc(\e) \triangleq
+\; \text{match} \; \e \; \text{with}
+\;   \stRequestRead{\_}{ \_}{\loc}
+\mid \stRequestWrite{\_}{ \_}{\loc}{\_} -> \loc
+\mid \_ -> \bot
+\; \text{end}. \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\prevReadFromOther(\loc, \e', \tId, \cpath, \IssuingOrder) \triangleq \\
+\quad \exists \cpath^{*} < \cpath, \\
+\quad \quad last\_index(\stRequestRead{\tId}{ \cpath^{*}}{\loc}, \IssuingOrder) > last\_index(\stRequestRead{\tId}{ \cpath}{\loc}, \IssuingOrder), \\
+\quad \quad \tape(\cpath^{*}) = \tapeRead{(\tapeSatisfied{\_}{\Request})}, \Request \not = \e'). \\
+\\
+\getNewTapeCell(\StmtARM) \triangleq \\
+\quad \text{match} \; \StmtARM \; \text{with} \\
+\quad | ``\readInst{\reg}{\expr}" -> \tapeRead{\None} \\
+\quad | ``\writeInst{\expr_0}{\expr_1}" -> \tapeWrite{\None} \\
+\quad | ``\fenceInst{\Ftype}" -> \tapeFence{\None}{\Ftype} \\
+\quad | ``\ifGotoInst{\expr}{\z}" -> \tapeIfGoto{\None}{\z} \\
+\quad | ``\reg = \expr" -> \tapeAssign \\
+\quad | ``\nop" -> \tapeNop \\
+\quad \text{end}. \\
+\\
+\e <_{\Ord} \e' \triangleq (\e, \e') \in \Ord. \\
+\reorderableRel{\stRequest{\tId}{ \cpath}{ \RequestInfo}}{\stRequest{\tId'}{ \cpath'}{ \RequestInfo'}} \triangleq \\
+\quad \textIf \SY \in \{\RequestInfo,\RequestInfo'\} \; \textThen false \\
+\quad \textElif \RequestInfo.\loc = \RequestInfo'.\loc \not = \bot \; \textThen false \\
+\quad \textElse true. \\
+%% \quad \textIf \{\RequestInfo,\RequestInfo'\} \subseteq \{\LD, \SY\} \; \textThen false \\
+%% \quad \textElif \SY \in \{\RequestInfo,\RequestInfo'\} \; \textThen false \\
+%% \quad \textElif \exists \loc, \stval. \{\RequestInfo,\RequestInfo'\} \subseteq \{\loc, \loc:\stval\} \; \textThen false \\
+%% \quad \textElif \RequestInfo' = \LD \land \tId = \tId' \land \exists \loc, \RequestInfo = \loc \; \textThen false \\
+%% \quad \textElif \RequestInfo  = \LD \land \tId = \tId' \; \text{then}  \; false \\
+%% \quad \textElse true. \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\nextPathCom{\cpath}{\Carm}{\tape} \triangleq filter(\lambda \cpath' \rightarrow \lastInstr{\cpath'} < size(\Carm),  \\
+\quad \textIf \cpath = [] \; \textThen \{ [0] \} \\
+\quad \textElif \tape(\cpath) = \bot \; \textThen \emptyset \\
+\quad \textElif \exists k, \tape(\cpath) = \tapeIfGoto{\None}{k} \; \textThen
+      \{ snoc(\cpath, \lastInstr{\cpath} + 1), snoc(\cpath, \lastInstr{\cpath} + k) \} \\
+\quad \textElif \exists k, \tape(\cpath) = \tapeIfGoto{\Taken}{k} \; \textThen
+      \{ snoc(\cpath, \lastInstr{\cpath} + k) \} \\
+\quad \textElse \{ snoc(\cpath, \lastInstr{\cpath} + 1) \}). \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\tapeUpdRestart(\Carm, \tId, \tape) \triangleq \\
+\quad fixpoint(\lambda \tape' -> \\
+\qquad \lambda \cpath -> \\
+\qquad \quad \textIf \Carm[\lastInstr{\cpath}] = ``\reg = [\expr]" \land \semf{\expr}{\cpath} = \bot \\
+\qquad \qquad \textThen \tapeRead{\None} \\
+\qquad \quad \textElif \exists \cpath'',
+                  \tape'(\cpath) = \tapeRead{(\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{ \cpath''}{ \_}{\_}})} \land
+                  \tape'(\cpath'') = \tapeWrite{\None} \\
+\qquad \qquad \textThen \tapeRead{\None} \\
+\qquad \quad \textElif \Carm[\lastInstr{\cpath}] = ``[\expr_0] = \expr_1" \land
+                  (\semf{\expr_0}{\cpath} = \bot \lor \semf{\expr_1}{\cpath} = \bot) \\
+\qquad \qquad \textThen \tapeWrite{\None} \\
+\qquad \quad \textElse \tape'(\cpath))(\tape). \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\tapeUpdWcom(im, \loc, \stval, \Carm, \tId, \cpath, \tape) \triangleq \\
+\quad \tapeUpdRestart(\Carm, \tId, \\
+\qquad \lambda \cpath' -> \\
+\qquad \quad \textIf   \cpath' = \cpath \; \textThen \tapeWrite{(\tapeWriteCommitted{im}{\loc}{\stval})} \\
+\qquad \quad \textElif \cpath' < \cpath \; \textThen \tape(\cpath') \\
+\qquad \quad \textElif \tape(\cpath') = \tapeRead{(\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{ \cpath}{\loc}{\stval}})}
+            \\
+\qquad \qquad \textThen \tape(\cpath') = \tapeRead{(\tapeSatisfied{\Plain}{\stRequestWrite{\tId}{ \cpath}{\loc}{\stval}})} \\
+\qquad \quad \textElif \tape(\cpath') = \tapeRead{(\Issued{\loc})} \; \textThen \tapeRead{\None} \\
+\qquad \quad \textElif \exists \cpath'' < \cpath,
+                      \tape(\cpath') =\tapeRead{(\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{ \cpath''}{\loc}{\_}})}
+                      \; \textThen \tapeRead{\None} \\
+\qquad \quad \textElif \exists \tId'', \cpath'', \lnot (\tId'' = \tId \land \cpath'' \ge \cpath) \land
+                      \tape(\cpath') =\tapeRead{(\tapeSatisfied{\Plain}{\stRequestWrite{\tId''}{ \cpath''}{\loc}{\_}})}
+                      \\
+\qquad \qquad \textThen \tapeRead{\None} \\
+\qquad \quad \textElse \tape(\cpath')). \\
+\\
+\tapeUpdRsat(\satisfiedState, \loc, \stval, \Carm, \tId, \cpath, \tId', \cpath', \tape) \triangleq \\
+\quad \tapeUpdRestart(\Carm, \tId, \\
+\qquad \lambda \cpath'' -> \\
+\qquad \quad \textIf   \cpath'' = \cpath \;
+                  \textThen \tapeRead{(\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId'}{ \cpath'}{\loc}{\stval}})} \\
+\qquad \quad \textElif \cpath'' < \cpath \; \textThen \tape(\cpath'') \\
+\qquad \quad \textElif \exists \cpath^{*} < \cpath,
+                  \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\SatisfiedInFlight}{\stRequestWrite{\tId}{ \cpath^{*}}{\loc}{\_}})}
+                  \; \textThen \tapeRead{\None} \\
+\qquad \quad \textElif \exists \tId^{*}, \cpath^{*},
+                  \lnot (\tId^{*} = \tId  \land \cpath^{*} > \cpath ) \land
+                  \lnot (\tId^{*} = \tId' \land \cpath^{*} = \cpath') \land \\
+\qquad \qquad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Plain}{\stRequestWrite{\tId^{*}}{ \cpath^{*}}{\loc}{\_}})}
+                  \; \textThen \tapeRead{\None} \\
+\qquad \quad \textElse \tape(\cpath'')).
+\end{array}
+\]
+
+}
+
