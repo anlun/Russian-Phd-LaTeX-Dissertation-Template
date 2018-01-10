@@ -817,6 +817,7 @@ ARMv8 POP и её произвольного сценария поведения
 Центральная теорема главы, которая утверждает корректность компиляции между
 моделями, формулируется так:
 \begin{theorem}
+  \label{armvpop:mainthm}
   Для любой программы $\Cfarm$ и её сценария поведения в модели ARMv8 POP,
   $\Cfarm \vdash \sinit \armStepP^{*} \s$,
   где $\s$ --- финальное состояние, $\finalStateP(\s, \Cfarm)$,
@@ -2003,5 +2004,203 @@ $\Rarm$ для пути $\cpath$.
 \cite{Podkopaev-al:ECOOP17}.
 
 \section{Доказательство корректности компиляции}
+\noindent
+В этом разделе мы докажем основную теорему главы, представленную в
+разделе~\ref{sec:armpop:highlevel}.
+
+\noindent
+  \emph{\textbf{Теорема \ref{armvpop:mainthm}.}
+  Для любой программы $\Cfarm$ и её сценария поведения в модели ARMv8 POP,
+  $\Cfarm \vdash \sinit \armStepP^{*} \s$,
+  где $\s$ --- финальное состояние, $\finalStateP(\s, \Cfarm)$,
+  существует сценарий поведения этой программы в обещающей модели,
+  $\Cfprom \vdash \pinit \promStep^{*} \p$,
+  где $\p$ --- финальное состояние $\finalStateProm(\p, \Cfprom)$,
+  и состояния памяти в $\s$ и $\p$ совпадают, $\sameMemory(\s, \p)$.
+  }
+
+\newcommand{\TSfprom}{\TSf}
+%% Here $\finalStateProm(\p, \Cfprom)$ means that the Promise machine cannot make a further transition
+%% (each thread's $\cpath$ points out of the thread's program instruction list) from $\p$ and
+%% all promises are fulfilled.
+\begin{proof}
+  Let's fix the program $\Cfprom$. In the remainder of the section we write $``\s \armStepP \s'"$ instead of
+  $``\Cfprom \vdash \s \armStepP \s'"$ for all machines.
+We apply the result of \cref{sec:sim-armt-arm}, and change the proof goal to the simulation for the ARM+$\tau$ machine:\\
+\[\begin{array}{l}
+  \forall \Cfprom, %\Cfarm = compilation(\Cfprom), \\
+  \aT. \; \ainit \armStep^{*} \aT \land \finalStateA(\aT, \Cfarm) \Rightarrow \\
+  \quad \exists \p. \; \pinit \promStep^{*} \p \land \finalStateProm(\p, \Cfprom) \land \sameMemory(\aT, \p). \\
+\end{array}\]
+To prove it, we introduce a number of relations between ARM+$\tau$ and Promise states, which are
+parts of the simulation relation.
+
+%% First of all, the programs have to be the same: $\invCf(\aT, \p) \triangleq \aT.\Cfarm = \p.\Cfprom.$
+%% First of all, the domains of per-thread components of the state have to be the same:
+%% \[\invTId(\aT, \p) \triangleq \dom{\aT.\tapef} = \dom{\aT.\IssuingOrderf} = \dom{\p.\TSfprom} (= \dom{\Cfprom}).\]
+%% In all following invariants we implicitly assume that $\tId$s are from $\dom{\aT.\Cfarm}$.
+The $\invPrefix$ relation states that every instruction instance, which has been executed by the Promise machine,
+has been executed by the ARM+$\tau$ machine:
+\[
+\invPrefix(\aT, \p) \triangleq \forall \tId, \cpath' < \p.\TSfprom(\tId).\cpath. \;
+     \aT.\tapef(\tId, \cpath') \; \text{is committed}. \\
+\]
+The next relations connect the memories of the machines. $\invMemOne$ states that for every write, which is committed by the
+ARM+$\tau$ machine, there is a message in the Promise memory to the same location with the same value and timestamp,
+and its view is less or equal to the corresponding view of the ARM request. If the $\cpath$ of the committed write
+is less than the corresponding thread's pointer to the next instruction ($\p.\TSfprom(\tId).\cpath$), then the write is
+fulfilled, otherwise it is promised but not fulfilled:
+\[\begin{array}{l}
+\invMemOne(\aT, \p) \triangleq \forall \tId, \loc, \stval, \tau, \R', \cpath. \\
+  \quad \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\stval})} = \aT.\tapef(\tId, \cpath) \land
+        \angled{\tau, \_, \R'} = \aT.\hmap(\tId, \cpath) \Rightarrow \\
+  \quad \exists \R \le \R'. \\
+  \qquad (\cpath \ge \p.\TSfprom(\tId).\cpath \Rightarrow \writeEvt{\loc}{\stval}{\tau}{\R} \in \p.\TSfprom(\tId).\PromSet)\land \\
+  \qquad (\cpath <   \p.\TSfprom(\tId).\cpath \Rightarrow \\
+  \qquad \quad
+    \writeEvt{\loc}{\stval}{\tau}{\R} \in
+    \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet). \\
+\end{array}\]
+$\invMemTwo$ connects the memories in other direction: for every message in the Promise memory (except for initial ones) there is a
+committed write instruction instance in the ARM+$\tau$ machine:
+\[\begin{array}{l}
+\invMemTwo(\aT, \p) \triangleq
+  \forall \writeEvt{\loc}{\stval}{\tau}{\R} \in \p.\Mprom. \; \tau \not = \tstamp{0} \Rightarrow
+    \exists \tId, \cpath, \R' \ge \R. \\
+  \quad  \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\stval})} = \aT.\tapef(\tId, \cpath) \land
+      \aT.\hmap(\tId, \cpath) = \angled{\tau, \_, \R'}.
+\end{array}\]
+$\invMemThree$ relates initial writes to locations: 
+\[\begin{array}{l}
+\invMemThree(\aT, \p) \triangleq
+  \forall \loc. \; \stRequestWrite{0_{\tId}}{[]}{\loc}{0} \in \aT.\Mpop \land \writeEvt{\loc}{0}{\tstamp{0}}{\lambda \loc. \; \tstamp{0}} \in \p.\Mprom.
+\end{array}\]
+$\invView$ says that views of a Promise thread are restricted by the composition of singleton
+views of writes and reads committed by the ARM thread.
+For the acquire view, it counts all the writes and reads up to $\cpath$.
+For the current view, it counts all the writes up to $\cpath$ and reads up to the latest
+committed $\LD$ fence ($\lastLD(\tape, \cpath)$).
+For the release view, it counts all writes up to the latest committed $\SY$ fence
+($\lastSY(\tape, \cpath)$) and reads up to the latest committed $\LD$ fence before
+the $\SY$ fence ($\lastLDSY(\tape, \cpath)$).
+\[\begin{array}{l}
+\invView(\aT, \p) \triangleq
+  \forall \tId, \tape = \aT.\tapef(\tId), \cpath = \p.\TSfprom(\tId).\cpath. \\
+  \quad \textLet \cpath^{\LD}, \cpath^{\SY} \triangleq
+    \lastLD(\tape, \cpath),\lastSY(\tape, \cpath) \; \textIn \\
+  \quad \textLet \cpath^{\LD\SY} \triangleq \lastLDSY(\tape, \cpath) \; \textIn \\
+  %% \quad \textLet viewf(\cpath_{\bf \sf read}, \cpath_{\bf \sf write}) \triangleq \\
+  %% \quad \quad \bigsqcup \readsSatisfiedR(\cpath_{\bf \sf read}, \tape, \aT.\hmap)  \sqcup
+    %% \bigsqcup \opstau(\tId, \cpath_{\bf \sf write}, \tape, \aT.\hmap) \; \textIn \\
+  \quad (\p.\TSfprom(\tId).\Racq \le \bigsqcup \viewf(\tId, \cpath, \cpath, \tape, \aT.\hmap)) \land \\
+  \quad (\p.\TSfprom(\tId).\Rcur \le \bigsqcup \viewf(\tId, \cpath^{\LD}, \cpath, \tape, \aT.\hmap)) \land \\
+  \quad (\p.\TSfprom(\tId).\Rrel \le \bigsqcup \viewf(\tId, \cpath^{\LD\SY}, \cpath^{\SY}, \tape, \aT.\hmap).\\
+\end{array}\]
+$\invState$ declares that a variable state of a Promise thread is the same as the committed state function up to
+the corresponding $\cpath$ of the ARM thread:
+\[\begin{array}{l}
+\invState(\aT, \p) \triangleq
+  \forall \tId, \regf = \regstcom(\Cfarm(\tId), \aT.\tapef(\tId), \p.\TSfprom(\tId).\cpath). \\
+  \quad \quad \forall \reg, \p.\TSfprom(\tId).\PromState(\reg) = \regf(\reg).\\
+\end{array}\]
+$\invComWrite$ says that if an ARM thread committed a write, then all $\cpath$-previous $\SY$ fences are executed by
+the corresponding Promise thread:
+\[\begin{array}{l}
+\invComWrite(\aT, \p) \triangleq
+  \forall \tId, \tape = \aT.\tapef(\tId), \\
+  \quad \cpath_{write} = \lastCommittedWrite(\tape), \cpath_{\SY} < \cpath_{write}. \\
+  \qquad  \tape(\cpath_{\SY}) = \tapeFence{\_}{\SY} \Rightarrow \cpath_{\SY} < \p.\TSfprom(\tId).\cpath.
+\end{array}\]
+where $\lastCommittedWrite(\tape)$ is a $\cpath$ of a last write committed by the thread.
+The relation is necessary for certification of the Promise machine steps.
+
+\noindent
+$\invReach$ asserts that states are reachable:%
+\[\invReach(\aT, \p) \triangleq \ainit \armStepP^{*} \aT \land \pinit \promStep^{*} \p.\]
+
+The relation $\simrelBase$ combines the aforementioned relations:
+\[\simrelBase \triangleq \invPrefix \cap \invMemOne \cap \invMemTwo \cap \invMemThree \cap \invView \cap \invState \cap \invComWrite \cap \invReach.\]
+
+In the simulation, either the Promise machine is waiting for the next step of the ARM+$\tau$ machine,
+or there is a Promise thread which should make at least one non-\transenv{Promise write} step
+(corresponding to an instruction which the thread's $\cpath$ component is pointing to).
+A Promise thread $\tId$ is waiting for the corresponding ARM thread, if
+the next command to be executed, which is pointed by $\cpath$, is not fetched or committed
+in the ARM thread.
+\[\begin{array}{l}
+\invPromUptoARMtId(\tId,\aT,\p) \triangleq
+  \textLet \tape, \cpath \triangleq \aT.\tapef(\tId), \p.\TSfprom(\tId).\cpath \; \textIn \\
+  \quad \tape(\cpath) = \bot \lor \tape(\cpath) \; \text{is not committed}. \\
+
+\arraycolsep=1.4pt
+\begin{array}{lllll}
+\invPromUptoARM & (\aT,\p) & \triangleq \forall & \tId. \; & \invPromUptoARMtId(\tId,\aT,\p). \\
+  %% \text{Or:} \\
+  %% \forall \tId, \tape = \aT.\tapef(\tId), \cpath = \p.\TSfprom(\tId).\cpath \Rightarrow \\
+  %% \quad \tape(\cpath) = \bot \lor \tape(\cpath)\; \text{is not committed}. \\
+\invPromUptoARMnot & (\aT,\p) & \triangleq \exists! & \tId. \; \lnot & \invPromUptoARMtId(\tId,\aT,\p). \\
+\end{array}
+\end{array}\]
+The relations are used to define two simulation relations:
+\[
+\simrelPre \triangleq \simrelBase \cap \invPromUptoARMnot \quad\qquad
+\simrel    \triangleq \simrelBase \cap \invPromUptoARM 
+\]
+If the states are related by $\simrelPre$, there is a thread of the Promise machine which may 
+take a step (which is not \transenv{Promise write}) by executing the next instruction its $\cpath$ is pointing to.
+After it either the thread has to make another step ($\simrelPre(\aT, \p')$), or all threads of the
+Promise machine are waiting ($\simrel(\aT, \p')$):
+\begin{lemma}
+\label{lem-snd}
+$\forall (\aT, \p) \in \simrelPre. \;
+\exists \p'. \p \promStep \p' \land (\aT, \p') \in \simrelPre \cup \simrel$.
+\end{lemma}
+\noindent
+As at every specific state of the ARM+$\tau$ machine it has committed a finite number of instruction instances,
+we show that the Promise machine can make a finite number of transitions to get its state to satisfy $\simrel$:
+\begin{lemma}
+\label{lem-trd}
+$\forall (\aT, \p) \in \simrelPre. \;
+\exists \p'. \; \p \promStep^{*} \p' \land (\aT, \p') \in \simrel$.
+\end{lemma}
+\noindent
+Suppose, the ARM+$\tau$ and Promise machine states are related by $\simrel$.
+Then, we show that the ARM+$\tau$ machine may make a step. If the step is \transenv{Write commit},
+then the Promise machine has to promise the corresponding message, and the states of the machines
+are related by $\simrelPre \cup \simrel$. If the step is not \transenv{Write commit}, then
+the Promise machine does not make a step, and the states are related by the same relation
+$\simrelPre \cup \simrel$.
+%% \begin{restatable}{lem}{lemmaFst}
+\begin{lemma}
+\label{lem-fst}
+$\forall (\aT, \p) \in \simrel. \\
+(\forall \aT'. \; \aT \armStepgen{\lnot \; \transenv{Write commit}} \aT' \Rightarrow (\aT', \p) \in \simrelPre \cup \simrel) \land {} \\
+(\forall \aT'. \; \aT \armStepgen{\transenv{Write commit}} \aT' \Rightarrow
+\exists \p'. \; \p \promStepgen{\transenv{Promise write}} \p' \land  (\aT', \p') \in \simrelPre \cup \simrel)$.
+\end{lemma}
+%% \end{restatable}
+Then, we state the following lemma:
+%% \begin{restatable}{lem}{lemmaFth}
+\begin{lemma}
+  \label{lem-fth}
+%% $\forall (\aT, \p) \in \simrel, \aT'. \; \aT \armStep \aT' \Rightarrow
+$\forall (\aT, \p) \in \simrel. \;
+\exists \p'. \; \p \promStep^{*} \p' \land (\aT', \p') \in \simrel$.
+\end{lemma}
+%% \end{restatable}
+\noindent
+It straightforwardly follows from the three previous lemmas.%
+\footnote{Proofs of the lemmas can be found
+  \ifext{in \cref{appendix-proofs}}{ in the extended version of the paper \cite{Podkopaev-al:ECOOP17TR}}.}
+
+The theorem is proved by induction on the ARM+$\tau$ execution using Lemma \ref{lem-fth}.
+The machine memories are the same at the end due to $\invMemOne$ and $\invMemTwo$.
+The only thing, which we need to show, is that $\finalStateProm(\p, \Cfprom)$ holds.
+
+The Promise machine cannot make a further step (each thread's $\cpath$ points out of the thread's
+instruction list), as otherwise the ARM+$\tau$ machine would be able to fetch a new instruction
+instance, and $\finalStateA(\aT, \Cfarm)$ would not hold. Each thread has fulfilled its promises
+according to $\invMemOne$ and $\invMemTwo$.
+\end{proof}
 \section{Выводы}
 \app{Описать расширение доказательства на остальные части обещающей модели}
