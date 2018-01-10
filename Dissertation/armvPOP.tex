@@ -637,7 +637,7 @@ T1.\Rcur = [x@\graybox{\tstamp{1}}, y@\graybox{\tstamp{1}}]; \quad T2.\Rcur = [x
 обещающую модель, далее \emph{обещающая машина}, или \emph{машина \Promise}, выглядит следующим образом:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]}\} }; \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]}\}; } \\
 T1.\Rcur = [x@\tstamp{0}, y@\tstamp{0}]; & 
 T1.\Racq = [x@\tstamp{0}, y@\tstamp{0}]; & 
 T1.\Rrel = [x@\tstamp{0}, y@\tstamp{0}];           \\
@@ -651,7 +651,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 \[
 \begin{array}{l l l}
 \multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},
-  \graybox{\angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}} \} }; \\
+  \graybox{\angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}} \}; } \\
 T1.\Rcur = [x@\graybox{\tstamp{1}}, y@\tstamp{0}]; & 
 T1.\Racq = [x@\graybox{\tstamp{1}}, y@\tstamp{0}]; & 
 T1.\Rrel = [x@\tstamp{0}, y@\tstamp{0}];           \\
@@ -668,7 +668,7 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 \[
 \begin{array}{l l l}
 \multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},
-  \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]} \}}; \\
+  \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]} \};} \\
 T1.\Rcur = [x@\tstamp{1}, y@\tstamp{0}];           &
 T1.\Racq = [x@\tstamp{1}, y@\tstamp{0}];           &
 T1.\Rrel = [x@\graybox{\tstamp{1}}, y@\tstamp{0}]; \\
@@ -680,9 +680,9 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 После этого первый поток выполняет вторую запись по тем же правилам, что и первую:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},}; \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},} \\
 \multicolumn{3}{l}{
-\quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \graybox{\angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]}} \}} \\
+\quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \graybox{\angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]}} \};} \\
 T1.\Rcur = [x@\tstamp{1}, y@\graybox{\tstamp{1}}]; &
 T1.\Racq = [x@\tstamp{1}, y@\graybox{\tstamp{1}}]; &
 T1.\Rrel = [x@\tstamp{1}, y@\tstamp{0}]; \\
@@ -696,9 +696,9 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 $[x@\tstamp{1}, y@\tstamp{1}]$, как это было и в модели $\OpCpp$:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},}; \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},} \\
 \multicolumn{3}{l}{
-\quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]} \}} \\
+\quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]} \};} \\
 T1.\Rcur = [x@\tstamp{1}, y@\tstamp{1}]; &
 T1.\Racq = [x@\tstamp{1}, y@\tstamp{1}]; &
 T1.\Rrel = [x@\tstamp{1}, y@\tstamp{0}]; \\
@@ -711,9 +711,9 @@ T2.\Rrel = [x@\tstamp{0}, y@\tstamp{0}]. \\
 базовый фронт $\Rcur$ второго потока становится равным приобретающему фронту $\Racq$:
 \[
 \begin{array}{l l l}
-\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},}; \\
+\multicolumn{3}{l}{M = \{\angled{x:0@\tstamp{0}, [x@\tstamp{0}]}, \angled{y:0@\tstamp{0}, [y@\tstamp{0}]},} \\
 \multicolumn{3}{l}{
-\quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]} \}} \\
+\quad \quad \quad \angled{x:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{0}]}, \angled{y:1@\tstamp{1}, [x@\tstamp{1}, y@\tstamp{1}]} \};} \\
 T1.\Rcur = [x@\tstamp{1}, y@\tstamp{1}]; &
 T1.\Racq = [x@\tstamp{1}, y@\tstamp{1}]; &
 T1.\Rrel = [x@\tstamp{1}, y@\tstamp{0}]; \\
@@ -1511,11 +1511,16 @@ $\forall \s. \; \sinit \armStepP^{*} \s \Rightarrow
   Проверим все три типа возможных изменений:
   \begin{description}
     \item[Удаление запроса $\e$]:
-      \[\Evt' = \Evt \setminus \{\e\}, \Prop' = \Prop \setminus \{(\tId, \e) \mid \tId \},
-        \Ord' = (\checkReorderings{\Ord \setminus (\{\e\} \times \Evt) \setminus (\Evt \times \{\e\})})^{+}\]
+      \[\begin{array}{l}
+        \Evt' = \Evt \setminus \{\e\}, \Prop' = \Prop \setminus \{(\tId, \e) \mid \tId \}, \\
+        \Ord' = (\checkReorderings{\Ord \setminus (\{\e\} \times \Evt) \setminus (\Evt \times \{\e\})})^{+}
+        \end{array}\]
     \item[Отправка запроса $\e$ потоком $\tId$]:
-      \[\Evt' = \Evt \cup \{\e\}, \Prop' = \Prop \cup \{(\tId, \e)\},
-        \Ord' = (\Ord \cup \{(\e', \e) \mid \Prop(\tId, \e'), \notReorderableRel{\e'}{\e} \})^{+} \]
+      \[\begin{array}{l}
+        \Evt' = \Evt \cup \{\e\}, \Prop' = \Prop \cup \{(\tId, \e)\}, \\
+        \Ord' = (\Ord \cup \{(\e', \e) \mid \Prop(\tId, \e'), \notReorderableRel{\e'}{\e} \})^{+}
+        \end{array}
+      \]
     \item[Поток $\tId$ становится осведомлённым о запросе $\e$]:
       \[\begin{array}{l}\Evt' = \Evt, \Prop' = \Prop \cup \{ (\tId, \e) \}, \\
         \Ord' = (\Ord \cup \{ (\e, \e') \mid \Prop(\tId,\e'),  \lnot \Prop(\e.\tId,\e'),
@@ -1573,6 +1578,7 @@ $\forall \s, \s'. \; \s \armStepP^{*} \s'  \Rightarrow \s.\Ord \cap (\s'.\Evt \t
 \end{proof}
 
 \subsection{Модель ARMv8 POP и метки времени}
+\label{sec:arm-timestamps}
 Зафиксируем некоторую программу $\Cfarm$ и рассмотрим её завершающийся сценарий
 поведения в модели ARMv8 POP:
 $$
@@ -1657,9 +1663,204 @@ ${\restrict{mo}{\s^j.\Evt}} \cup \s^j.\Ord$ проходит только чер
 \end{proof}
 
 \subsection{Определение машины \ARMt}
+В состоянии машины \ARMt~добавляется один дополнительный компонент 
+$\hmap : \Tid \times \Path \rightharpoonup \Timestamp \times 2^{\RequestSet} \times \View$
+относительно машины ARMv8 POP.
+%% where $\tau : \Timestamp = \mathbb{Q}$ is a set of timestamps, and $\R : \View = \Loc \rightharpoonup \Timestamp$
+%% is a partial function from locations to timestamps, similar to per-thread and message views in the Promise machine.
+Компонента $\hmap$ является частичной функцией, определённой на экземплярах инструкций
+записи, которые завершили своё исполнение.
+Каждому такому экземпляру $(\tId, \cpath)$ функция сопоставляет
+(\emph{i}) метку времени,
+(\emph{ii}) множество запросов записи и барьеров $S$ в подсистеме памяти,
+которые гарантировано предшествуют в смысле отношения $\Ord$ запросу экземпляра $(\tId, \cpath)$,
+если такой запрос присутствует в подсистеме,
+и (\emph{iii}) фронт сообщения в стиле обещающей модели:
+по локации $\loc$ он возвращает максимальную метку времени среди запросов записи
+в эту локацию из множества $S$.
+Для краткости мы определяем проекции компоненты $\hmap$:
+$\tmap: \Tid \times \Path \rightharpoonup \Timestamp$,
+$\omap: \Tid \times \Path \rightharpoonup 2^{\RequestSet}$, и
+$\rmap: \Tid \times \Path \rightharpoonup \View$.
+Компонента $\hmap$ начального состояния машины $\ARMt$,
+$\ainit \triangleq \angled{\sinit, \hmap^{\rm init}}$,
+присваивает нулевые метки времени всем инициализирующим записям:
+$\hmap^{\rm init} \triangleq [(0_{\tId}, []) \mapsto
+  \angled{\tstamp{0}, \lambda \loc. \; \tstamp{0}, \emptyset}]$.
+
+\begin{figure}
+\centering
+$\begin{array}{@{}c@{}}
+\displaystyle\frac{\begin{array}{@{}c@{}}
+  \Cfarm \vdash
+  \s \armStepPgen{\mathit{label}} \s'
+\\
+ \mathit{label} \not \in \{ \transenv{Propagate} \; \_ \; \_, \transenv{Write commit} \; \_ \; \_ \; \_ \; \_ \}
+\end{array}
+}{
+  \Cfarm \vdash
+    \angled{\s, \hmap}
+    \armStepgen{\mathit{label}}
+    \angled{\s', \hmap}
+}
+\\
+\\
+\displaystyle\frac{\begin{array}{@{}c@{}}
+  \Cfarm \vdash
+  \s \armStepPgen{\transenv{Propagate} \; \e \; \tId} \s' \\
+  \s'.\Ord \cup \moTau(\s'.\Evt, \tmap) \; \text{ациклично}
+\end{array}
+}{
+  \Cfarm \vdash
+    \angled{\s, \hmap}
+    \armStepgen{\transenv{Propagate} \; \e \; \tId}
+    \angled{\s', \hmap}
+}
+\\
+\\
+\displaystyle\frac{\begin{array}{@{}c@{}}
+\Cfarm\vdash \s 
+  \armStepWriteCommitPLoc
+  \angled{\Mpop', \IssuingOrderf', \tapef'} \\
+  \begin{array}{@{}r@{~~~~~~}l@{}}
+  \tapef'(\tId, \cpath) = \tapeWrite{(\tapeWriteCommitted{im}{\loc}{\stval})} &
+    \tape \triangleq \s.\tapef(\tId) \\
+  \timeRangeCondition(im, \loc, \tau, \tId, \cpath, \tape, \hmap) &
+    \coherentThread(\loc, \tau, \cpath, \tape, \hmap) \\
+  \uniqueTimeLoc(\loc, \tau, \s.\tapef, \hmap) &
+    \cpath^{\SY} \triangleq \lastSY(\tape, \cpath) \\
+  \end{array} \\
+  \begin{array}{@{}r r@{~}l@{}}
+  S & \triangleq & \textIf \cpath^{\SY} \not = [] \\
+    & &\textThen \{\stRequestFence{\tId}{\cpath^{\SY}}\} \cup \OrdPrevRequest(\tId, \cpath^{\SY}, \tape, \hmap) \\
+    & & \textElse \emptyset \\
+  S' &\triangleq& \textIf im \; \textThen S \cup \{ \stRequestWrite{\tId}{\cpath}{\loc}{\stval} \} \; \textElse S \\
+  \R &\triangleq& [\loc @ \tau] \sqcup \viewf(\tId, \cpath^{\SY}, \cpath^{\SY}, \tape, \hmap) \\
+  \hmap' &\triangleq& \hmap[(\tId, \cpath) \mapsto (\tau,S',\R)]
+  %% \bigsqcup \opstau(\tId, \cpath^{\SY}, \tape, \hmap) \sqcup \bigsqcup \readsSatisfiedR(\cpath^{\SY}, \tape, \hmap) \\
+  \end{array}\\
+  \Mpop'.\Ord \cup \moTau(\Mpop'.\Evt, \tmap') \; \text{ациклично} \\
+\end{array}
+}{
+\Cfarm \vdash 
+  \angled{\s, \hmap}
+  \armStepWriteCommitLoc
+  \angled{\angled{\Mpop', \IssuingOrderf', \tapef'}, \hmap'}
+}
+\end{array}$
+\caption{Переходы машины \ARMt}
+\label{fig:trans-armt}
+\end{figure}
+
+Правила переходов машины \ARMt~приведены на рис. \ref{fig:trans-armt}.
+Первое правило переводит все,
+кроме \transenv{Уведомления потока} и \transenv{Завершения записи},
+переходы машины ARMv8 POP в переходы машины \ARMt; при этом компонента $\hmap$
+в правиле не используется.
+Новое правило \transenv{Завершение записи} обновляет компоненту $\hmap$,
+и оба правила \transenv{Уведомления потока} и \transenv{Завершения записи}
+имеют общее ограничение --- объединение отношения $\Ord$ и отношения $\moTau$, построенного по
+меткам времени, должно быть ациклично, где $\moTau$ определяется так:
+%% \begin{definition}
+  \[
+  \begin{array}{l}
+  \moTau(\Evt, \tmap) \defeq \\
+  \quad \{ (\e, \e') \in \Evt \times \Evt \mid \\
+     \qquad \e, \e' \; \text{--- запросы записи}, \e.loc = \e'.loc,
+   \tmap(\e.\tId, \e.\cpath) < \tmap(\e'.\tId, \e'.\cpath)\}.
+  \end{array}
+  \]
+%% \end{definition}
+\noindent
+Остальные правила не могут добавить циклов в упомянутое объединение,
+поэтому в них не требуется такая проверка.
+
+Рассмотрим подробнее правило \transenv{Завершения записи}.
+Оно выбирает метку времени $\tau$, которая должна быть уникальна среди запросов записи
+в локацию $\loc$ (предикат $\uniqueTimeLoc$).
+Кроме того, эта метка времени должна быть согласована с метками времени
+выполненных экземпляров записи в эту локацию (предикат $\coherentThread$):
+$\tau$ должно быть больше, чем метки времени предшествующих экземпляров, и меньше, чем
+последующих.
+Правило \transenv{Завершения записи} машины ARMv8 POP не отправляет запрос на запись
+($im = \mathit{false}$),
+если существует  последующий завершенный экземпляр записи в ту же локацию.
+Тем не менее, машина $\ARMt$ присваивает метку времени и в таком случае.
+При этом метка времени экземпляра, запрос которого был отправлен в подсистему памяти,
+имеет целочисленное значение, а метка времени экземпляра без запросов в подсистеме
+находится в интервале $(\tau' - 1, \tau')$, где $\tau'$ --- это
+метка времени ближайшего последующего завершенного экземпляра записи в ту же локацию,
+чей запрос был отправлен (предикат $\timeRangeCondition$).
+
+Если запрос на запись, который мы обозначим $w$,
+отправлен в подсистему хранения ($im = \mathit{true}$),
+и существует предшествующий экземпляр $\SY$-барьера ($\cpath^{\SY} \neq []$),
+то множество запросов, которые гарантировано предшествуют $w$ в отношении $\Ord$
+(функция $\omap$) включает три набора запросов.
+Во-первых, запрос предшествующего барьера $\stRequestFence{\tId}{\cpathSY}$.
+Во-вторых, множество запросов экземпляров записи, предшествующих экземпляру $\cpathSY$,
+$\OrdPrevRequest(\tId, \cpathSY, \tape, \hmap)$.
+В-третьих, элементы множества $\omap(\e.\tId, \e.\cpath)$ за каждый запрос записи $e$,
+прочитанный потоком до экземпляра $\cpathSY$:
+\[\begin{array}{l}
+\OrdPrevRequest(\tId, \cpathSY, \tape, \hmap) \triangleq\\
+\quad \{ \writeEvt{\tId}{\cpath'}{\loc'}{\stval'} \mid \cpath'  < \cpathSY,
+          \tape(\cpath' ) = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\stval'})} \} \cup {}\\
+\quad \bigcup \{ \omap(\e.\tId, \e.\cpath) \mid
+                   \cpath'' < \cpathSY, \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\e})} \}. 
+\end{array}\]
+
+Почему все эти запросы гарантировано предшествуют запросу $w$ в отношении $\Ord$?
+Во-первых, все запросы, кроме $f \defeq \stRequestFence{\tId}{\cpathSY}$, предшествуют $f$,
+т.к. в момент добавления $f$ подсистема памяти добавила по $\Ord$-ребру $(\e, f)$ за
+каждый запрос $\e$, о котором был осведомлён поток.
+Последнее верно из следующих рассуждений.
+О каждом запросе записи $\e'$, который был отправлен потоком до отправки $f$,
+поток естественным образом осведомлён.
+О каждом запросе записи $\e''$, который был прочитан потоком до отправки $f$,
+поток осведомлён по ограничениям подсистемы памяти, гарантирующей, что
+запрос чтения может получить ответ из запроса записи, только если о них осведомлено
+одно и то же множество потоков.
+
+Во-вторых, когда поток отправляет запрос $w$, он добавляет ребро $(f, w)$.
+Как следствие, все упомянутые выше запросы также предшествуют $w$ в отношении $\Ord$
+по транзитивности $\Ord$.
+
+Новое вхождение в функцию $\rmap$ определяется как по-точечный максимум (операция $\sqcup$)
+на фронтах $[\loc@\tau]$ и
+$\viewf(\tId, \cpath^{\SY}, \cpath^{\SY}, \tape, \hmap)$, где
+\[\begin{array}{l}
+\viewf(\tId, \cpath^{\bf \sf write}, \cpath^{\bf \sf read}, \tape, \hmap) \triangleq \\
+\quad \bigsqcup \opstau(\tId, \cpath^{\bf \sf write}, \tape, \hmap) \sqcup \bigsqcup \readsSatisfiedR(\cpath^{\bf \sf read}, \tape, \hmap)
+\end{array}\]
+определяет фронт запросов из вхождения $\omap$:
+\[\begin{array}{l}
+\opstau(\tId, \cpath, \tape, \hmap) \triangleq \\
+\quad \{[\loc @ \tau] \mid
+        \cpath' < \cpath, \tape(\cpath') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})},
+        \tau = \tmap(\tId , \cpath')
+        \} \; \cup \\
+\quad \{[\loc @ \tau] \mid
+        \tId', \cpath', \cpath'' < \cpath,  \tau = \tmap(\tId', \cpath') \not = \bot, \\
+\quad \quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId'}{ \cpath'}{\loc}{\_}})},
+        \satisfiedState \not = \SatisfiedInFlight \}. \\
+\\
+\readsSatisfiedR(\cpath, \tape, \hmap) \triangleq \\
+\quad \{\rmap(\tId', \cpath') \not = \bot \mid \exists \loc, \tId', \cpath', \cpath'' < \cpath,\\
+\quad \quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\satisfiedState}{\stRequestWrite{\tId'}{ \cpath'}{\loc}{\_}})},
+        \satisfiedState \not = \SatisfiedInFlight \}. \\
+\end{array}\]
+
 \subsection{Симуляция модели ARMv8 POP}
 \label{sec:armvpop:armt:sim}
 
+Как мы увидели в предыдущем разделе, переходы машины \ARMt~являются
+переходами машины ARMv8 POP с дополнительными ограничениями, что
+потенциально может означать уменьшение допускаемых сценариев поведения.
+Поскольку это бы означало, что мы не смогли бы использовать \ARMt~как промежуточную
+машину в нашем доказательстве корректности компиляции,
+нам нужно показать, что все сценарии поведения ARNv8 POP также являются сценариями
+поведения \ARMt~ с точностью до компоненты состояния $\hmap$.
 \begin{theorem}
   \label{thm:armvpop:armt:sim}
 $\forall \Cfarm, \{\s^i\}_{i \in [0..n]}.\; \s^0 = \sinit  \land \finalStateP(\s^n, \Cfarm) \land{}$ \\
@@ -1667,6 +1868,85 @@ ${} \quad \Cfarm \vdash \s^0 \armStepP \dots \armStepP \s^n \Rightarrow$
 $\exists \{\hmap^i\}_{i \in [0..n]}. \; \hmap^0 = \ainit.\hmap \land {}$ \\
 ${} \qquad \Cfarm \vdash \angled{\s^0, \hmap^0} \armStep \dots \armStep \angled{\s^n, \hmap^n}$.
 \end{theorem}
+\begin{proof}
+  В разделе \ref{sec:arm-timestamps} мы показали, как по финальному состоянию в
+  сценарии поведения ARMv8 POP построить отношение $mo$ и функцию
+  $\taumapping : \Request \rightharpoonup \tau$.
+  Здесь мы также строим их по состоянию $\s^n$, но с небольшим изменением:
+  мы предполагаем, что  функция $\taumapping$ задана на экземплярах инструкций,
+  т.е. на множестве $\Tid \times \Path$, а не на запросах.
+  Это изменение имеет только стилистический характер, т.к. по запросу
+  однозначно восстанавливается идентификатор экземпляра инструкции,
+  кроме случая инициализирующих запросов.
+
+  Мы конструируем множество $\{\hmap^i \}_{i \in [0..n]}$ индуктивно.
+  Начальная компонента $\hmap^0$ равна $\ainit.\hmap$.
+  Также мы используем следующий инвариант для состояний сценария поведения \ARMt,
+  который мы конструируем:
+  \[\begin{array}{l}
+  \invTT(\s, \hmap) \triangleq \forall \tId, \cpath. \\
+  \quad (\s.\tapef(\tId, \cpath) = \tapeWrite{(\tapeWriteCommitted{true}{\_}{\_})} \Rightarrow
+         \tmap(\tId, \cpath) = \taumapping(\tId, \cpath)) \lor {} \\
+  \quad (\s.\tapef(\tId, \cpath) \not = \tapeWrite{(\tapeWriteCommitted{\_}{\_}{\_})} \Rightarrow
+         \tmap(\tId, \cpath) = \bot).
+  \end{array}\]
+  Инвариант утверждает, что метки времени, полученные в ходе исполнения в \ARMt,
+  соответствуют функции $\taumapping$. 
+  Предположим, что мы сконструировали $i$ первых состояний сценария поведения \ARMt,
+  и инвариант выполняется на них.
+  Докажем индукционный переход, рассмотрев варианты шага $\Cfarm \vdash \s^i \armStepP \s^{i + 1}$:
+  \begin{description}
+  \item[Уведомление потока:]
+    Выберем $\hmap^{i + 1}$ равным $\hmap^{i}$. 
+    Тогда утверждение $\invTT(\s^{i + 1}, \hmap^{i + 1})$ выполняется, т.к.
+    выполняется $\invTT(\s^{i}, \hmap^{i})$ и
+    $\s^{i + 1}.\tapef = \s^{i}.\tapef$.
+    В разделе \ref{sec:arm-timestamps} мы доказали, что
+    для любого $j \in [0..n]$ отношение $\restrict{mo}{\s^j.\Evt} \cup \s^j.\Ord$ ациклично.
+    Утверждение $\invTT(\s^{i + 1}, \hmap^{i + 1})$ гарантирует, что
+    функция $\restrict{mo}{\s^{i+1}.\Evt}$ равна $\moTau(\s^{i+1}.\Evt, \tmap^{i+1})$.
+    Тогда $\s^{i+1}.\Ord \cup \moTau(\s^{i+1}.\Evt, \tmap^{i+1})$ ациклично.
+    Таким образом, все дополнительные ограничения правила \transenv{Уведомление потока}
+    машины \ARMt~выполнены, и она может сделать соответствующий переход.
+  \item[Завершение записи $\tId \; \cpath$:]
+    Нам нужно рассмотреть два случая.
+    
+    Если соответствующий запрос записи отправлен в подсистему памяти, то мы выбираем
+    ему метку времени $\tau$, которая является параметром перехода в машине \ARMt,
+    равной $\taumapping(\tId, \cpath)$.
+    Мы выбираем $\hmap^{i + 1}$ в соответствии с определением этой компоненты в
+    правиле \transenv{Завершения записи} машины \ARMt.
+    Инвариант, очевидно, выполняется по определению.
+    По определению функции $\taumapping$ метка времени $\tau$ уникальна среди запросов записи
+    в соответствующую локацию.
+    Ацикличность отношения $\s^{i+1}.\Ord \cup \moTau(\s^{i+1}.\Evt, \tmap^{i + 1})$
+    следует из тех же рассуждений, что и в предыдущем рассмотренном случае.
+    Из ацикличности следует, что $\tau$ больше всех остальных меток времени
+    запросов записи в ту же локацию среди тех, что были отправлены тем же потоком
+    в подсистему памяти.
+    $\tau$ также больше всех меток времени предшествующих завершенных
+    экземпляров записи в ту же локацию, которые не отправляли запросы,
+    как следствие того, по какому принципу для них выбираются метки времени.
+    В плёнке потока нет последующих завершенных записей в ту же локацию,
+    т.к. запрос был отправлен, а значит метка времени $\tau$ корректна относительно
+    других записей потока.
+    
+    Если запрос записи не был отправлен, то $\taumapping(\tId, \cpath) = \bot$.
+    Мы знаем, что существует последующий экземпляр записи в ту же локацию с меткой
+    времени $\tau'$, который отправил запрос в подсистему памяти.
+    Мы выбираем метку времени $\tau$ из интервала $(\tau' - 1, \tau)$ так, чтобы
+    она была корректна относительно требований перехода машины \ARMt.
+    Мы выбираем $\hmap^{i + 1}$ в соответствии с переходом
+    \transenv{Завершение записи} машины \ARMt.
+    Инвариант, очевидно, сохраняется.
+
+  \item[Другие переходы:]
+    Мы выбираем компоненту $\hmap^{i + 1}$ равной $\hmap^{i}$.
+    Поскольку в остальных правилах машины \ARMt~нет дополнительных ограничений,
+    машина может сделать соответствующий переход, и инвариант сохраняется.
+    \qedhere
+  \end{description}
+\end{proof}
 
 \subsection{Фронты и машина \ARMt}
 
