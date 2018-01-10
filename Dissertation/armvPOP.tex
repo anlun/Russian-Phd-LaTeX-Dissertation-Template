@@ -1490,7 +1490,88 @@ $\Mprom^{\rm init} \triangleq \{ \writeEvt{\loc}{0}{\tstamp{0}}{\R^{\rm init}} \
 \end{description}
 
 \section{Промежуточная машина \ARMt}
+В этом разделе мы вводим промежуточную машину \ARMt и доказываем, что она симулирует
+машину ARMv8 POP.
+Для этого мы сначала показываем корректность некоторых базовых утверждений
+про подсистему памяти машины ARMv8 POP,
+а затем показываем, как ввести метки времени для конкретного сценария поведения ARMv8 POP.
+
 \subsection{Свойства подсистемы памяти модели ARMv8 POP}
+Во всех леммах мы неявно предполагаем наличие некоторой программы $\Cfarm$.
+
+\begin{lemma}\label{lem-ord-trans}
+$\forall \s. \; \sinit \armStepP^{*} \s \Rightarrow
+  \s.\Ord = (\checkReorderings{\s.\Ord})^{+} \land \s.\Ord \text{ ациклично}$.
+\end{lemma}
+\begin{proof}
+  Утверждение верно для начального состояния $\sinit$. 
+  Рассмотрим все возможные изменения в подсистеме памяти, которые бывают трёх типов.
+  Мы предполагаем, что состояние
+  $\angled{\Evt, \Ord, \Prop}$ переходит в состояние $\angled{\Evt', \Ord', \Prop'}$.
+  Проверим все три типа возможных изменений:
+  \begin{description}
+    \item[Удаление запроса $\e$]:
+      \[\Evt' = \Evt \setminus \{\e\}, \Prop' = \Prop \setminus \{(\tId, \e) \mid \tId \},
+        \Ord' = (\checkReorderings{\Ord \setminus (\{\e\} \times \Evt) \setminus (\Evt \times \{\e\})})^{+}\]
+    \item[Отправка запроса $\e$ потоком $\tId$]:
+      \[\Evt' = \Evt \cup \{\e\}, \Prop' = \Prop \cup \{(\tId, \e)\},
+        \Ord' = (\Ord \cup \{(\e', \e) \mid \Prop(\tId, \e'), \notReorderableRel{\e'}{\e} \})^{+} \]
+    \item[Поток $\tId$ становится осведомлённым о запросе $\e$]:
+      \[\begin{array}{l}\Evt' = \Evt, \Prop' = \Prop \cup \{ (\tId, \e) \}, \\
+        \Ord' = (\Ord \cup \{ (\e, \e') \mid \Prop(\tId,\e'),  \lnot \Prop(\e.\tId,\e'),
+        \notReorderableRel{\e}{\e'}, \lnot (\e' <_{\Ord} \e) \})^{+}
+        \end{array}\]
+  \end{description}
+  Очевидно, что $\Ord' = (\checkReorderings{\Ord'})^{+}$.
+  Также $\Ord'$ ацикличен, поскольку
+  $\Ord' \subseteq \Ord$ в случае удаления события,
+  отправка запроса добавляет только ребра, входящие в новый запрос $\e$, 
+  а в третьем случае происходит проверка на ацикличность.
+\end{proof}
+Следующие две леммы доказываются аналогично.
+\begin{lemma}\label{lem-prop-ord}
+  $\forall \s,\e,\e',\tId. \; \sinit \armStepP^{*} \s \land 
+  \notReorderableRel{\e}{\e'} \land \s.\Prop(\tId, \e) \land \s.\Prop(\tId, \e') \Rightarrow
+   {}\\{}\quad \e=\e' \lor \s.\Ord(\e, \e') \lor \s.\Ord(\e', \e)$.
+%% NOTE: here we use that $\reorderableRel$ is symmertric! 
+%% Otherwise one would have to add $\notReorderableRel{\e'}{\e}$ to the premise.
+\end{lemma}
+\begin{lemma}\label{lem-write-fence-persistent}
+$\forall \s, \s'. \; \s \armStepP^{*} \s' \Rightarrow \s.\Evt \setminus \{ \e \mid \e \text{ --- запрос чтения}\} \subseteq \s'.\Evt$.
+\end{lemma}
+\begin{lemma}\label{lem-ord-persistent}
+$\forall \s, \s'. \; \s \armStepP^{*} \s'  \Rightarrow \s.\Ord \cap (\s'.\Evt \times \s'.\Evt) \subseteq \s'.\Ord$.
+\end{lemma}
+\begin{proof}
+  Следующая более слабая версия утверждения верна, так как нет перехода, который
+  бы удалял $\Ord$-ребро между запросы, который не могут быть переупорядочены:
+  \[
+    \forall \s, \s'. \; \s \armStepP^{*} \s'  \Rightarrow (\s.\Ord \cap (\s'.\Evt \times \s'.\Evt)) \setminus {\reorderableRel{}{}}\subseteq \s'.\Ord
+%    \forall \s, \s', \{\e, \e'\} \subseteq \s.\Evt. \; \s \armStepP^{*} \s' \land \s.\Ord(\e, \e') \land
+%      \{\e, \e'\} \subseteq \s'.\Evt \land \notReorderableRel{\e}{\e'} \Rightarrow \s'.\Ord(\e, \e'). \\
+  \]
+  Теперь докажем изначальное утверждение.
+  Зафиксируем пару $(\e, \e') \in \s.\Ord \cap (\s'.\Evt \times \s'.\Evt)$.
+  Мы хотим показать, что $(\e, \e') \in \s'.\Ord$.
+  Если запросы не переупорядочиваемы, $\notReorderableRel{\e}{\e'}$, то утверждение выполняется,
+  т.к.
+  $(e, e') \in (\s.\Ord \cap (\s'.\Evt \times \s'.\Evt)) \setminus {\reorderableRel{}{}} \subseteq \s'.\Ord$.
+  Иначе $\e$ и $\e'$ являются запросами чтения или записи к разным локациям.
+  Поскольку $\s.\Ord(\e, \e')$, по лемме \ref{lem-ord-trans}
+  существует конечный путь по $\s.\Ord$-рёбрам от $\e$ к $\e'$, т.ч.
+  каждое ребро соединяет не переупорядочиваемые запросы.
+  
+  Предположим, что на этом пути есть запрос барьера памяти $\e''$.
+  Тогда по транзитивности $\s.\Ord$ следует, что $\{(\e, \e''), (\e'', \e')\} \subseteq \s.\Ord$.
+  Следовательно, по ослабленной версии леммы и транзитивности $\s'.\Ord$ следует, что
+  $\{(\e, \e''), (\e'', \e'), (\e, \e')\} \subseteq \s'.\Ord$.
+  
+  Предположим, что на этом пути нет запроса барьера памяти.
+  Тогда по определению отношения $\reorderableRel{}{}$ следует,
+  что на пути все запросы оперируют над одной и той же локацией.
+  Это противоречит $\notReorderableRel{\e}{\e'}$.
+\end{proof}
+
 \subsection{Модель ARMv8 POP и метки времени}
 \subsection{Определение машины \ARMt}
 \subsection{Симуляция модели ARMv8 POP}
