@@ -2024,32 +2024,37 @@ $\Rarm$ для пути $\cpath$.
 %% (each thread's $\cpath$ points out of the thread's program instruction list) from $\p$ and
 %% all promises are fulfilled.
 \begin{proof}
-  Let's fix the program $\Cfprom$. In the remainder of the section we write $``\s \armStepP \s'"$ instead of
-  $``\Cfprom \vdash \s \armStepP \s'"$ for all machines.
-We apply the result of \cref{sec:sim-armt-arm}, and change the proof goal to the simulation for the ARM+$\tau$ machine:\\
+  Зафиксируем программу $\Cfprom$. Далее мы будем писать $``\s \armStepP \s'"$ вместо
+  $``\Cfprom \vdash \s \armStepP \s'"$ как для всех машин.
+  Используя результат раздела \ref{sec:armvpop:armt:sim}, мы меняем утверждение, которое нужно
+  доказать, на симуляцию обещающей машиной машины \ARMt
 \[\begin{array}{l}
-  \forall \Cfprom, %\Cfarm = compilation(\Cfprom), \\
-  \aT. \; \ainit \armStep^{*} \aT \land \finalStateA(\aT, \Cfarm) \Rightarrow \\
+  \forall \aT. \; \ainit \armStep^{*} \aT \land \finalStateA(\aT, \Cfarm) \Rightarrow \\
   \quad \exists \p. \; \pinit \promStep^{*} \p \land \finalStateProm(\p, \Cfprom) \land \sameMemory(\aT, \p). \\
 \end{array}\]
-To prove it, we introduce a number of relations between ARM+$\tau$ and Promise states, which are
-parts of the simulation relation.
+Для того, чтобы доказать это утверждение, мы вводим набор отношений, связывающих
+состояния машин. Эти отношения в дальнейшем войдут в отношение симуляции.
+
+Следуя представлению обещающей машины в \cite{Podkopaev-al:ECOOP17}, мы добавим в состояние
+каждого потока обещающей машины по указателю на следующий к исполнению экземпляр инструкции и
+будем обозначать его $\p.\TSf(\tId).\cpath$.
 
 %% First of all, the programs have to be the same: $\invCf(\aT, \p) \triangleq \aT.\Cfarm = \p.\Cfprom.$
 %% First of all, the domains of per-thread components of the state have to be the same:
 %% \[\invTId(\aT, \p) \triangleq \dom{\aT.\tapef} = \dom{\aT.\IssuingOrderf} = \dom{\p.\TSfprom} (= \dom{\Cfprom}).\]
 %% In all following invariants we implicitly assume that $\tId$s are from $\dom{\aT.\Cfarm}$.
-The $\invPrefix$ relation states that every instruction instance, which has been executed by the Promise machine,
-has been executed by the ARM+$\tau$ machine:
+Отношение $\invPrefix$ устанавливает, что все экземпляры инструкций, выполненные
+обещающей машиной, завершены машиной \ARMt:
 \[
 \invPrefix(\aT, \p) \triangleq \forall \tId, \cpath' < \p.\TSfprom(\tId).\cpath. \;
-     \aT.\tapef(\tId, \cpath') \; \text{is committed}. \\
+     \aT.\tapef(\tId, \cpath') \; \text{завершено}. \\
 \]
-The next relations connect the memories of the machines. $\invMemOne$ states that for every write, which is committed by the
-ARM+$\tau$ machine, there is a message in the Promise memory to the same location with the same value and timestamp,
-and its view is less or equal to the corresponding view of the ARM request. If the $\cpath$ of the committed write
-is less than the corresponding thread's pointer to the next instruction ($\p.\TSfprom(\tId).\cpath$), then the write is
-fulfilled, otherwise it is promised but not fulfilled:
+Следующие отношения связывают память обещающей машины с подсистемой памяти \ARMt.
+Отношение $\invMemOne$ утверждает, что для каждого завершенного экземпляра записи в \ARMt
+существует сообщение в памяти обещающей машины с теми же локацией, значением и меткой времени,
+кроме того фронт сообщения меньше либо равен, чем соответствующий фронт запроса в \ARMt.
+При этом, если путь экземпляра записи меньше, чем указатель обещающей машины, то
+сообщение было обещано, и обещание выполнено, иначе --- только обещано:
 \[\begin{array}{l}
 \invMemOne(\aT, \p) \triangleq \forall \tId, \loc, \stval, \tau, \R', \cpath. \\
   \quad \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\stval})} = \aT.\tapef(\tId, \cpath) \land
@@ -2061,8 +2066,9 @@ fulfilled, otherwise it is promised but not fulfilled:
     \writeEvt{\loc}{\stval}{\tau}{\R} \in
     \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet). \\
 \end{array}\]
-$\invMemTwo$ connects the memories in other direction: for every message in the Promise memory (except for initial ones) there is a
-committed write instruction instance in the ARM+$\tau$ machine:
+Отношение $\invMemTwo$ связывает памяти машин в обратном направлении:
+для каждого сообщения из памяти обещающей машины в плёнке \ARMt~есть
+соответствующий завершённый экземпляр записи:
 \[\begin{array}{l}
 \invMemTwo(\aT, \p) \triangleq
   \forall \writeEvt{\loc}{\stval}{\tau}{\R} \in \p.\Mprom. \; \tau \not = \tstamp{0} \Rightarrow
@@ -2070,19 +2076,20 @@ committed write instruction instance in the ARM+$\tau$ machine:
   \quad  \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\stval})} = \aT.\tapef(\tId, \cpath) \land
       \aT.\hmap(\tId, \cpath) = \angled{\tau, \_, \R'}.
 \end{array}\]
-$\invMemThree$ relates initial writes to locations: 
+Отношение $\invMemThree$ связывает инициализирующие записи:
 \[\begin{array}{l}
 \invMemThree(\aT, \p) \triangleq
   \forall \loc. \; \stRequestWrite{0_{\tId}}{[]}{\loc}{0} \in \aT.\Mpop \land \writeEvt{\loc}{0}{\tstamp{0}}{\lambda \loc. \; \tstamp{0}} \in \p.\Mprom.
 \end{array}\]
-$\invView$ says that views of a Promise thread are restricted by the composition of singleton
-views of writes and reads committed by the ARM thread.
-For the acquire view, it counts all the writes and reads up to $\cpath$.
-For the current view, it counts all the writes up to $\cpath$ and reads up to the latest
-committed $\LD$ fence ($\lastLD(\tape, \cpath)$).
-For the release view, it counts all writes up to the latest committed $\SY$ fence
-($\lastSY(\tape, \cpath)$) and reads up to the latest committed $\LD$ fence before
-the $\SY$ fence ($\lastLDSY(\tape, \cpath)$).
+Отношение $\invView$ утверждает, что фронты обещающей машины ограничены комбинацией
+фронтов, связанных с завершёнными экземплярами чтений и записей машины \ARMt.
+Для приобретающего фронта считаются все экземпляры записи и чтения до $\cpath$.
+Для базового фронта считаются все экземпляры записи до $\cpath$ и чтения до
+последнего завершённого экземпляра $\LD$ барьера ($\lastLD(\tape, \cpath)$).
+Для высвобождающего фронта считаются все экземпляры записи вплоть до последнего завершённого
+экземпляра $\SY$ барьера ($\lastSY(\tape, \cpath)$)
+и все экземпляры чтения до завершённого экземпляра $\LD$ барьера,
+предшествующего этому $\SY$ барьеру ($\lastLDSY(\tape, \cpath)$).
 \[\begin{array}{l}
 \invView(\aT, \p) \triangleq
   \forall \tId, \tape = \aT.\tapef(\tId), \cpath = \p.\TSfprom(\tId).\cpath. \\
@@ -2190,8 +2197,8 @@ $\forall (\aT, \p) \in \simrel. \;
 %% \end{restatable}
 \noindent
 It straightforwardly follows from the three previous lemmas.%
-\footnote{Proofs of the lemmas can be found
-  \ifext{in \cref{appendix-proofs}}{ in the extended version of the paper \cite{Podkopaev-al:ECOOP17TR}}.}
+Proofs of the lemmas can be found
+  in the extended version of the paper \cite{Podkopaev-al:ECOOP17}.
 
 The theorem is proved by induction on the ARM+$\tau$ execution using Lemma \ref{lem-fth}.
 The machine memories are the same at the end due to $\invMemOne$ and $\invMemTwo$.
