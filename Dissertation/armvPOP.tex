@@ -2036,8 +2036,11 @@ $\Rarm$ для пути $\cpath$.
 состояния машин. Эти отношения в дальнейшем войдут в отношение симуляции.
 
 Следуя представлению обещающей машины в \cite{Podkopaev-al:ECOOP17}, мы добавим в состояние
-каждого потока обещающей машины по указателю на следующий к исполнению экземпляр инструкции и
-будем обозначать его $\p.\TSf(\tId).\cpath$.
+каждого потока обещающей машины указатель на следующий к исполнению экземпляр инструкции,
+который будем обозначать $\p.\TSf(\tId).\cpath$, и функцию состояния локальных
+переменных $\p.\TSf(\tId).\PromState$.
+В представлении из раздела \ref{sec:armpop:promisemodel} эти части состояния скрыты
+помеченной системой переходов.
 
 %% First of all, the programs have to be the same: $\invCf(\aT, \p) \triangleq \aT.\Cfarm = \p.\Cfprom.$
 %% First of all, the domains of per-thread components of the state have to be the same:
@@ -2103,80 +2106,85 @@ $\Rarm$ для пути $\cpath$.
   \quad (\p.\TSfprom(\tId).\Rcur \le \bigsqcup \viewf(\tId, \cpath^{\LD}, \cpath, \tape, \aT.\hmap)) \land \\
   \quad (\p.\TSfprom(\tId).\Rrel \le \bigsqcup \viewf(\tId, \cpath^{\LD\SY}, \cpath^{\SY}, \tape, \aT.\hmap).\\
 \end{array}\]
-$\invState$ declares that a variable state of a Promise thread is the same as the committed state function up to
-the corresponding $\cpath$ of the ARM thread:
+Отношение $\invState$ связывает состояние локальных переменных в потоке обещающей
+машины со значением функции состояния машины \ARMt:
 \[\begin{array}{l}
 \invState(\aT, \p) \triangleq
   \forall \tId, \regf = \regstcom(\Cfarm(\tId), \aT.\tapef(\tId), \p.\TSfprom(\tId).\cpath). \\
   \quad \quad \forall \reg, \p.\TSfprom(\tId).\PromState(\reg) = \regf(\reg).\\
 \end{array}\]
-$\invComWrite$ says that if an ARM thread committed a write, then all $\cpath$-previous $\SY$ fences are executed by
-the corresponding Promise thread:
+Отношение $\invComWrite$ утверждает, что все экземпляры $\SY$ барьера, которые
+предшествуют завершённому экземпляру записи, выполнены обещающей машиной:
 \[\begin{array}{l}
 \invComWrite(\aT, \p) \triangleq
   \forall \tId, \tape = \aT.\tapef(\tId), \\
   \quad \cpath_{write} = \lastCommittedWrite(\tape), \cpath_{\SY} < \cpath_{write}. \\
-  \qquad  \tape(\cpath_{\SY}) = \tapeFence{\_}{\SY} \Rightarrow \cpath_{\SY} < \p.\TSfprom(\tId).\cpath.
+  \qquad  \tape(\cpath_{\SY}) = \tapeFence{\_}{\SY} \Rightarrow \cpath_{\SY} < \p.\TSfprom(\tId).\cpath,
 \end{array}\]
-where $\lastCommittedWrite(\tape)$ is a $\cpath$ of a last write committed by the thread.
-The relation is necessary for certification of the Promise machine steps.
+где $\lastCommittedWrite(\tape)$ --- это путь последнего завершённого потоком экземпляра записи.
+Данное отношение нужно для доказательства сертифицируемости шагов обещающей машины,
+участвующих в симуляции.
 
-\noindent
-$\invReach$ asserts that states are reachable:%
+Отношение $\invReach$ показывает, что состояния машин достигаемы из изначального:
 \[\invReach(\aT, \p) \triangleq \ainit \armStepP^{*} \aT \land \pinit \promStep^{*} \p.\]
 
-The relation $\simrelBase$ combines the aforementioned relations:
+Отношение $\simrelBase$ комбинирует упомянутые отношения:
 \[\simrelBase \triangleq \invPrefix \cap \invMemOne \cap \invMemTwo \cap \invMemThree \cap \invView \cap \invState \cap \invComWrite \cap \invReach.\]
 
-In the simulation, either the Promise machine is waiting for the next step of the ARM+$\tau$ machine,
-or there is a Promise thread which should make at least one non-\transenv{Promise write} step
-(corresponding to an instruction which the thread's $\cpath$ component is pointing to).
-A Promise thread $\tId$ is waiting for the corresponding ARM thread, if
-the next command to be executed, which is pointed by $\cpath$, is not fetched or committed
-in the ARM thread.
+В симуляции в каждый момент верно одно из двух:
+либо обещающая машина ожидает, что машина \ARMt завершит исполнение экземпляра инструкции,
+либо указатель одно (и только в одном) из потоков обещающей машины показывает на
+завершённый экземпляр инструкции.
+Последнее означает, что обещающая машина должна сделать шаг, соответствующий этому
+экземпляру.
+Для того, чтобы задать оба возможных варианта, мы используем вспомогательный предикат:
 \[\begin{array}{l}
 \invPromUptoARMtId(\tId,\aT,\p) \triangleq
   \textLet \tape, \cpath \triangleq \aT.\tapef(\tId), \p.\TSfprom(\tId).\cpath \; \textIn \\
-  \quad \tape(\cpath) = \bot \lor \tape(\cpath) \; \text{is not committed}. \\
-
-\arraycolsep=1.4pt
+  \quad \tape(\cpath) = \bot \lor \tape(\cpath) \; \text{не завершен}. \\
+\end{array}\]
+С его помощью вариант, когда обещающая машина ожидает, выражается предикатом 
+$\invPromUptoARM$, а вариант, когда обещающая машина должна сделать шаг ---
+предикатом $\invPromUptoARMnot$:
+\[
 \begin{array}{lllll}
 \invPromUptoARM & (\aT,\p) & \triangleq \forall & \tId. \; & \invPromUptoARMtId(\tId,\aT,\p). \\
   %% \text{Or:} \\
   %% \forall \tId, \tape = \aT.\tapef(\tId), \cpath = \p.\TSfprom(\tId).\cpath \Rightarrow \\
   %% \quad \tape(\cpath) = \bot \lor \tape(\cpath)\; \text{is not committed}. \\
 \invPromUptoARMnot & (\aT,\p) & \triangleq \exists! & \tId. \; \lnot & \invPromUptoARMtId(\tId,\aT,\p). \\
-\end{array}
 \end{array}\]
-The relations are used to define two simulation relations:
+Данные предикаты используются для определения двух отношений симуляции:
 \[
 \simrelPre \triangleq \simrelBase \cap \invPromUptoARMnot \quad\qquad
 \simrel    \triangleq \simrelBase \cap \invPromUptoARM 
 \]
-If the states are related by $\simrelPre$, there is a thread of the Promise machine which may 
-take a step (which is not \transenv{Promise write}) by executing the next instruction its $\cpath$ is pointing to.
-After it either the thread has to make another step ($\simrelPre(\aT, \p')$), or all threads of the
-Promise machine are waiting ($\simrel(\aT, \p')$):
+Так, если состояния машин связаны отношением $\simrelPre$, то существует поток обещающей
+машины, который может сделать переход. После этого перехода состояния машин
+связаны вновь отношением $\simrelPre$, и тот же поток может сделать ещё один шаг, или
+состояния связаны отношением $\simrel$, и все потоки обещающей машины ждут:
 \begin{lemma}
 \label{lem-snd}
 $\forall (\aT, \p) \in \simrelPre. \;
 \exists \p'. \p \promStep \p' \land (\aT, \p') \in \simrelPre \cup \simrel$.
 \end{lemma}
 \noindent
-As at every specific state of the ARM+$\tau$ machine it has committed a finite number of instruction instances,
-we show that the Promise machine can make a finite number of transitions to get its state to satisfy $\simrel$:
+Как следствие того, что в каждом корректном состоянии машины \ARMt~существует лишь
+конечное число завершённых экземпляров инструкций, можно показать, что
+обещающая машина может за конечное число шагов ``нагнать'' \ARMt:
 \begin{lemma}
 \label{lem-trd}
 $\forall (\aT, \p) \in \simrelPre. \;
 \exists \p'. \; \p \promStep^{*} \p' \land (\aT, \p') \in \simrel$.
 \end{lemma}
 \noindent
-Suppose, the ARM+$\tau$ and Promise machine states are related by $\simrel$.
-Then, we show that the ARM+$\tau$ machine may make a step. If the step is \transenv{Write commit},
-then the Promise machine has to promise the corresponding message, and the states of the machines
-are related by $\simrelPre \cup \simrel$. If the step is not \transenv{Write commit}, then
-the Promise machine does not make a step, and the states are related by the same relation
-$\simrelPre \cup \simrel$.
+Предположим, что состояния обещающей и \ARMt~машин связаны отношением $\simrel$.
+Для такой ситуации мы показываем, что машина \ARMt~может сделать шаг.
+Если этот шаг является \transenv{Завершением записи}, то обещающая машина
+может пообещать соответствующее сообщение, и новые состояния машин будут
+связаны отношением $\simrelPre \cup \simrel$.
+Если это другой шаг, то обещающая машина не делает своего ответного шага,
+но состояния машин опять же связаны отношением $\simrelPre \cup \simrel$.
 %% \begin{restatable}{lem}{lemmaFst}
 \begin{lemma}
 \label{lem-fst}
@@ -2186,7 +2194,7 @@ $\forall (\aT, \p) \in \simrel. \\
 \exists \p'. \; \p \promStepgen{\transenv{Promise write}} \p' \land  (\aT', \p') \in \simrelPre \cup \simrel)$.
 \end{lemma}
 %% \end{restatable}
-Then, we state the following lemma:
+Из предыдущих лемм следует основная лемма симуляции:
 %% \begin{restatable}{lem}{lemmaFth}
 \begin{lemma}
   \label{lem-fth}
@@ -2196,18 +2204,19 @@ $\forall (\aT, \p) \in \simrel. \;
 \end{lemma}
 %% \end{restatable}
 \noindent
-It straightforwardly follows from the three previous lemmas.%
-Proofs of the lemmas can be found
-  in the extended version of the paper \cite{Podkopaev-al:ECOOP17}.
+Доказательства лемм могут быть найдены в расширенной версии \cite{Podkopaev-al:ECOOP17}.
 
-The theorem is proved by induction on the ARM+$\tau$ execution using Lemma \ref{lem-fth}.
-The machine memories are the same at the end due to $\invMemOne$ and $\invMemTwo$.
-The only thing, which we need to show, is that $\finalStateProm(\p, \Cfprom)$ holds.
+Сама теорема доказывается индукцией по длине сценария поведения с помощью леммы \ref{lem-fth}.
+Часть утверждения теоремы о том, что конечные состояния памяти совпадают,
+напрямую следует из отношений $\invMemOne$ и $\invMemTwo$.
+Так, единственное, что осталось доказать, что состояние $\p$ является
+финальным состоянием обещающей машины ($\finalStateProm(\p, \Cfprom)$).
 
-The Promise machine cannot make a further step (each thread's $\cpath$ points out of the thread's
-instruction list), as otherwise the ARM+$\tau$ machine would be able to fetch a new instruction
-instance, and $\finalStateA(\aT, \Cfarm)$ would not hold. Each thread has fulfilled its promises
-according to $\invMemOne$ and $\invMemTwo$.
+Обещающая машина не может сделать нового перехода, так это бы означало, что
+машина \ARMt~может подгрузить новый экземпляр инструкции, и противоречило бы 
+$\finalStateA(\aT, \Cfarm)$. Кроме того, все сообщения из состояния $\p$
+были обещаны и выполнены, как следствие того, что выполняется
+$\invMemOne(\aT,\p)$ и $\invMemTwo(\aT, \p)$.
 \end{proof}
 \section{Выводы}
 \app{Описать расширение доказательства на остальные части обещающей модели}
