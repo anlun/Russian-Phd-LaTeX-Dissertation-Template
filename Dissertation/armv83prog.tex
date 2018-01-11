@@ -1,57 +1,55 @@
-\chapter{Связь между программами и обещающей и ARMv8.3 моделями}
-\label{sec:appendixProg}
 
-\begin{figure}[h]
-\begin{minipage}{0.6\textwidth}
-$\begin{array}{l @{~} r @{~} l}
-\Carm    & : & \ListOf{\StmtARM} \\  
-\StmtARM & ::= & \readInst{\reg}{\expr} \\
-         & |   & \writeInst{\expr_0}{\expr_1} \\
-         & |   & \fenceInst{\FtypeProm} \\
-         & |   & \ifGotoInst{\expr}{\z} \\
-         & |   & \assignInst{\reg}{\expr} \mid \nop \\
-\FtypeProm & ::= & \rel \mid \acq\\
-\expr    & ::= & \val \mid \reg \mid \loc \mid uop \; \expr \\
-         & |   & bop \; \expr_0 \; \expr_1 \\
-         %% & :   & \Expr \\
-\reg : \Reg & - & a, b, c, ...  \quad \; \text{(локальные переменные)} \\
-\loc : \Loc & - & x, y, z, ... \quad \text{(локации)} \\
-uop, bop & - & \text{арифметические операции} \\
-\val, \z       & \in & \mathbb{Z}
-\end{array}$
-\captionof{figure}{Синтаксис программ}
-\label{fig:syn-prog}
-\end{minipage}
-%
-\begin{minipage}{0.4\textwidth}
-$\begin{array}{l @{~} r @{~} l}
-    \Path  & ::= & \ListOf{Label} \\
-    \Label & ::= & \rlab{}{\loc}{\val} \\
-           & |   & \wlab{}{\loc}{\val} \\
-           & |   & \flab{\FtypeProm} \\
-           & |   & \epsilon \\
-\end{array}$
-\captionof{figure}{Метки переходов}
-\label{fig:lts}
-\end{minipage}
-\end{figure}
+%% \begin{figure}[h]
+%% \begin{minipage}{0.6\textwidth}
+%% $\begin{array}{l @{~} r @{~} l}
+%% \Carm    & : & \ListOf{\StmtARM} \\  
+%% \StmtARM & ::= & \readInst{\reg}{\expr} \\
+%%          & |   & \writeInst{\expr_0}{\expr_1} \\
+%%          & |   & \fenceInst{\FtypeProm} \\
+%%          & |   & \ifGotoInst{\expr}{\z} \\
+%%          & |   & \assignInst{\reg}{\expr} \mid \nop \\
+%% \FtypeProm & ::= & \rel \mid \acq\\
+%% \expr    & ::= & \val \mid \reg \mid \loc \mid uop \; \expr \\
+%%          & |   & bop \; \expr_0 \; \expr_1 \\
+%%          %% & :   & \Expr \\
+%% \reg : \Reg & - & a, b, c, ...  \quad \; \text{(локальные переменные)} \\
+%% \loc : \Loc & - & x, y, z, ... \quad \text{(локации)} \\
+%% uop, bop & - & \text{арифметические операции} \\
+%% \val, \z       & \in & \mathbb{Z}
+%% \end{array}$
+%% \captionof{figure}{Синтаксис программ}
+%% \label{fig:syn-prog}
+%% \end{minipage}
+%% %
+%% \begin{minipage}{0.4\textwidth}
+%% $\begin{array}{l @{~} r @{~} l}
+%%     \Path  & ::= & \ListOf{Label} \\
+%%     \Label & ::= & \rlab{}{\loc}{\val} \\
+%%            & |   & \wlab{}{\loc}{\val} \\
+%%            & |   & \flab{\FtypeProm} \\
+%%            & |   & \epsilon \\
+%% \end{array}$
+%% \captionof{figure}{Метки переходов}
+%% \label{fig:lts}
+%% \end{minipage}
+%% \end{figure}
 
-В этом разделе мы (i) опишем синтаксис исходного языка, который используется в нашей работе,
-приведем алгоритм построения по программе (ii) помеченной системы переходов для обещающей машины
-и (iii) \ARM-согласованных исполнений, а также предъявим теорему, которая их свяжет.
+%% В этом разделе мы (i) опишем синтаксис исходного языка, который используется в нашей работе,
+%% приведем алгоритм построения по программе (ii) помеченной системы переходов для обещающей машины
+%% и (iii) \ARM-согласованных исполнений, а также предъявим теорему, которая их свяжет.
 
-%% \section{Исходный язык}
-Синтаксис исходного языка представлен на рисунке \ref{fig:syn-prog}.
-В нашем синтаксисе многопоточная программа является параллельной композицией потоков на верхнем уровне, где
-код каждого потока есть список инструкций ($\ListOf{\StmtARM}$).
-Инструкция может быть чтением ($\readInst{\reg}{\expr}$),
-записью ($\writeInst{\expr_0}{\expr_1}$),
-барьером памяти ($\fenceInst{\FtypeProm}$), 
-условным переходом на $\z$ позиций в списке инструкций ($\ifGotoInst{\expr}{\z}$),
-присваиванием в локальную переменную ($\assignInst{\reg}{\expr}$),
-пустой операцией ($\nop$).
+%% %% \section{Исходный язык}
+%% Синтаксис исходного языка представлен на рисунке \ref{fig:syn-prog}.
+%% В нашем синтаксисе многопоточная программа является параллельной композицией потоков на верхнем уровне, где
+%% код каждого потока есть список инструкций ($\ListOf{\StmtARM}$).
+%% Инструкция может быть чтением ($\readInst{\reg}{\expr}$),
+%% записью ($\writeInst{\expr_0}{\expr_1}$),
+%% барьером памяти ($\fenceInst{\FtypeProm}$), 
+%% условным переходом на $\z$ позиций в списке инструкций ($\ifGotoInst{\expr}{\z}$),
+%% присваиванием в локальную переменную ($\assignInst{\reg}{\expr}$),
+%% пустой операцией ($\nop$).
 
-\section{Компиляция программ в помеченную систему переходов}
+\chapter{Компиляция программ в помеченную систему переходов}
 Первым шагом для построения помеченной системы переходов по программе является
 генерация всех возможных \emph{путей} ($\Path$) исполнения -- списков меток (см. рис. \ref{fig:lts}).
 Далее по множеству путей строится конечный автомат, принимающий упомянутые пути.
@@ -89,7 +87,7 @@ $\begin{array}{l @{~} r @{~} l}
 }
 \]
 
-\section{Компиляция программ в предзапуски}
+\chapter{Компиляция программ в предзапуски}
 
 Для построения \ARM-согласованных исполнений по программе стандартно
 используется следующая схема \cite{Vafeiadis-Narayan:OOPSLA13}.
@@ -207,7 +205,7 @@ $\begin{array}{l @{~} r @{~} l}
 }
 
 
-\section{Связь между системой переходов и вершинами в \ARM-исполнении}
+\chapter{Связь между системой переходов и вершинами в \ARM-исполнении}
 
 \[\inarr{
   \approx : \Label_{\Promise} \rightarrow \Label_{\ARM} \rightarrow {\rm Boolean} \\
