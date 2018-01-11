@@ -1,0 +1,349 @@
+\chapter{Доказательство леммы о шаге симуляции между обещающей и ARMv8.3 моделями}
+\label{sec:sim-step-proof}
+
+  \emph{{\bf Лемма \ref{lem:sim-step}.}
+  Пусть для некоторых конфигураций обхода $\tup{C, \IssuedSet}$ и $\tup{C', \IssuedSet'}$ сценария $G$,
+  а также некоторого состояния обещающей машины $\tup{\TSf, M}$ выполняется
+  $G \vdash \tup{C, \IssuedSet} \travConfigStep \tup{C', \IssuedSet'}$ и
+  $\simRel(C, \IssuedSet, \TSf, M)$.
+  Тогда существуют $\TSf'$, $M'$, т.ч. $\tup{\TSf, M} \stepp\!\!^{+} \tup{\TSf', M'}$ и
+  $\simRel(C', \IssuedSet', \TSf', M')$.}
+\begin{proof}%[Доказательство леммы \ref{lem:sim-step}]
+  Существует два варианта: $G \vdash C, \IssuedSet \travConfigStep \tup{C', \IssuedSet'}$ соответствует покрытию или
+  выпуску некоторого события $e \in \lE$. Введем обозначения $tid \defeq \lTID(e)$ и
+  $\tup{\pstate, \View, \PromSet} \defeq \TSf(tid)$.
+  %% \[\begin{array}{l@{~}l}
+  %%    tid & \defeq \lTID(e) \\
+  %%    \tup{\pstate, \View, \PromSet} & \defeq \TSf(tid) \\
+  %% \end{array}\]
+  Начнем с рассмотрения варианта, когда $G \vdash C, \IssuedSet \travConfigStep \tup{C', \IssuedSet'}$ соответствует
+  выпуску события записи $e$.
+
+  {\bf Выпуск события $e$}. Из определения $\travConfigStep$ следует, что
+  $C' = C$, $\IssuedSet' = \IssuedSet \cup \{e\}$ и $e \in \issuable(G, C, \IssuedSet) \setminus \IssuedSet$.
+      Введем обозначения:
+      \[\begin{array}{l l}
+        \loc, \; \val, \; \tau & \defeq \lLOC(e), \; \lVALW(e), \; T(e) \\
+        mview & \defeq [\loc @ \tau] \sqcup \View.\viewRel \\
+        msg & \defeq \msg{\loc}{\val}{\tau}{mview} \\
+      \end{array}\]
+      Мы знаем, что в $M$ нету сообщения для локации $\loc$ с меткой времени $\tau$,
+      т.к. функция $T$ выдает уникальные для одной локации метки времени для событий записи ($\correctTmap(G, T)$),
+      и у каждого сообщения из $M$ существует соответствующее ему сообщение в $\IssuedSet$ ($\invMemTwo(C, \IssuedSet, M)$).
+      \[\begin{array}{l l}
+        M', \; \PromSet' & \defeq \addToMemory{M}{msg}, \; \addToMemory{\PromSet}{msg} \\
+        \TSf' & \defeq \TSf[tid \mapsto \tup{\pstate, \View, \PromSet'}]
+      \end{array}\]
+      $mview \in M'$, т.к. $[\loc @ \tau] \in M'$ и $\View.\viewRel \in M$.
+      Таким образом $\tup{\tup{\pstate, \View, \PromSet}, M} \stepptid \tup{\tup{\pstate, \View, \PromSet'}, M'}$ выполняется.
+      Осталось проверить, что $\simRel(C, \IssuedSet', \TSf', M')$ выполняется.
+      \begin{itemize}
+        \item $\invMemOne(C, \IssuedSet', \TSf', M') \land \invMemTwo(C, \IssuedSet', M')$: \\
+          Единственным нетривиальным утверждением, которое нужно проверить, является $mview \le \domView(\msgRel; [e])$.
+          По определению, $mview = [\loc @ \tau] \sqcup \View.\viewRel$
+          $[\loc @ \tau] = [\lLOC(e) @ T(e)] \le \domView(\msgRel; [e])$, т.к. $\tup{e, e} \in \msgRel$.
+          Из $\invView(C, \TSf)$ следует $\View.\viewRel \le \domView(\relRel; [e'])$,
+          где $e' \in \nextset(G, C)$ и $\lTID(e') = \lTID(e)$. Т.к. $e \nin C$ и по определению $\nextset$,
+          $\tup{e', e} \in \lPO^{?}$. Из определения $\relRel$ и $\msgRel$ следует
+          $\relRel; [e']; \lPO^{?}; [e] \suq \msgRel; [e]$.
+          %% \[\dom{\relRel; [e']} = \dom{\relRel; [e']; \lPO^{?}; [e]} \suq \dom{\msgRel; [e]}\]
+          Утверждение выполняется, т.к. $\View.\viewRel \le \domView(\relRel; \lPO; [e'])$.
+        
+        \item $\invViewRel(\TSf')$: выполняется по $\invViewRel(\TSf)$ и определениям $mview$ и $\TSf'$.
+
+        \item $\invView(C, \TSf')$: т.к. $\forall tid. \; \TSf'(tid).\View = \TSf(tid).\View$ и $\invView(C, \TSf')$,
+          инвариант выполняется.
+
+        \item $\invState(C, \TSf')$:
+          следует из того, что $\invState(C, \TSf)$ выполняется и, для любого $tid$, $\TSf(tid).\pstate = \TSf'(tid).\pstate$.
+      \end{itemize}
+      %%    \app{TODO}
+      %% $\tup{\TSf', M'}$ is consistent by \cref{prop:sim-cert}.
+
+  
+  {\bf Покрытие события $e$.} В этом случае $C' = C \cup \{e\}, \IssuedSet' = \IssuedSet$.
+  %% \begin{itemize}
+    %% \item $C' = C \cup \{e\}, \IssuedSet' = \IssuedSet$, and $e \nin \dom{\lRMW}$: \\
+      Т.к. $\invState(C, \TSf)$ выполняется, существуют $t$ и $\pstate'$, т.ч. $t \approx \lLAB(e)$.
+      Рассмотрим варианты $e$.
+      \begin{itemize}
+        \item $e \in \lDMBLD$.
+          В этом случае $\labelF(t) = \fenceLbl{\acq}$ по $\invState(C, \TSf)$.
+          \[\begin{array}{l@{~}l}
+            \View'    & \defeq \tup{\View.\viewAcq, \View.\viewAcq, \View.\viewRel} \\
+            \TSf', M' & \defeq \TSf[tid \mapsto \tup{\pstate', \View', \PromSet}], M \\
+          \end{array}\]
+      Проверим, что $\simRel(C', \IssuedSet, \TSf', M)$ выполняется.
+      \begin{itemize}
+        \item $\invMemOne(C', \IssuedSet, \TSf', M) \land \invMemTwo(C', \IssuedSet, M)$:
+          выполняется, т.к. $e \nin \lW$ и $\simRel(C, \IssuedSet, \TSf, M)$ выполняется.
+
+        \item $\invViewRel(\TSf')$: выполняется, т.к. $\invViewRel(\TSf)$ выполняется и\\
+          $\TSf'(tid).\{\View.\viewRel, \PromSet\} = \TSf(tid).\{\View.\viewRel, \PromSet\}$.
+
+        \item $\invView(C', \TSf')$:
+          \[\inarr{
+  \forall e' \in \nextset(G, C'). \; \letdef{\tup{\viewCur, \viewAcq, \viewfRel}}{\TSf'(\lTID(e')).\View}\\
+  \quad
+  \begin{array}{@{}r@{~}l@{~}l}
+    \viewCur  & \le \domView(\curRel; [e']) & \land {} \\
+    \viewAcq  & \le \domView(\acqRel; [e']) & \land {} \\
+    \viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Зафиксируем $e'$. Если $\lTID(e') \neq tid$, то утверждение следует из $\invView(C, \TSf)$.
+          Предположим, что $\lTID(e') = tid$. Тогда $\imm{\lPO}(e, e')$, т.к. $e \in \nextset(G, C)$.
+          Мы знаем, что $\View.\viewAcq \le \domView(\acqRel; \lPO; [e])$, т.к. $\invView(C, \TSf)$ выполняется.
+          Нам нужно показать, что
+          \[\inarr{
+  \begin{array}{@{}r@{~}l@{~}l}
+    \View.\viewAcq  & \le \domView(\curRel; [e']) & \land {} \\
+    \View.\viewAcq  & \le \domView(\acqRel; [e']) & \land {} \\
+    \View.\viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Т.к. $\dom{\acqRel; [e]} \suq \dom{\acqRel; [e']}$
+          и $\acqRel;[e];\lPO;[e'] \suq \curRel; [e']$, утверждение выполняется.
+        \item $\invState(C', \TSf')$:
+          очевидно следует из $\invState(C, \TSf)$ и определений $C', \TSf'$.
+      \end{itemize}
+
+        \item $e \in \lDMBSY$. В этом случае $\labelF(t) = \fenceLbl{\rel}$ по $\invState(C, \TSf)$.
+          \[\begin{array}{l@{~}l}
+            \View'   & \defeq \tup{\viewCur, \viewAcq, \viewCur} \\
+            \TSf'    & \defeq \TSf[tid \mapsto \tup{\pstate', \View', \PromSet}] \\
+            M' & \defeq M \\
+          \end{array}\]
+          Не существует $w \in \IssuedSet$, т.ч. $\lPO(e, w)$. Иначе не
+          это противоречило бы $w \in \issuable(G, C, \IssuedSet)$ по лемме \ref{prop:trav-prop-preserve} 
+          Из этого следует, что не существует $w \in \IssuedSet \setminus C$, т.ч. $\lTID(w) = tid$, и
+          $\PromSet = \emptyset$ по $\invMemOne(C, \IssuedSet, \TSf, M)$.
+          
+      Проверим $\simRel(C', \IssuedSet, \TSf', M)$.
+      \begin{itemize}
+        \item $\invMemOne(C', \IssuedSet, \TSf', M) \land \invMemTwo(C', \IssuedSet, M)$:
+          выполняется, т.к. $e \nin \lW$ и $\simRel(C, \IssuedSet, \TSf, M)$ выполняется.
+        \item $\invViewRel(\TSf')$: \\
+          Зафиксируем поток $tid'$. Если $tid' \neq tid$, то утверждение выполняется по $\invViewRel(\TSf)$.
+          Если $tid' = tid$, то утверждение выполняется, т.к. $\TSf'(tid).\PromSet = \TSf(tid).\PromSet = \emptyset$.
+        \item $\invView(C', \TSf')$:
+          \[\inarr{
+  \forall e' \in \nextset(G, C'). \; \letdef{\tup{\viewCur, \viewAcq, \viewfRel}}{\TSf'(\lTID(e')).\View}\\
+  \quad
+  \begin{array}{@{}r@{~}l@{~}l}
+    \viewCur  & \le \domView(\curRel; [e']) & \land {} \\
+    \viewAcq  & \le \domView(\acqRel; [e']) & \land {} \\
+    \viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Зафиксируем $e'$. Если $\lTID(e') \neq tid$, то утверждение следует из $\invView(C, \TSf)$.
+          Если $\lTID(e') = tid$, то $\imm{\lPO}(e, e')$, т.к. $e \in \nextset(G, C)$.
+          Нам нужно показать, что
+          \[\inarr{
+  \begin{array}{@{}r@{~}l@{~}l}
+    \View.\viewCur & \le \domView(\curRel; [e']) & \land {} \\
+    \View.\viewAcq & \le \domView(\acqRel; [e']) & \land {} \\
+    \View.\viewCur & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Т.к. $\dom{\curRel; [e]} \suq \dom{\curRel; [e']}$
+          и $\relRel;[e];\lPO;[e'] \suq \curRel; [e']$, утверждение выполняется.
+          
+        \item $\invState(C', \TSf')$:
+          очевидно следует из $\invState(C, \TSf)$ и определений $C', \TSf'$.
+      \end{itemize}
+        \item $e \in \lR$. 
+          В этом случае $\labelF(t) = \readLbl{\loc}{\val}$ по $\invState(C, \TSf)$.
+          \[\begin{array}{l@{~}l}
+            \loc, \val       & \defeq \lLOC(e), \lVALR(e) \\
+            {\pstate, \View, \PromSet} & \defeq \TSf(tid) \\
+          \end{array}\]
+          Т.к. $e \in \lR \cap \coverable(G, C, \IssuedSet)$ из определения $\travConfigStep$,
+          существует событие записи $w \in \IssuedSet \cap \dom{\lRF; [e]}$. По $\invMemOne(C, \IssuedSet, \TSf, M)$
+          существует фронт $view$, т.ч. $msg \defeq \msg{\loc}{\val}{T(w)}{view} \in M$.
+          $\View.\viewCur \le T(w)$ по лемме \ref{lem:curset-acyclic}.
+
+          \[\begin{array}{l@{~}l}
+            \View'   & \defeq \tup{\View.\viewCur \sqcup [\loc @ T(w)], \View.\viewAcq \sqcup view, \View.\viewRel} \\
+            \TSf'    & \defeq \TSf[tid \mapsto \tup{\pstate', \View', \PromSet}] \\
+          \end{array}\]
+          Нужно проверить $\simRel(C', \IssuedSet, \TSf', M)$.
+        \begin{itemize}
+        \item $\invMemOne(C', \IssuedSet, \TSf', M) \land \invMemTwo(C', \IssuedSet, M)$:
+          выполняется, т.к. $e \nin \lW$ и $\simRel(C, \IssuedSet, \TSf, M)$ выполняется.
+
+        \item $\invViewRel(\TSf')$: выполняется, т.к. $\invViewRel(\TSf)$ выполняется и\\
+          $\TSf'(tid).\{\View.\viewRel, \PromSet\} = \TSf(tid).\{\View.\viewRel, \PromSet\}$.
+
+        \item $\invView(C', \TSf')$:
+          \[\inarr{
+  \forall e' \in \nextset(G, C'). \; \letdef{\tup{\viewCur, \viewAcq, \viewfRel}}{\TSf'(\lTID(e')).\View}\\
+  \quad
+  \begin{array}{@{}r@{~}l@{~}l}
+    \viewCur  & \le \domView(\curRel; [e']) & \land {} \\
+    \viewAcq  & \le \domView(\acqRel; [e']) & \land {} \\
+    \viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Зафиксируем $e'$. Если $\lTID(e') \neq tid$, то утверждение следует из $\invView(C, \TSf)$.
+          Предположим, что $\lTID(e') = tid$. Тогда $\imm{\lPO}(e, e')$, т.к. $e \in \nextset(G, C)$.
+          %% Мы знаем, что $\View.\viewAcq \le \domView(\acqRel; \lPO; [e])$, т.к. $\invView(C, \TSf)$ выполняется.
+          Нам нужно показать, что
+          \[\inarr{
+  \begin{array}{@{}l@{~}l@{~}l}
+    \View.\viewCur \sqcup [\loc @ T(w)] & \le \domView(\curRel; [e']) & \land {} \\
+    \View.\viewAcq \sqcup view & \le \domView(\acqRel; [e']) & \land {} \\
+    \View.\viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          %% $\View.\viewCur \le \domView(\curRel; [e]) \le \domView(\curRel; [e'])$ по $\invView(C, \TSf')$.
+          Т.к. $\tup{w, e'} \in \curRel$, $[\loc @ T(w)] \le \domView(\curRel; [e'])$.
+          Из $\invViewRel(\TSf)$ следует, что $view = [\loc @ T(w)] \sqcup \TSf(\lTID(w)).\View.\viewfRel$.
+          Т.к. $\tup{w, e'} \in \acqRel$, $[\loc @ T(w)] \le \domView(\acqRel; [e'])$.
+          Т.к. $\TSf(\lTID(w)).\View.\viewfRel \le \domView(\relRel; [w])$ и
+          $\dom{\relRel; [w]} \suq \dom{\acqRel; [e']}$, утверждение выполняется.
+        \item $\invState(C', \TSf')$:
+          очевидно следует из $\invState(C, \TSf)$ и определений $C', \TSf'$.
+      \end{itemize}
+
+        \item $e \in \lW$.
+          В этом случае $\labelF(t) = \writeLbl{\loc}{\val}$ по $\invState(C, \TSf)$.
+          \[\begin{array}{l@{~}l}
+            \loc, \val, \tau        & \defeq \lLOC(e), \lVALW(e), T(e) \\
+            \tup{\pstate, \View, \PromSet} & \defeq \TSf(tid) \\
+            \tup{\viewCur, \viewAcq, \viewRel} & \defeq \View. \\
+          \end{array}\]
+          $e \in \IssuedSet$, т.е. $e \in \lW \cap \coverable(G, C, \IssuedSet)$.
+          Из $\invMemOne(C, \IssuedSet, \TSf, M)$ следует, что существует $view$, т.ч.
+          $msg \defeq \msg{\loc}{\val}{\tau}{view} \in M$.
+          $\viewCur(\loc) < \tau$ следует по лемме \ref{lem:curset-acyclic}.
+          \[\begin{array}{l@{~}l}
+            \viewCur', \viewAcq' & \defeq \viewCur \sqcup [\loc @ \tau], \viewAcq \sqcup [\loc @ \tau] \\
+            \View'    & \defeq \tup{\viewCur', \viewAcq', \viewRel} \\
+            \TSf'     & \defeq \TSf[tid \mapsto \tup{\pstate', \View', \PromSet \setminus msg}] \\
+          \end{array}\]
+          $view = \viewRel$ по $\invViewRel(\TSf)$.
+
+          Нужно проверить $\simRel(C', \IssuedSet, \TSf', M)$.
+        \begin{itemize}
+        \item $\invMemOne(C', \IssuedSet, \TSf', M) \land \invMemTwo(C', \IssuedSet, M)$:
+          выполняется, т.к. мы добавили $e$ во множество покрытых событий и убрали $msg$ из множества
+          обещанных сообщений потока $tid$.
+
+        \item $\invViewRel(\TSf')$: выполняется, т.к. $\invViewRel(\TSf)$ выполняется, \\
+          $\TSf'(tid).\View.\viewRel = \TSf(tid).\View.\viewRel$ и
+          $\TSf'(tid).\PromSet \subset \TSf(tid).\PromSet$.
+
+        \item $\invView(C', \TSf')$:
+          \[\inarr{
+  \forall e' \in \nextset(G, C'). \; \letdef{\tup{\viewCur, \viewAcq, \viewfRel}}{\TSf'(\lTID(e')).\View}\\
+  \quad
+  \begin{array}{@{}r@{~}l@{~}l}
+    \viewCur  & \le \domView(\curRel; [e']) & \land {} \\
+    \viewAcq  & \le \domView(\acqRel; [e']) & \land {} \\
+    \viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Зафиксируем $e'$. Если $\lTID(e') \neq tid$, то утверждение следует из $\invView(C, \TSf)$.
+          Предположим, что $\lTID(e') = tid$. Тогда $\imm{\lPO}(e, e')$, т.к. $e \in \nextset(G, C)$.
+          %% Мы знаем, что $\View.\viewAcq \le \domView(\acqRel; \lPO; [e])$, т.к. $\invView(C, \TSf)$ выполняется.
+          Нам нужно показать, что
+          \[\inarr{
+  \begin{array}{@{}l@{~}l@{~}l}
+    \View.\viewCur \sqcup [\loc @ \tau] & \le \domView(\curRel; [e']) & \land {} \\
+    \View.\viewAcq \sqcup [\loc @ \tau] & \le \domView(\acqRel; [e']) & \land {} \\
+    \View.\viewfRel & \le \domView(\relRel; [e']). \\
+  \end{array}
+          }\]
+          Т.к. $\tup{w, e'} \in \curRel \suq \acqRel$,
+          $[\loc @ \tau] \le \domView(\curRel; [e'])$
+          ${} \le \domView(\acqRel; [e'])$.
+        \item $\invState(C', \TSf')$:
+          очевидно следует из $\invState(C, \TSf)$ и определений $C', \TSf'$.
+      \end{itemize}
+
+      \end{itemize}
+
+      %% \app{TODO}
+      %% $\tup{\TSf', M'}$ is consistent by \cref{prop:sim-cert}.
+
+  %% \end{itemize}
+\end{proof}
+
+\begin{lemma}
+  \label{lem:curset-acyclic}
+  Для любой локации $\loc$ выполняется $[\lW_{\loc}]; \curRel; [\lW_{\loc}] \suq \lCO$.
+\end{lemma}
+\begin{proof}
+  Зафиксируем $\tup{w, w'} \in [\lW_{\loc}]; \curRel; [\lW_{\loc}]$. Тогда по определению $\lCO$,
+  либо $\lCO(w, w')$, либо $\lCO(w', w)$. Если выполняется первое, то выполняется утверждение.
+  Пусть выполняется второе.
+  \[\inarr{
+    {} [\lW_{\loc}]; \curRel; [\lW_{\loc}] = \\
+    {} [\lW_{\loc}]; \lRF^{?}; (\lPO \cup \lSW)^{+}; [\lW_{\loc}] = \\
+    \quad \text{(по транзитивности $\lPO$ и определению $\lSW$)} \\
+    {} [\lW_{\loc}]; \lRF^{?}; \lPO; (\lSW; \lPO)^{*}; [\lW_{\loc}] = \\
+    {} [\lW_{\loc}]; \lRF^{?}; \lPO; [\lW_{\loc}] \cup {} \\
+    {} [\lW_{\loc}]; \lRFE^{?}; \lPO; (\lSW; \lPO)^{+}; [\lW_{\loc}] \cup {} \\
+  }\]
+  $\tup{w, w'} \nin [\lW_{\loc}]; \lRF^{?}; \lPO; [\lW_{\loc}]$, т.к. $\tup{w', w} \in \lCO$ и выполняется \ref{ax:internal}.
+  
+  Введем вспомогательное отношение $\lEORD \defeq (\lOBS \cup \lDOB \cup \lBOB)^{+}$,
+  которое антирефлексивно по определению \ARM-согласованности (\ref{ax:external}).
+  Из определений отношений следует, что $\lPO^{?}; \lSW; \lPO \suq \lBOB^{?}; \lBOB \cup \lBOB^{?}; \lBOB; \lRFE; \lBOB \suq \lEORD$.
+  По транзитивности $\lEORD$, $\tup{w, w'} \in \lEORD$.
+  
+  Мы знаем, что $\tup{w', w} \in \lCO$. Есть два варианта: $\tup{w', w} \in \lCOE$ или $\tup{w', w} \in \lCOI$.
+  Первый вариант противоречит ацикличности $\lEORD$, т.к. $\lCOE \suq \lOBS$. Опровергнем второй вариант, показав, что
+  $(\lEORD \cup \lCOI)^{+} = (\lOBS \cup \lDOB \cup \lBOB \cup \lCOI)^{+}$ антирефлексивно.
+
+  Предположим обратное и рассмотрим цикл минимальной длины, в котором точно есть $\lCOI$ по антирефлексивности $\lEORD$.
+  Рассмотрим предыдущее ребро и покажем, что во всех случаях цикл можно укоротить.  
+  \begin{itemize}
+    \item $\lCOI; \lCOI \suq \lCOI$
+    \item $\lOBS; \lCOI \suq \lOBS$: $\quad \lRFE; \lCOI = \emptyset \quad \lFRE; \lCOI \suq \lFRE \quad \lCOE; \lCOI \suq \lCOE$
+    \item $\lDOB; \lCOI \suq \lDOB$:
+      \begin{itemize}
+        \item $\lADDR; \lPO^{?}; \lCOI \suq \lDOB \quad \lDATA; \lCOI \suq \lDOB$
+        \item $(\lADDR \cup \lDATA);\lRFI; \lCOI = \emptyset \quad (\lCTRL \cup \lDATA); [\lW]; \lCOI^{?}; \lCOI \suq \lDOB$
+      \end{itemize}
+    \item $\lBOB; \lCOI \suq \lBOB$: $\lPO; \lCOI \suq \lPO$
+    \qedhere
+  \end{itemize}
+\end{proof}
+
+\chapter{Связь между системой переходов и вершинами в \ARM-исполнении}
+\label{sec:lts-rel}
+
+\[\inarr{
+  \approx : \Label_{\Promise} \rightarrow \Label_{\ARM} \rightarrow {\rm Boolean} \\
+  lbl_{\Promise} \approx lbl_{\ARM} \defeq \\
+  \qquad \kw{match} \; lbl_{\Promise}, \; lbl_{\ARM} \; \kw{with} \\
+  \qquad
+    \begin{array}{@{}l}
+      | \; \rlab{}{\loc}{\val}, \rlab{}{\loc}{\val} \;
+      | \; \wlab{}{\loc}{\val}, \wlab{}{\loc}{\val} \\
+      | \; \flab{\rel}, \flab{\SY} \;
+      | \; \flab{\acq}, \flab{\LD} \rightarrow {\rm true} \\
+      | \; \_, \_ \rightarrow {\rm false}
+    \end{array} \\
+  \\
+  \nthf : \{A : Set\} \rightarrow \Pset(A \times A) \rightarrow \mathbb{N} \rightarrow \Pset(A) \\
+  \nthf \; rel \; n \defeq \codom{rel^{n}} \setminus \codom{rel^{n + 1}}.
+}\]
+
+\begin{theorem}
+\[\inarr{
+\forall \Carm. \\
+\quad (\forall \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \\
+\qquad \exists path \in \cmdsToLbls \; \Carm. \; \forall n \in \mathbb{N}, a \in \nthf \; \lPO \; n. \\
+\qquad \quad \exists k \in \mathbb{N}. \; path[n + k] \approx lbl \; a) \land {} \\
+\quad (\forall path \in \cmdsToLbls \; \Carm. \\
+\qquad \exists \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \;
+  \forall n \in \mathbb{N}. \\
+\qquad \quad path[n] \neq \epsilon \Rightarrow \exists k \in \mathbb{N}, a \in \nthf \; \lPO \; (n - k). \; path[n] \approx lbl \; a).
+}\]
+\end{theorem}
+\begin{proof}
+  Верно по определению функций $\instToLbl$ и $\instToVrtx$.
+\end{proof}
