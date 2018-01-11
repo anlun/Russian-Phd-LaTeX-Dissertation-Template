@@ -1,0 +1,243 @@
+\chapter{Связь между программами и обещающей и ARMv8.3 моделями}
+\label{sec:appendixProg}
+
+\begin{figure}[h]
+\begin{minipage}{0.6\textwidth}
+$\begin{array}{l @{~} r @{~} l}
+\Carm    & : & \ListOf{\StmtARM} \\  
+\StmtARM & ::= & \readInst{\reg}{\expr} \\
+         & |   & \writeInst{\expr_0}{\expr_1} \\
+         & |   & \fenceInst{\FtypeProm} \\
+         & |   & \ifGotoInst{\expr}{\z} \\
+         & |   & \assignInst{\reg}{\expr} \mid \nop \\
+\FtypeProm & ::= & \rel \mid \acq\\
+\expr    & ::= & \val \mid \reg \mid \loc \mid uop \; \expr \\
+         & |   & bop \; \expr_0 \; \expr_1 \\
+         %% & :   & \Expr \\
+\reg : \Reg & - & a, b, c, ...  \quad \; \text{(локальные переменные)} \\
+\loc : \Loc & - & x, y, z, ... \quad \text{(локации)} \\
+uop, bop & - & \text{арифметические операции} \\
+\val, \z       & \in & \mathbb{Z}
+\end{array}$
+\captionof{figure}{Синтаксис программ}
+\label{fig:syn-prog}
+\end{minipage}
+%
+\begin{minipage}{0.4\textwidth}
+$\begin{array}{l @{~} r @{~} l}
+    \Path  & ::= & \ListOf{Label} \\
+    \Label & ::= & \rlab{}{\loc}{\val} \\
+           & |   & \wlab{}{\loc}{\val} \\
+           & |   & \flab{\FtypeProm} \\
+           & |   & \epsilon \\
+\end{array}$
+\captionof{figure}{Метки переходов}
+\label{fig:lts}
+\end{minipage}
+\end{figure}
+
+В этом разделе мы (i) опишем синтаксис исходного языка, который используется в нашей работе,
+приведем алгоритм построения по программе (ii) помеченной системы переходов для обещающей машины
+и (iii) \ARM-согласованных исполнений, а также предъявим теорему, которая их свяжет.
+
+%% \section{Исходный язык}
+Синтаксис исходного языка представлен на рисунке \ref{fig:syn-prog}.
+В нашем синтаксисе многопоточная программа является параллельной композицией потоков на верхнем уровне, где
+код каждого потока есть список инструкций ($\ListOf{\StmtARM}$).
+Инструкция может быть чтением ($\readInst{\reg}{\expr}$),
+записью ($\writeInst{\expr_0}{\expr_1}$),
+барьером памяти ($\fenceInst{\FtypeProm}$), 
+условным переходом на $\z$ позиций в списке инструкций ($\ifGotoInst{\expr}{\z}$),
+присваиванием в локальную переменную ($\assignInst{\reg}{\expr}$),
+пустой операцией ($\nop$).
+
+\section{Компиляция программ в помеченную систему переходов}
+Первым шагом для построения помеченной системы переходов по программе является
+генерация всех возможных \emph{путей} ($\Path$) исполнения -- списков меток (см. рис. \ref{fig:lts}).
+Далее по множеству путей строится конечный автомат, принимающий упомянутые пути.
+
+Функция построения путей $\cmdsToLbls$ использует вспомогательную функцию $\instToLbl$,
+которая принимает список инструкций потока $ilist$, указатель на текущую инструкцию $pos$ и
+состояние локальных переменных $st$.
+\[
+\inarr{
+  \cmdsToLbls : \Carm \rightarrow \Pset(\Path) \\
+  \cmdsToLbls \; ilist = \instToLbl \; ilist \; 0 \; (\lambda \reg. 0) \\
+  \\
+  \instToLbl : \Carm \rightarrow \mathbb{N} \rightarrow (\Reg \rightarrow \mathbb{N}) \rightarrow \Pset(\Path) \\
+  \instToLbl \; ilist \; pos \; \PromState \defeq \\
+  \quad \textIf   pos < 0 \; || \; pos > length(ilist) \; \textThen \{ [] \} \\
+  \quad \textElse \\
+  \qquad \kw{match} \; ilist[pos] \; \kw{with} \\
+  \qquad
+    \begin{array}{@{}l}
+    | ``\nop" \rightarrow \instToLbl \; ilist \; (pos + 1) \; \PromState \\
+    | ``\readInst{\reg}{\expr}" \rightarrow \\
+      \quad \{ \rlab{}{\semState{\expr}{\PromState}}{\val} : l \mid
+      \forall \val \in \Val, l \in \instToLbl \; ilist \; (pos + 1) \; \PromState[\reg \mapsto \val] \} \\
+    | ``\assignInst{\reg}{\expr}" \rightarrow
+                 \instToLbl \; (pos + 1) \; \PromState[\reg \mapsto \semState{\expr}{\PromState}] \\
+    | ``\writeInst{\expr_0}{\expr_1}" \rightarrow \\
+      \quad \{ \wlab{}{\semState{\expr_0}{\PromState}}{\semState{\expr_1}{\PromState}} : l \mid
+      \forall l \in \instToLbl \; ilist \; (pos + 1) \; \PromState \} \\
+    | ``\fenceInst{\FtypeProm}" \rightarrow
+      \{ \flab{\FtypeProm} : l \mid \forall l \in \instToLbl \; ilist \; (pos + 1) \; \PromState \} \\
+    | ``\ifGotoInst{\expr}{k}" \rightarrow
+      \letdef{step}{\textIf \semState{\expr}{\PromState} \; \textThen k \; \textElse 1} \\
+      \quad \instToLbl \; (pos + step) \; \PromState \\
+  \end{array} \\
+}
+\]
+
+\section{Компиляция программ в предзапуски}
+
+Для построения \ARM-согласованных исполнений по программе стандартно
+используется следующая схема \cite{Vafeiadis-Narayan:OOPSLA13}.
+В начале по программе строятся \emph{предзапуски} --- графы исполнений, в которых определена
+только часть нужных отношений между событиями, а именно отношения порядка $\lPO$ и зависимостей
+по данным $\lDATA$, управлению $\lCTRL$ и адресу $\lADDR$.
+\[
+\inarr{
+  \PreExecutions \defeq \Pset(\langle set : \Pset(E), \lab : set \rightharpoonup \Label, \\
+   \quad \lPO : \Pset(set \times set), \lCTRL : \Pset(set \times set),
+         \lADDR : \Pset(set \times set), \lDATA : \Pset(set \times set) \rangle) \\
+     %% , \state : \Reg \rightarrow \Val, \dep : \Pset(\Reg \times E)}) \\
+}\]
+При этом для каждой инструкции чтения
+генерируется столько вариантов соответствующего события, сколько существует возможных значений
+соответствующего типа данных.
+Далее для каждого предзапуска недетерменированно выбираются отношения согласованности $\lCO$ и чтения из $\lRF$
+таким образом, чтобы получалось \ARM-согласованное исполнение. Важно отменить, что не для всех предзапусков
+существуют подходящие $\lCO$ и $\lRF$.
+
+\[
+\inarr{
+  \cmdsToVrtxs : \Carm \rightarrow \PreExecutions \\
+  \cmdsToVrtxs \; ilist = \instToVrtx \; ilist \; 0 \; (\lambda \reg. 0) \; \emptyset \\
+}\]
+Функция построения предзапусков по программе $\cmdsToVrtxs$ использует вспомогательную функцию $\instToVrtx$,
+которая принимает список инструкций потока $ilist$, указатель на текущую инструкцию $pos$,
+состояние локальных переменных $st$ и отношение зависимости локальной переменной от сгенерированного события $\dep$.
+Последний параметр нужен для отношений зависимости.
+
+\[
+\inarr{
+  \regs : \Expr \rightarrow \Pset(\Reg) \\
+  \regs \; e \defeq \\
+  \quad \kw{match} \; e \; \kw{with} \\
+  \quad | \; \loc \; | \; \val \rightarrow \emptyset \\
+  \quad | \; \reg \rightarrow \{\reg\} \\
+  \quad | \; uop \; \expr \rightarrow \regs \; \expr \\
+  \quad | \; bop \; \expr_o \; \expr_1 \rightarrow (\regs \; \expr_0) \cup (\regs \; \expr_1) \\
+}\]
+%% \[\inarr{
+%%   \sembr{-} : \Carm \rightarrow
+%%     \{\tup{\emptyset, \bot, \emptyset, \emptyset, \emptyset, \emptyset, \emptyset, \lambda \reg. \; 0, \emptyset} \} \\
+%%   \sembr{[]} = \{\tup{\emptyset, \bot, \emptyset, \emptyset, \emptyset, \emptyset, \emptyset, \lambda \reg. \; 0, \emptyset} \} \\
+%% }\]
+{\small
+\[
+\inarr{
+  \instToVrtx : \Carm \rightarrow \mathbb{N} \rightarrow (\Reg \rightarrow \mathbb{N}) \rightarrow \Pset(\Reg \times E)
+    \rightarrow \PreExecutions \\
+    %% \ListOf{(\Label \times \mathbb{N} \times (\Reg \rightarrow \mathbb{N}))} \\
+  \instToVrtx \; ilist \; pos \; \PromState \; \dep \defeq \\
+  \quad \textIf   pos < 0 \; || \; pos > length(ilist) \; \textThen
+    \{\tup{\emptyset, \bot, \emptyset, \emptyset, \emptyset, \emptyset}\} \\
+  \quad \textElse \\
+  \qquad
+    \letdef{a}{{\rm fresh\text{-}vertex} } \\
+  \qquad \kw{match} \; ilist[pos] \; \kw{with} \\
+  \qquad
+    \begin{array}{@{}l}
+    | ``\nop" \rightarrow \instToVrtx \; ilist \; (pos + 1) \; \PromState \; \dep \\
+    | ``\readInst{\reg}{\expr}" \rightarrow \\
+      \quad \inarr{
+        \letdef{\dep'}{(\dep \setminus \{\reg\} \times E) \cup \{\tup{\reg, a}\}} \\
+        \letdef{\loc}{\semState{\expr}{\PromState}} \\
+        \letdef{\lADDR'}{ \codom{[\regs(\expr)]; \dep} \times \{a\} } \\
+        \{\tup{set \cup\{a\}, \lab[a \mapsto \rlab{}{\loc}{\val}], \lPO \cup \{a\} \times set, \lCTRL, \lADDR \cup \lADDR', \lDATA}
+        \mid \forall \val \in \Val, \\
+        \quad \tup{set, \lab, \lPO, \lCTRL, \lADDR, \lDATA} \in
+          \instToVrtx \; ilist \; (pos + 1) \; \PromState[\reg \mapsto \val] \; \dep'\} \\
+      } \\
+    | ``\assignInst{\reg}{\expr}" \rightarrow \\
+      \quad \inarr{
+        \letdef{\dep'}{(\dep \setminus \{\reg\} \times E) \cup \{\reg\} \times \regs(\expr) \}} \\
+        \instToVrtx \; ilist \; (pos + 1) \; \PromState[\reg \mapsto \semState{\expr}{\PromState}] \; \dep' \\
+      } \\
+    | ``\writeInst{\expr_0}{\expr_1}" \rightarrow \\
+      \quad \inarr{
+        \letdef{\loc}{\semState{\expr_0}{\PromState}} \\
+        \letdef{\val}{\semState{\expr_1}{\PromState}} \\
+        \letdef{\lADDR'}{ \codom{[\regs(\expr_0)]; \dep} \times \{a\} } \\
+        \letdef{\lDATA'}{ \codom{[\regs(\expr_1)]; \dep} \times \{a\} } \\
+        \{\tup{set \cup\{a\}, \lab[a \mapsto \wlab{}{\loc}{\val}], \lPO \cup \{a\} \times set,
+          \lCTRL, \lADDR \cup \lADDR', \lDATA \cup \lDATA'}
+        \mid  \\
+        \quad \tup{set, \lab, \lPO, \lCTRL, \lADDR, \lDATA} \in
+          \instToVrtx \; ilist \; (pos + 1) \; \PromState \; \dep\} \\
+      } \\
+    | ``\fenceInst{\FtypeProm}" \rightarrow \\
+      \quad \inarr{
+        \{\tup{set \cup\{a\}, \lab[a \mapsto \flab{\FtypeProm}], \lPO \cup \{a\} \times set,
+          \lCTRL, \lADDR, \lDATA}
+        \mid  \\
+        \quad \tup{set, \lab, \lPO, \lCTRL, \lADDR, \lDATA} \in
+          \instToVrtx \; ilist \; (pos + 1) \; \PromState \; \dep\} \\
+      } \\
+    | ``\ifGotoInst{\expr}{k}" \rightarrow \\
+      \quad \inarr{
+        \letdef{step}{\textIf \semState{\expr}{\PromState} \; \textThen k \; \textElse 1} \\
+        \letdef{dver}{\codom{[\regs(\expr)]; \dep}} \\
+        \{\tup{set, \lab, \lPO, \lCTRL \cup dver \times set, \lADDR, \lDATA}
+        \mid  \\
+        \quad \tup{set, \lab, \lPO, \lCTRL, \lADDR, \lDATA} \in
+          \instToVrtx \; ilist \; (pos + step) \; \PromState \; \dep \} \\
+      } \\
+  \end{array} \\
+  %% \\
+  %% \cmdsToVrtxsAux : \Carm \rightarrow \mathbb{N} \times (\Reg \rightarrow \mathbb{N}) \rightarrow \ListOf{\Path}\\
+  %% \cmdsToVrtxsAux \; ilist \; (pos, \; \PromState) = \letdef{l}{\instToLbl \; ilist \; (pos, \; \PromState)} \\
+  %% \quad %\textup{\sf flatten} \;
+  %%       [lbl':lbls \mid (lbl', pos', \PromState') \in l, lbls \in \cmdsToLblsAux \; ilist \; (pos', \; \PromState') ] \\
+  %% \\
+}
+\]
+}
+
+
+\section{Связь между системой переходов и вершинами в \ARM-исполнении}
+
+\[\inarr{
+  \approx : \Label_{\Promise} \rightarrow \Label_{\ARM} \rightarrow {\rm Boolean} \\
+  lbl_{\Promise} \approx lbl_{\ARM} \defeq \\
+  \qquad \kw{match} \; lbl_{\Promise}, \; lbl_{\ARM} \; \kw{with} \\
+  \qquad
+    \begin{array}{@{}l}
+      | \; \rlab{}{\loc}{\val}, \rlab{}{\loc}{\val} \;
+      | \; \wlab{}{\loc}{\val}, \wlab{}{\loc}{\val} \\
+      | \; \flab{\rel}, \flab{\SY} \;
+      | \; \flab{\acq}, \flab{\LD} \rightarrow {\rm true} \\
+      | \; \_, \_ \rightarrow {\rm false}
+    \end{array} \\
+  \\
+  \nthf : \{A : Set\} \rightarrow \Pset(A \times A) \rightarrow \mathbb{N} \rightarrow \Pset(A) \\
+  \nthf \; rel \; n \defeq \codom{rel^{n}} \setminus \codom{rel^{n + 1}}.
+}\]
+
+\begin{theorem}
+\[\inarr{
+\forall \Carm. \\
+\quad (\forall \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \\
+\qquad \exists path \in \cmdsToLbls \; \Carm. \; \forall n \in \mathbb{N}, a \in \nthf \; \lPO \; n. \\
+\qquad \quad \exists k \in \mathbb{N}. \; path[n + k] \approx lbl \; a) \land {} \\
+\quad (\forall path \in \cmdsToLbls \; \Carm. \\
+\qquad \exists \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \;
+  \forall n \in \mathbb{N}. \\
+\qquad \quad path[n] \neq \epsilon \Rightarrow \exists k \in \mathbb{N}, a \in \nthf \; \lPO \; (n - k). \; path[n] \approx lbl \; a).
+}\]
+\end{theorem}
+\begin{proof}
+  Верно по определению функций $\instToLbl$ и $\instToVrtx$.
+\end{proof}
