@@ -70,6 +70,36 @@ Requires: #3\\
   \codePostfix
 }
 
+\newcommand{\iriwTemplate}[8]{
+  \codePrefix
+  $\writeInstParam{#1}{x}{0}; \writeInstParam{#2}{y}{0};$ \\
+\begin{tabular}{L || L || L || L}
+  \writeInstParam{#3}{x}{1} &
+  \writeInstParam{#4}{y}{1} &
+  \readInstParam{#5}{a}{x}; &
+  \readInstParam{#7}{c}{y}; \\
+  & &
+  \readInstParam{#6}{b}{y} &
+  \readInstParam{#8}{d}{x} \\
+\end{tabular}
+  \codePostfix
+}
+
+\newcommand{\wrTemplate}[8]{
+\codePrefix
+  $\writeInstParam{#1}{x}{0}; \writeInstParam{#2}{y}{0};$ \\
+  \begin{tabular}{L || L}
+    \writeInstParam{#3}{x}{1}; &
+    \writeInstParam{#5}{y}{1}; \\
+
+    \writeInstParam{#4}{y}{2} &
+    \writeInstParam{#6}{x}{2} \\
+  \end{tabular} \\
+  $\readInstParam{#7}{a}{x};
+   \readInstParam{#8}{b}{y}$
+\codePostfix
+}
+
 \section{Store Buffering (SB)}
 \label{app:sb}
 
@@ -547,137 +577,40 @@ a = 1 \land b = 2 \land c = 2 \land d = 1 \\
 \litmusTestStart{IRIW\_rlx}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = <0, 1>; r2 = <0, 1>;}\\
-\lstinline{  r3 = <0, 1>; r4 = <0, 1>}\\
+\[\begin{array}{l}
+a \in \{0, 1\} \land b \in \{0, 1\} \land c \in \{0, 1\} \land d \in \{0, 1\} \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.5\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-               |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|x|$]_{rlx}$|;
-r2 = |$[$|y|$]_{rlx}$|
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r3 = |$[$|y|$]_{rlx}$|;
-r4 = |$[$|x|$]_{rlx}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
-
-Comment:
-It is possible to get
-\lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
+\iriwTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
+%% Comment:
+%% It is possible to get
+%% \lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
 \litmusTestEnd
 
 \litmusTestStart{IRIW\_rel+acq}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = <0, 1>; r2 = <0, 1>;}\\
-\lstinline{  r3 = <0, 1>; r4 = <0, 1>}\\
+\[\begin{array}{l}
+a \in \{0, 1\} \land b \in \{0, 1\} \land c \in \{0, 1\} \land d \in \{0, 1\} \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.5\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-               |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|x|$]_{acq}$|;
-r2 = |$[$|y|$]_{acq}$|
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r3 = |$[$|y|$]_{acq}$|;
-r4 = |$[$|x|$]_{acq}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
-
-Comment:
-It is possible to get
-\lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
+\iriwTemplate{\rel}{\rel}{\rel}{\rel}{\acq}{\acq}{\acq}{\acq}
+%% Comment:
+%% It is possible to get
+%% \lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
 \litmusTestEnd
 
 \litmusTestStart{IRIW\_sc}{\tick}{SC + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Forbidden outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 0 |$\land$| r3 = 1 |$\land$| r4 = 0}\\
+\[\begin{array}{l}
+a = 1 \land b = 0 \land c = 1 \land d = 0 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.5\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-               |$[$|x|$]_{sc}$| := 0; |$[$|y|$]_{sc}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{sc}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{sc}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|x|$]_{sc}$|;
-r2 = |$[$|y|$]_{sc}$|
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r3 = |$[$|y|$]_{sc}$|;
-r4 = |$[$|x|$]_{sc}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\iriwTemplate{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}
 \litmusTestEnd
 
 \section{Write-to-Read Causality (WRC)}
@@ -686,162 +619,90 @@ r4 = |$[$|x|$]_{sc}$|
 \litmusTestStart{WRC\_rel+acq}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Forbidden outcomes:\\
-\lstinline{  r2 = 1 |$\land$| r3 = 0}\\
+\[\begin{array}{l}
+b = 1 \land c = 0 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
+\codePrefix
+  $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{1};$ \\
+\begin{tabular}{L || L || L}
+\writeInstParam{\rel}{x}{1} &
+\readInstParam{\acq}{a}{x}; &
+\readInstParam{\acq}{b}{y}; \\
+
 &
-\begin{lstlisting}
-r1 = |$[$|x|$]_{acq}$|;
-|$[$|y|$]_{rel}$| := r1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|y|$]_{acq}$|;
-r3 = |$[$|x|$]_{acq}$|
-\end{lstlisting}
+\writeInstParam{\rel}{y}{a} &
+\readInstParam{\acq}{c}{x} \\
 \end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{WRC\_rlx}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r2 = 0 |$\land$| r3 = 0}\\
-\lstinline{  r2 = 0 |$\land$| r3 = 1}\\
-\lstinline{  r2 = 1 |$\land$| r3 = 0}\\
-\lstinline{  r2 = 1 |$\land$| r3 = 1}\\
+\[\begin{array}{l}
+b \in \{0, 1\} \land c \in \{0, 1\} \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|x|$]_{rlx}$|;
-|$[$|y|$]_{rlx}$| := r1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|y|$]_{rlx}$|;
-r3 = |$[$|x|$]_{rlx}$|
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{1};$ \\
+\begin{tabular}{L || L || L}
+\writeInstParam{\rlx}{x}{1} &
+\readInstParam{\rlx}{a}{x}; &
+\readInstParam{\rlx}{b}{y}; \\
 
-%% Comment:
-%% It is possible to get
-\lstinline{r2 = 1; r3 = 0}
+&
+\writeInstParam{\rlx}{y}{a} &
+\readInstParam{\rlx}{c}{x} \\
+\end{tabular}
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{WRC\_cas+rel}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Impossible outcomes:\\
-\lstinline{  r2 = 2 |$\land$| r3 = 0}\\
+\[\begin{array}{l}
+b = 2 \land c = 0 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 1;
-|$[$|y|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
+\codePrefix
+  $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{1};$ \\
+\begin{tabular}{L || L || L}
+\writeInstParam{\rel}{x}{1}; &
+\casInstParam{\rel}{\acq}{a}{y}{1}{2} &
+\readInstParam{\acq}{b}{y}; \\
+
+\writeInstParam{\rel}{y}{1} &
 &
-\begin{lstlisting}
-cas|$_{rel,acq}$|(y, 1, 2)
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rel}$|;
-r2 = |$[$|x|$]_{rel}$|
-\end{lstlisting}
+\readInstParam{\acq}{c}{x} \\
 \end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
-\vspace{.2cm}
-\hrule
-\vspace{.2cm}
+\codePostfix
+\litmusTestEnd
 
 \litmusTestStart{WRC\_cas+rlx}{\tick}{History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Impossible outcomes:\\
-\lstinline{  r2 = 2 |$\land$| r3 = 0}\\
+\[\begin{array}{l}
+b = 2 \land c = 0 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-        |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1;
-|$[$|y|$]_{rel}$| := 1
-\end{lstlisting}
-\hspace{.6cm}
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+\begin{tabular}{L || L || L}
+\writeInstParam{\rlx}{x}{1}; &
+\casInstParam{\rlx}{\rlx}{a}{y}{1}{2} &
+\readInstParam{\rlx}{b}{y}; \\
+
+\writeInstParam{\rel}{y}{1} &
 &
-\begin{lstlisting}
-cas|$_{rlx,rlx}$|(y, 1, 2)
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-r2 = |$[$|x|$]_{rlx}$|
-\end{lstlisting}
+\readInstParam{\rlx}{c}{x} \\
 \end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
-
-
-%\newpage
 
 \section{Out-of-Thin-Air reads}
 \label{app:ota}
@@ -854,77 +715,50 @@ clients~\cite{Batty-al:ESOP15}.
 \litmusTestStart{OTA\_lb}{\fail}{Postponed reads + History + Viewfronts}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 0 |$\land$| r2 = 0}\\
+\[\begin{array}{l}
+a = 0 \land b = 0 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-|$[$|x|$]_{rlx}$| := r1
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{rlx}$|;
-|$[$|y|$]_{rlx}$| := r2
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+  \begin{tabular}{L || L}
+    \readInstParam{\rlx}{a}{y}; &
+    \readInstParam{\rlx}{b}{x} \\
 
-Comment: According to the C11 standard \cite{C:11,CPP:11},
-\lstinline{r1} and \lstinline{r2} can get arbitrary values.
+    \writeInstParam{\rlx}{x}{a}; &
+    \writeInstParam{\rlx}{y}{b} \\
+  \end{tabular}
+\codePostfix
+%% Comment: According to the C11 standard \cite{C:11,CPP:11},
+%% \lstinline{r1} and \lstinline{r2} can get arbitrary values.
 \litmusTestEnd
 
 \litmusTestStart{OTA\_if}{\fail}{Postponed reads + History + Viewfronts}
 \begin{minipage}[t]{0.4\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 0 |$\land$| r2 = 0}\\
+\[\begin{array}{l}
+a = 0 \land b = 0 \\
+\end{array}\]\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|y|$]_{rlx}$|;
-if r1
-then |$[$|x|$]_{rlx}$| := 1
-else r1 = 0 
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|x|$]_{rlx}$|;
-if r2
-then |$[$|y|$]_{rlx}$| := 1
-else r2 = 0
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
+  \begin{tabular}{L || L}
+    \readInstParam{\rlx}{a}{y}; &
+    \readInstParam{\rlx}{b}{x}; \\
+    
+    \begin{array}{@{}l@{}}
+      \iteml{a}{\writeInstParam{\rlx}{x}{1}}{\assignInst{a}{0}}
+    \end{array}
+    &
+    \begin{array}{@{}l@{}}
+      \iteml{b}{\writeInstParam{\rlx}{y}{1}}{\assignInst{b}{0}}
+    \end{array}
   \end{tabular}
-\end{minipage}
-
-Comment: According to the C11 standard \cite{C:11,CPP:11},
-\lstinline{r1} and \lstinline{r2} can be 1s at the end of execution.
+\codePostfix
+%% Comment: According to the C11 standard \cite{C:11,CPP:11},
+%% \lstinline{r1} and \lstinline{r2} can be 1s at the end of execution.
 \litmusTestEnd
 
 \section{Write Reorder (WR), or 2+2W from \cite{Lahav-al:POPL16}}
@@ -933,122 +767,46 @@ Comment: According to the C11 standard \cite{C:11,CPP:11},
 \litmusTestStart{WR\_rlx}{\tick}{History + Viewfronts + Operational Buffers}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 2}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 1}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 2}\\
+\[\begin{array}{l}
+  a = 1 \land b = 2 \\
+  a = 2 \land b = 1 \\
+  a = 2 \land b = 2 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1;
-|$[$|y|$]_{rlx}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rlx}$| := 1;
-|$[$|x|$]_{rlx}$| := 2
-\end{lstlisting}
-\end{tabular}
-\begin{lstlisting}
-  r1 = |$[$|x|$]_{rlx}$|; r2 = |$[$|y|$]_{rlx}$|
-\end{lstlisting}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\wrTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
 \litmusTestEnd
 
 \litmusTestStart{WR\_rlx+rel}{\tick}{History + Viewfronts + Operational Buffers}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 2}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 1}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 2}\\
+\[\begin{array}{l}
+  a = 1 \land b = 2 \\
+  a = 2 \land b = 1 \\
+  a = 2 \land b = 2 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 1;
-|$[$|y|$]_{rel}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rlx}$| := 1;
-|$[$|x|$]_{rel}$| := 2
-\end{lstlisting}
-\end{tabular}
-\begin{lstlisting}
-  r1 = |$[$|x|$]_{rlx}$|; r2 = |$[$|y|$]_{rlx}$|
-\end{lstlisting}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\wrTemplate{\rlx}{\rlx}{\rlx}{\rel}{\rlx}{\rel}{\rlx}{\rlx}
 \litmusTestEnd
 
 \litmusTestStart{WR\_rel}{\tick}{History + Viewfronts + Operational Buffers}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r1 = 1 |$\land$| r2 = 2}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 1}\\
-\lstinline{  r1 = 2 |$\land$| r2 = 2}\\
+\[\begin{array}{l}
+  a = 1 \land b = 2 \\
+  a = 2 \land b = 1 \\
+  a = 2 \land b = 2 \\
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.3\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 1;
-|$[$|y|$]_{rel}$| := 2
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rel}$| := 1;
-|$[$|x|$]_{rel}$| := 2
-\end{lstlisting}
-\end{tabular}
-\begin{lstlisting}
-  r1 = |$[$|x|$]_{acq}$|; r2 = |$[$|y|$]_{acq}$|
-\end{lstlisting}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
-
-\vspace{10pt}
-
+\wrTemplate{\rel}{\rel}{\rel}{\rel}{\rel}{\rel}{\acq}{\acq}
 %% This is an example of the program from \cite{Lahav-al:POPL16}.
 %% The weak behavior (\lstinline{r1 = r2 = 1}) is allowed in C11,
 %% but never observable under any known sound compilation scheme
 %% of the C11 release writes.
 %% Our semantics doesn't allow such behaviour as well as SRA
 %% \cite{Lahav-al:POPL16}. 
-
 \litmusTestEnd
 
 %% \section{Value Stealing}
@@ -1100,147 +858,104 @@ Possible outcomes:\\
 \litmusTestStart{SE\_simple}{\tick}{}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r0 = 0}\\
-\lstinline{  r0 = 1}\\
+\[\begin{array}{l}
+  c \in \{0, 1\}
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-%
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0; |$[$|z|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|x|$]_{rlx}$|;
-if r1
-then |$[$|z|$]_{rlx}$| := 1;
-     |$[$|y|$]_{rlx}$| := 1
-else |$[$|y|$]_{rlx}$| := 1
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|y|$]_{rlx}$|;
-if r2
-then |$[$|x|$]_{rlx}$| := 1
-else 0 
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0};
+  \writeInstParam{\rlx}{y}{0};
+  \writeInstParam{\rlx}{z}{0};$ \\
+  \begin{tabular}{L || L}
+    \begin{array}{@{}l@{}}
+      \readInstParam{\rlx}{a}{x}; \\
+      \iteml{a}{
+        \writeInstParam{\rlx}{z}{1}; \\
+        \writeInstParam{\rlx}{y}{1}
+      }{\writeInstParam{\rlx}{y}{1}}
+    \end{array} &
 
-\begin{lstlisting}
-                  r0 = |$[$|z|$]_{rlx}$|
-\end{lstlisting}
-\end{minipage}
-
+    \begin{array}{@{}l@{}}
+      \readInstParam{\rlx}{b}{y}; \\
+      \iteml{a}{
+        \writeInstParam{\rlx}{x}{1}
+      }{\skipc}
+    \end{array}
+  \end{tabular} \\
+  $\readInstParam{\rlx}{c}{z}$
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{SE\_prop}{\tick}{}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r0 = 0}\\
-\lstinline{  r0 = 1}\\
+\[\begin{array}{l}
+  c \in \{0, 1\}
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-%
-\begin{lstlisting}
-  |$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0; |$[$|z|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|x|$]_{rlx}$|;
-if r1
-then |$[$|z|$]_{rlx}$| := 1;
-     r1 = |$[$|z|$]_{rlx}$|;
-     |$[$|y|$]_{rlx}$| := r1
-else |$[$|y|$]_{rlx}$| := 1
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r2 = |$[$|y|$]_{rlx}$|;
-if r2
-then |$[$|x|$]_{rlx}$| := 1
-else 0 
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0};
+  \writeInstParam{\rlx}{y}{0};
+  \writeInstParam{\rlx}{z}{0};$ \\
+  \begin{tabular}{L || L}
+    \begin{array}{@{}l@{}}
+      \readInstParam{\rlx}{a}{x}; \\
+      \iteml{a}{
+        \writeInstParam{\rlx}{z}{1}; \\
+        \readInstParam{\rlx}{a}{z}; \\
+        \writeInstParam{\rlx}{y}{a}
+      }{\writeInstParam{\rlx}{y}{1}}
+    \end{array} &
 
-\begin{lstlisting}
-                  r0 = |$[$|z|$]_{rlx}$|
-\end{lstlisting}
-\end{minipage}
-
+    \begin{array}{@{}l@{}}
+      \readInstParam{\rlx}{b}{y}; \\
+      \iteml{a}{
+        \writeInstParam{\rlx}{x}{1}
+      }{\skipc}
+    \end{array}
+  \end{tabular} \\
+  $\readInstParam{\rlx}{c}{z}$
+\codePostfix
 \litmusTestEnd
 
 \litmusTestStart{SE\_nested}{\tick}{}
 \begin{minipage}[t]{0.3\linewidth}
 Possible outcomes:\\
-\lstinline{  r0 = 0}\\
-\lstinline{  r0 = 1}\\
+\[\begin{array}{l}
+  c \in \{0, 1\}
+\end{array}\]
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-%
-\begin{lstlisting}
-|$[$|x|$]_{rlx}$| := 0; |$[$|y|$]_{rlx}$| := 0; |$[$|z|$]_{rlx}$| := 0; |$[$|f|$]_{rlx}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-r1 = |$[$|x|$]_{rlx}$|;
-if r1
-then r2 = |$[$|f|$]_{rlx}$|;
-     if r2
-     then |$[$|z|$]_{rlx}$| := 1;
-          |$[$|y|$]_{rlx}$| := 1
-     else |$[$|y|$]_{rlx}$| := 1
-     fi
-else |$[$|y|$]_{rlx}$| := 1
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-r3 = |$[$|y|$]_{rlx}$|;
-if r3
-then |$[$|f|$]_{rlx}$| := 1;
-     |$[$|x|$]_{rlx}$| := 1
-else 0 
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
+\codePrefix
+  $\writeInstParam{\rlx}{x}{0};
+  \writeInstParam{\rlx}{y}{0};
+  \writeInstParam{\rlx}{z}{0};
+  \writeInstParam{\rlx}{f}{0};$ \\
+  \begin{tabular}{L || L}
+    \begin{array}{@{}l@{}}
+      \readInstParam{\rlx}{a}{x}; \\
+      \iteml{a}{
+        \readInstParam{\rlx}{b}{f}; \\
+        \iteml{b}{
+          \writeInstParam{\rlx}{z}{1}; \\
+          \writeInstParam{\rlx}{y}{1}
+        }{\writeInstParam{\rlx}{y}{1}}
+      }{\writeInstParam{\rlx}{y}{1}}
+    \end{array} &
 
-\begin{lstlisting}
-                  r0 = |$[$|z|$]_{rlx}$|
-\end{lstlisting}
-\end{minipage}
-
+    \begin{array}{@{}l@{}}
+      \readInstParam{\rlx}{b}{y}; \\
+      \iteml{a}{
+        \writeInstParam{\rlx}{f}{1}; \\
+        \writeInstParam{\rlx}{x}{1}
+      }{\skipc}
+    \end{array}
+  \end{tabular} \\
+  $\readInstParam{\rlx}{c}{z}$
+\codePostfix
 \litmusTestEnd
-
 
 \section{Locks}
 \label{app:locks}

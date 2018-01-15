@@ -6,7 +6,7 @@
   а также некоторого состояния обещающей машины $\tup{\TSf, M}$ выполняется
   $G \vdash \tup{C, \IssuedSet} \travConfigStep \tup{C', \IssuedSet'}$ и
   $\simRel(C, \IssuedSet, \TSf, M)$.
-  Тогда существуют $\TSf'$ и $M'$ такие, что $\tup{\TSf, M} \stepp\!\!^{+} \tup{\TSf', M'}$ и
+  Тогда существуют такие $\TSf'$ и $M'$, что $\tup{\TSf, M} \stepp\!\!^{+} \tup{\TSf', M'}$ и
   $\simRel(C', \IssuedSet', \TSf', M')$.}
 \begin{proof}%[Доказательство леммы \ref{lem:sim-step}]
   Существует два варианта: $G \vdash C, \IssuedSet \travConfigStep \tup{C', \IssuedSet'}$ соответствует покрытию или
@@ -57,14 +57,13 @@
         \item $\invState(C, \TSf')$:
           следует из того, что $\invState(C, \TSf)$ выполняется и, для любого $tid$, $\TSf(tid).\pstate = \TSf'(tid).\pstate$.
       \end{itemize}
-      %%    \app{TODO}
       %% $\tup{\TSf', M'}$ is consistent by \cref{prop:sim-cert}.
 
   
   {\bf Покрытие события $e$.} В этом случае $C' = C \cup \{e\}, \IssuedSet' = \IssuedSet$.
   %% \begin{itemize}
     %% \item $C' = C \cup \{e\}, \IssuedSet' = \IssuedSet$, and $e \nin \dom{\lRMW}$: \\
-      Т.к. $\invState(C, \TSf)$ выполняется, существуют $t$ и $\pstate'$ такие, что $t \approx \lLAB(e)$.
+      Т.к. $\invState(C, \TSf)$ выполняется, существуют такие $t$ и $\pstate'$, что $t \approx \lLAB(e)$.
       Рассмотрим варианты $e$.
       \begin{itemize}
         \item $e \in \lDMBLD$.
@@ -264,7 +263,6 @@
 
       \end{itemize}
 
-      %% \app{TODO}
       %% $\tup{\TSf', M'}$ is consistent by \cref{prop:sim-cert}.
 
   %% \end{itemize}
