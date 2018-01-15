@@ -963,88 +963,67 @@ Possible outcomes:\\
 \begin{minipage}[t]{0.4\linewidth}
 \textbf{Dekker's lock}\\\\
 Possible outcomes:\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+  \Stuck
+\end{array}\]
 Requires: RA + na\\
 Fully Supported: $\tick$\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := 1;
-r1 = |$[$|y|$]_{acq}$|
-if r1 == 0
-then |$[$|d|$]_{na}$| := 5
-else 0 
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rel}$| := 1;
-r2 = |$[$|x|$]_{acq}$|
-if r2 == 0
-then |$[$|d|$]_{na}$| := 6
-else 0 
-fi
-\end{lstlisting}
+\codePrefix
+$\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{0}; \writeInstParam{\na}{d}{0};$ \\
+\begin{tabular}{L || L}
+  \begin{array}{@{}l@{}}
+    \writeInstParam{\rel}{x}{1}; \\
+    \readInstParam{\acq}{a}{y}; \\
+    \iteml{a == 0}{
+      \writeInstParam{\na}{d}{5}
+    }{\skipc}
+  \end{array} &
+  \begin{array}{@{}l@{}}
+    \writeInstParam{\rel}{y}{1}; \\
+    \readInstParam{\acq}{b}{x}; \\
+    \iteml{b == 0}{
+      \writeInstParam{\na}{d}{6}
+    }{\skipc}
+  \end{array}
 \end{tabular}
-    \end{minipage}
-&
-  \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 
 \begin{minipage}[t]{0.4\linewidth}
 \textbf{Cohen's lock}\\\\
 Impossible outcomes (according to \cite{Turon-al:OOPSLA14}):\\
-\lstinline{  stuck}\\
+\[\begin{array}{l}
+  \Stuck
+\end{array}\]
 Requires: RA + na\\
 Fully Supported: $\tick$\\
 \end{minipage}
 %
-\begin{minipage}[t]{0.4\linewidth}
-\vspace{-.2cm}
-  \begin{tabular}{l@{\ \ \ }l}
-    \begin{minipage}[l]{4.3cm} \small
-\begin{lstlisting}
-  |$[$|x|$]_{rel}$| := 0; |$[$|y|$]_{rel}$| := 0; |$[$|d|$]_{na}$| := 0;
-\end{lstlisting}
-\vspace{-.2cm}
-\begin{tabular}{l||l}
-\begin{lstlisting}
-|$[$|x|$]_{rel}$| := choice 1 2;
-repeat |$[$|y|$]_{acq}$| end;
-r1 = |$[$|x|$]_{acq}$|
-r2 = |$[$|y|$]_{acq}$|
-if r1 == r2
-then |$[$|d|$]_{na}$| := 5
-else 0 
-fi
-\end{lstlisting}
-\hspace{.6cm}
-&
-\begin{lstlisting}
-|$[$|y|$]_{rel}$| := choice 1 2;
-repeat |$[$|x|$]_{acq}$| end;
-r3 = |$[$|x|$]_{acq}$|
-r4 = |$[$|y|$]_{acq}$|
-if r3 != r4
-then |$[$|d|$]_{na}$| := 6
-else 0 
-fi
-\end{lstlisting}
-\end{tabular}
-    \end{minipage}
-&
+\codePrefix
+  $\writeInstParam{\rel}{x}{0};\writeInstParam{\rel}{y}{0};\writeInstParam{\na}{d}{0};$ \\
+  \begin{tabular}{L || L}
+    \begin{array}{@{}l@{}}
+      \writeInstParam{\rel}{x}{\Choice{1}{2}}; \\
+      \repeatReadInst{\acq}{y}; \\
+      \readInstParam{\acq}{a}{x}; \\
+      \readInstParam{\acq}{b}{y}; \\
+      \iteml{a == b}{
+        \writeInstParam{\na}{d}{5}
+      }{\skipc}
+    \end{array} &
+
+    \begin{array}{@{}l@{}}
+      \writeInstParam{\rel}{y}{\Choice{1}{2}}; \\
+      \repeatReadInst{\acq}{x}; \\
+      \readInstParam{\acq}{c}{x}; \\
+      \readInstParam{\acq}{d}{y}; \\
+      \iteml{c \neq d}{
+        \writeInstParam{\na}{d}{6}
+      }{\skipc}
+    \end{array}
   \end{tabular}
-\end{minipage}
+\codePostfix
 \litmusTestEnd
 %% \end{figure*}
