@@ -6,7 +6,7 @@
   а также некоторого состояния обещающей машины $\tup{\TSf, M}$ выполняется
   $G \vdash \tup{C, \IssuedSet} \travConfigStep \tup{C', \IssuedSet'}$ и
   $\simRel(C, \IssuedSet, \TSf, M)$.
-  Тогда существуют $\TSf'$, $M'$, т.ч. $\tup{\TSf, M} \stepp\!\!^{+} \tup{\TSf', M'}$ и
+  Тогда существуют $\TSf'$ и $M'$ такие, что $\tup{\TSf, M} \stepp\!\!^{+} \tup{\TSf', M'}$ и
   $\simRel(C', \IssuedSet', \TSf', M')$.}
 \begin{proof}%[Доказательство леммы \ref{lem:sim-step}]
   Существует два варианта: $G \vdash C, \IssuedSet \travConfigStep \tup{C', \IssuedSet'}$ соответствует покрытию или
@@ -64,7 +64,7 @@
   {\bf Покрытие события $e$.} В этом случае $C' = C \cup \{e\}, \IssuedSet' = \IssuedSet$.
   %% \begin{itemize}
     %% \item $C' = C \cup \{e\}, \IssuedSet' = \IssuedSet$, and $e \nin \dom{\lRMW}$: \\
-      Т.к. $\invState(C, \TSf)$ выполняется, существуют $t$ и $\pstate'$, т.ч. $t \approx \lLAB(e)$.
+      Т.к. $\invState(C, \TSf)$ выполняется, существуют $t$ и $\pstate'$ такие, что $t \approx \lLAB(e)$.
       Рассмотрим варианты $e$.
       \begin{itemize}
         \item $e \in \lDMBLD$.
@@ -114,9 +114,9 @@
             \TSf'    & \defeq \TSf[tid \mapsto \tup{\pstate', \View', \PromSet}] \\
             M' & \defeq M \\
           \end{array}\]
-          Не существует $w \in \IssuedSet$, т.ч. $\lPO(e, w)$. Иначе не
+          Не существует $w \in \IssuedSet$ такого, что $\lPO(e, w)$. Иначе не
           это противоречило бы $w \in \issuable(G, C, \IssuedSet)$ по лемме \ref{prop:trav-prop-preserve} 
-          Из этого следует, что не существует $w \in \IssuedSet \setminus C$, т.ч. $\lTID(w) = tid$, и
+          Из этого следует, что не существует $w \in \IssuedSet \setminus C$ такого, что $\lTID(w) = tid$, и
           $\PromSet = \emptyset$ по $\invMemOne(C, \IssuedSet, \TSf, M)$.
           
       Проверим $\simRel(C', \IssuedSet, \TSf', M)$.
@@ -160,7 +160,7 @@
           \end{array}\]
           Т.к. $e \in \lR \cap \coverable(G, C, \IssuedSet)$ из определения $\travConfigStep$,
           существует событие записи $w \in \IssuedSet \cap \dom{\lRF; [e]}$. По $\invMemOne(C, \IssuedSet, \TSf, M)$
-          существует фронт $view$, т.ч. $msg \defeq \msg{\loc}{\val}{T(w)}{view} \in M$.
+          существует фронт $view$ такой, что $msg \defeq \msg{\loc}{\val}{T(w)}{view} \in M$.
           $\View.\viewCur \le T(w)$ по лемме \ref{lem:curset-acyclic}.
 
           \[\begin{array}{l@{~}l}
@@ -214,7 +214,7 @@
             \tup{\viewCur, \viewAcq, \viewRel} & \defeq \View. \\
           \end{array}\]
           $e \in \IssuedSet$, т.е. $e \in \lW \cap \coverable(G, C, \IssuedSet)$.
-          Из $\invMemOne(C, \IssuedSet, \TSf, M)$ следует, что существует $view$, т.ч.
+          Из $\invMemOne(C, \IssuedSet, \TSf, M)$ следует, что существует $view$ такое, что
           $msg \defeq \msg{\loc}{\val}{\tau}{view} \in M$.
           $\viewCur(\loc) < \tau$ следует по лемме \ref{lem:curset-acyclic}.
           \[\begin{array}{l@{~}l}
