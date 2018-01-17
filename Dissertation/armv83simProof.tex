@@ -1,4 +1,4 @@
-\chapter{Доказательство леммы о шаге симуляции между обещающей и ARMv8.3 моделями}
+\chapter{Доказательство леммы о шаге симуляции обещающей модели и обхода сценария ARMv8.3}
 \label{sec:sim-step-proof}
 
   {\bf Лемма \ref{lem:sim-step}.}
@@ -310,7 +310,7 @@
   \end{itemize}
 \end{proof}
 
-\chapter{Связь между системой переходов и вершинами в \ARM-исполнении}
+\chapter{Связь между системой переходов обещающей модели и вершинами в сценарии поведения ARMv8.3}
 \label{sec:lts-rel}
 
 \[\inarr{
@@ -319,11 +319,11 @@
   \qquad \kw{match} \; lbl_{\Promise}, \; lbl_{\ARM} \; \kw{with} \\
   \qquad
     \begin{array}{@{}l}
-      | \; \rlab{}{\loc}{\val}, \rlab{}{\loc}{\val} \;
-      | \; \wlab{}{\loc}{\val}, \wlab{}{\loc}{\val} \\
-      | \; \flab{\rel}, \flab{\SY} \;
-      | \; \flab{\acq}, \flab{\LD} \rightarrow {\rm true} \\
-      | \; \_, \_ \rightarrow {\rm false}
+      \mid \rlab{}{\loc}{\val}, \rlab{}{\loc}{\val}
+      \mid \wlab{}{\loc}{\val}, \wlab{}{\loc}{\val} \\
+      \mid \flab{\rel}, \flab{\SY}
+      \mid \flab{\acq}, \flab{\LD} \rightarrow {\rm true} \\
+      \mid \_, \_ \rightarrow {\rm false}
     \end{array} \\
   \\
   \nthf : \{A : Set\} \rightarrow \Pset(A \times A) \rightarrow \mathbb{N} \rightarrow \Pset(A) \\
