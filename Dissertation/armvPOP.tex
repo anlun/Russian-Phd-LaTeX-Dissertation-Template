@@ -1865,7 +1865,7 @@ $\viewf(\tId, \cpath^{\SY}, \cpath^{\SY}, \tape, \hmap)$, где
 Поскольку это бы означало, что мы не смогли бы использовать \ARMt~как промежуточную
 машину в нашем доказательстве корректности компиляции,
 нужно показать, что все сценарии поведения ARNv8 POP также являются сценариями
-поведения \ARMt~ с точностью до компоненты состояния $\hmap$.
+поведения \ARMt~с точностью до компоненты состояния $\hmap$.
 \begin{theorem}
   \label{thm:armvpop:armt:sim}
 $\forall \Cfarm, \{\s^i\}_{i \in [0..n]}.\; \s^0 = \sinit  \land \finalStateP(\s^n, \Cfarm) \land{}$ \\
@@ -2003,8 +2003,7 @@ $\Rarm$ для пути $\cpath$.
              \aT.\tmap(\tId, \cpath) > \Rarm(\aT, \tId, \cpath, \loc)).$
 \end{theorem}
 \noindent
-Доказательство данной теоремы может быть найдено в расширенной версии
-\cite{Podkopaev-al:ECOOP17}.
+Доказательство данной теоремы может быть найдено в \cite{Podkopaev-al:ECOOP17TR}.
 
 \section{Доказательство корректности компиляции}
 В этом разделе мы докажем основную теорему главы, представленную в
@@ -2025,15 +2024,15 @@ $\Rarm$ для пути $\cpath$.
 %% (each thread's $\cpath$ points out of the thread's program instruction list) from $\p$ and
 %% all promises are fulfilled.
 \begin{proof}
-  Зафиксируем программу $\Cfprom$. Далее мы будем писать $``\s \armStepP \s'"$ вместо
-  $``\Cfprom \vdash \s \armStepP \s'"$ как для всех машин.
-  Используя результат раздела \ref{sec:armvpop:armt:sim}, мы меняем утверждение, которое нужно
-  доказать, на симуляцию обещающей машиной машины \ARMt
+  Зафиксируем программу $\Cfprom$.
+  %% Далее мы будем писать $``\s \armStepP \s'"$ вместо $``\Cfprom \vdash \s \armStepP \s'"$ как для всех машин.
+  Используя теорему \ref{thm:armvpop:armt:sim}, мы меняем утверждение, которое нужно
+  доказать, на симуляцию обещающей машиной машины \ARMt:
 \[\begin{array}{l}
-  \forall \aT. \; \ainit \armStep^{*} \aT \land \finalStateA(\aT, \Cfarm) \Rightarrow \\
-  \quad \exists \p. \; \pinit \promStep^{*} \p \land \finalStateProm(\p, \Cfprom) \land \sameMemory(\aT, \p). \\
+  \forall \aT. \; \Cfprom \vdash \ainit \armStep^{*} \aT \land \finalStateA(\aT, \Cfarm) \Rightarrow \\
+  \quad \exists \p. \; \Cfprom \vdash \pinit \promStep^{*} \p \land \finalStateProm(\p, \Cfprom) \land \sameMemory(\aT, \p). \\
 \end{array}\]
-Для того, чтобы доказать это утверждение, мы вводим набор отношений, связывающих
+Для того, чтобы доказать это утверждение, введём набор отношений, связывающих
 состояния машин. Эти отношения в дальнейшем войдут в отношение симуляции.
 
 Следуя представлению обещающей машины в \cite{Podkopaev-al:ECOOP17}, мы добавим в состояние
@@ -2051,12 +2050,12 @@ $\Rarm$ для пути $\cpath$.
 обещающей машиной, завершены машиной \ARMt:
 \[
 \invPrefix(\aT, \p) \triangleq \forall \tId, \cpath' < \p.\TSfprom(\tId).\cpath. \;
-     \aT.\tapef(\tId, \cpath') \; \text{завершено}. \\
+     (\aT.\tapef(\tId, \cpath') \; \text{завершено}). \\
 \]
 Следующие отношения связывают память обещающей машины с подсистемой памяти \ARMt.
 Отношение $\invMemOne$ утверждает, что для каждого завершенного экземпляра записи в \ARMt
 существует сообщение в памяти обещающей машины с теми же локацией, значением и меткой времени,
-кроме того фронт сообщения меньше либо равен, чем соответствующий фронт запроса в \ARMt.
+кроме того фронт сообщения не больше, чем соответствующий фронт запроса в \ARMt.
 При этом, если путь экземпляра записи меньше, чем указатель обещающей машины, то
 сообщение было обещано, и обещание выполнено, иначе --- только обещано:
 \[\begin{array}{l}
@@ -2087,10 +2086,10 @@ $\Rarm$ для пути $\cpath$.
 \end{array}\]
 Отношение $\invView$ утверждает, что фронты обещающей машины ограничены комбинацией
 фронтов, связанных с завершёнными экземплярами чтений и записей машины \ARMt.
-Для приобретающего фронта считаются все экземпляры записи и чтения до $\cpath$.
-Для базового фронта считаются все экземпляры записи до $\cpath$ и чтения до
-последнего завершённого экземпляра $\LD$ барьера ($\lastLD(\tape, \cpath)$).
-Для высвобождающего фронта считаются все экземпляры записи вплоть до последнего завершённого
+Для приобретающего фронта считаются все экземпляры записи и чтения, путь которых меньше $\cpath$.
+Для базового фронта считаются все экземпляры записи, путь которых меньше  $\cpath$, и
+чтения, путь которых меньше последнего завершённого экземпляра $\LD$ барьера ($\lastLD(\tape, \cpath)$).
+Для высвобождающего фронта учитываются все экземпляры записи вплоть до последнего завершённого
 экземпляра $\SY$ барьера ($\lastSY(\tape, \cpath)$)
 и все экземпляры чтения до завершённого экземпляра $\LD$ барьера,
 предшествующего этому $\SY$ барьеру ($\lastLDSY(\tape, \cpath)$).
@@ -2126,15 +2125,15 @@ $\Rarm$ для пути $\cpath$.
 Данное отношение нужно для доказательства сертифицируемости шагов обещающей машины,
 участвующих в симуляции.
 
-Отношение $\invReach$ показывает, что состояния машин достигаемы из изначального:
-\[\invReach(\aT, \p) \triangleq \ainit \armStepP^{*} \aT \land \pinit \promStep^{*} \p.\]
+Отношение $\invReach$ показывает, что состояния машин достигаемы из начального:
+\[\invReach(\aT, \p) \triangleq \Cfprom \vdash \ainit \armStepP^{*} \aT \land \Cfprom \vdash \pinit \promStep^{*} \p.\]
 
-Отношение $\simrelBase$ комбинирует упомянутые отношения:
+Отношение $\simrelBase$ комбинирует вышеупомянутые отношения:
 \[\simrelBase \triangleq \invPrefix \cap \invMemOne \cap \invMemTwo \cap \invMemThree \cap \invView \cap \invState \cap \invComWrite \cap \invReach.\]
 
-В симуляции в каждый момент верно одно из двух:
+При симуляции в каждый момент верно одно из двух:
 либо обещающая машина ожидает, что машина \ARMt~завершит исполнение экземпляра инструкции,
-либо указатель одно (и только в одном) из потоков обещающей машины показывает на
+либо указатель одного (и только одного) из потоков обещающей машины показывает на
 завершённый экземпляр инструкции.
 Последнее означает, что обещающая машина должна сделать шаг, соответствующий этому
 экземпляру.
@@ -2144,8 +2143,8 @@ $\Rarm$ для пути $\cpath$.
   \textLet \tape, \cpath \triangleq \aT.\tapef(\tId), \p.\TSfprom(\tId).\cpath \; \textIn \\
   \quad \tape(\cpath) = \bot \lor \tape(\cpath) \; \text{не завершен}. \\
 \end{array}\]
-С его помощью вариант, когда обещающая машина ожидает, выражается предикатом 
-$\invPromUptoARM$, а вариант, когда обещающая машина должна сделать шаг ---
+С его помощью случай, когда обещающая машина ожидает, выражается предикатом 
+$\invPromUptoARM$, а случай, когда обещающая машина должна сделать шаг ---
 предикатом $\invPromUptoARMnot$:
 \[
 \begin{array}{lllll}
@@ -2160,23 +2159,24 @@ $\invPromUptoARM$, а вариант, когда обещающая машина
 \simrelPre \triangleq \simrelBase \cap \invPromUptoARMnot \quad\qquad
 \simrel    \triangleq \simrelBase \cap \invPromUptoARM 
 \]
-Так, если состояния машин связаны отношением $\simrelPre$, то существует поток обещающей
-машины, который может сделать переход. После этого перехода состояния машин
-связаны вновь отношением $\simrelPre$, и тот же поток может сделать ещё один шаг, или
-состояния связаны отношением $\simrel$, и все потоки обещающей машины ждут:
+Если состояния машин связаны отношением $\simrelPre$, то существует поток обещающей
+машины, который может сделать переход. После этого перехода состояния машин снова
+связаны отношением $\simrelPre$, и тот же поток может сделать ещё один шаг, или
+состояния связаны отношением $\simrel$, и все потоки обещающей машины ждут.
+Это утверждение сформулировано в лемме \ref{lem-snd}.
 \begin{lemma}
 \label{lem-snd}
 $\forall (\aT, \p) \in \simrelPre. \;
-\exists \p'. \p \promStep \p' \land (\aT, \p') \in \simrelPre \cup \simrel$.
+\exists \p'. \Cfprom \vdash \p \promStep \p' \land (\aT, \p') \in \simrelPre \cup \simrel$.
 \end{lemma}
 \noindent
 Как следствие того, что в каждом корректном состоянии машины \ARMt~существует лишь
 конечное число завершённых экземпляров инструкций, можно показать, что
-обещающая машина может за конечное число шагов ``нагнать'' \ARMt:
+обещающая машина может за конечное число шагов ``нагнать'' \ARMt~(лемма \ref{lem-trd}).
 \begin{lemma}
 \label{lem-trd}
 $\forall (\aT, \p) \in \simrelPre. \;
-\exists \p'. \; \p \promStep^{*} \p' \land (\aT, \p') \in \simrel$.
+\exists \p'. \; \Cfprom \vdash \p \promStep^{*} \p' \land (\aT, \p') \in \simrel$.
 \end{lemma}
 \noindent
 Предположим, что состояния обещающей и \ARMt~машин связаны отношением $\simrel$.
@@ -2190,9 +2190,9 @@ $\forall (\aT, \p) \in \simrelPre. \;
 \begin{lemma}
 \label{lem-fst}
 $\forall (\aT, \p) \in \simrel. \\
-(\forall \aT'. \; \aT \armStepgen{\lnot \; \transenv{Write commit}} \aT' \Rightarrow (\aT', \p) \in \simrelPre \cup \simrel) \land {} \\
-(\forall \aT'. \; \aT \armStepgen{\transenv{Write commit}} \aT' \Rightarrow
-\exists \p'. \; \p \promStepgen{\transenv{Promise write}} \p' \land  (\aT', \p') \in \simrelPre \cup \simrel)$.
+(\forall \aT'. \; \Cfprom \vdash \aT \armStepgen{\lnot \; \transenv{Write commit}} \aT' \Rightarrow (\aT', \p) \in \simrelPre \cup \simrel) \land {} \\
+(\forall \aT'. \; \Cfprom \vdash \aT \armStepgen{\transenv{Write commit}} \aT' \Rightarrow
+\exists \p'. \; \Cfprom \vdash \p \promStepgen{\transenv{Promise write}} \p' \land  (\aT', \p') \in \simrelPre \cup \simrel)$.
 \end{lemma}
 %% \end{restatable}
 Из предыдущих лемм следует основная лемма симуляции:
@@ -2201,11 +2201,10 @@ $\forall (\aT, \p) \in \simrel. \\
   \label{lem-fth}
 %% $\forall (\aT, \p) \in \simrel, \aT'. \; \aT \armStep \aT' \Rightarrow
 $\forall (\aT, \p) \in \simrel. \;
-\exists \p'. \; \p \promStep^{*} \p' \land (\aT', \p') \in \simrel$.
+\exists \p'. \; \Cfprom \vdash \p \promStep^{*} \p' \land (\aT', \p') \in \simrel$.
 \end{lemma}
 %% \end{restatable}
-\noindent
-Доказательства лемм могут быть найдены в расширенной версии \cite{Podkopaev-al:ECOOP17}.
+Доказательства лемм могут быть найдены в \cite{Podkopaev-al:ECOOP17TR}.
 
 Сама теорема доказывается индукцией по длине сценария поведения с помощью леммы \ref{lem-fth}.
 Часть утверждения теоремы о том, что конечные состояния памяти совпадают,
@@ -2213,10 +2212,10 @@ $\forall (\aT, \p) \in \simrel. \;
 Так, единственное, что осталось доказать, что состояние $\p$ является
 финальным состоянием обещающей машины ($\finalStateProm(\p, \Cfprom)$).
 
-Обещающая машина не может сделать нового перехода, так это бы означало, что
+Обещающая машина не может сделать нового перехода, т.к. это бы означало, что
 машина \ARMt~может подгрузить новый экземпляр инструкции, и противоречило бы 
 $\finalStateA(\aT, \Cfarm)$. Кроме того, все сообщения из состояния $\p$
-были обещаны и выполнены, как следствие того, что выполняется
+были обещаны и выполнены, потому что выполняется
 $\invMemOne(\aT,\p)$ и $\invMemTwo(\aT, \p)$.
 \end{proof}
 
