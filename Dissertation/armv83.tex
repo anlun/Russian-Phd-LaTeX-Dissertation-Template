@@ -101,7 +101,7 @@ $\lMO$.
 Добавление в программу \textrm{MP} барьеров памяти, как и в случае с моделью ARMv8 POP,
 делает невозможным результат $[a = 1, b = 0]$ (см. рис. \ref{fig:arm83:mpsyld}):
 \begin{equation*}
-\tag{MP-sy-ld}\label{ex:MP-sy-ld}
+\tag{MP-sy-ld}
 \begin{tabular}{L || L}
   \writeInst{x}{1}; & \readInst{a}{y}; ~\valuecom{1} \\
   \syFence;         & \ldFence; \\

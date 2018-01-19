@@ -1,4 +1,4 @@
-
+\chapter{Компиляция программ в помеченную систему переходов}
 %% \begin{figure}[h]
 %% \begin{minipage}{0.6\textwidth}
 %% $\begin{array}{l @{~} r @{~} l}
@@ -22,15 +22,16 @@
 %% \end{minipage}
 %% %
 %% \begin{minipage}{0.4\textwidth}
+%% \begin{figure}[h]
 %% $\begin{array}{l @{~} r @{~} l}
 %%     \Path  & ::= & \ListOf{Label} \\
-%%     \Label & ::= & \rlab{}{\loc}{\val} \\
-%%            & |   & \wlab{}{\loc}{\val} \\
-%%            & |   & \flab{\FtypeProm} \\
-%%            & |   & \epsilon \\
+%%     \Label & ::= & \rlab{}{\loc}{\val} \mid \wlab{}{\loc}{\val} \\ 
+%%            & \mid & \flab{\FtypeProm} \mid \epsilon \\
 %% \end{array}$
+%% \caption{Метки переходов}
 %% \captionof{figure}{Метки переходов}
 %% \label{fig:lts}
+%% \end{figure}
 %% \end{minipage}
 %% \end{figure}
 
@@ -49,9 +50,14 @@
 %% присваиванием в локальную переменную ($\assignInst{\reg}{\expr}$),
 %% пустой операцией ($\nop$).
 
-\chapter{Компиляция программ в помеченную систему переходов}
 Первым шагом для построения помеченной системы переходов по программе является
-генерация всех возможных \emph{путей} ($\Path$) исполнения -- списков меток (см. рис. \ref{fig:lts}).
+генерация всех возможных \emph{путей} ($\Path$) исполнения, каждый из которых является списком меток:
+%% (см. рис. \ref{fig:lts})
+\[\begin{array}{l @{~} r @{~} l}
+    \Path  & ::= & \ListOf{Label} \\
+    \Label & ::= & \rlab{}{\loc}{\val} \mid \wlab{}{\loc}{\val}
+           \mid \flab{\FtypeProm} \mid \epsilon \\
+\end{array}\]
 Далее по множеству путей строится конечный автомат, принимающий упомянутые пути.
 
 Функция построения путей $\cmdsToLbls$ использует вспомогательную функцию $\instToLbl$,
