@@ -477,6 +477,7 @@
 
 \newcommand{\readInst}[3][\ExclReadType]{#2 \;:=_{\excl{#1}}\;[#3]}
 \newcommand{\readExpr}[2]{[#2]_{#1}}
+\newcommand{\readExprF}[3]{[#2]_{#1,#3}}
 \newcommand{\fenceInst}[1]{\fence{#1}}
 \newcommand{\dmbSY}{\fenceInst{\SY}}
 \newcommand{\dmbST}{\fenceInst{\ST}}
@@ -1251,7 +1252,7 @@
 %% \newcommand{\acqM}{\lstmath{acq}}
 %% \newcommand{\rlxM}{\lstmath{rlx}}
 %% \newcommand{\naM}{\lstmath{na}}
-%% \newcommand{\conM}{\lstmath{con}}
+\newcommand{\conM}{\mathtt{con}}
 
 \newcommand{\spawn}[2]{\text{\textsf{spawn}}(#1,~#2)}
 \newcommand{\joinP}[2]{\text{\textsf{join}}(#1,~#2)}

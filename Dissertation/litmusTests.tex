@@ -3,7 +3,8 @@
 \label{sec:litmusTests}
 
 \newcommand{\litmusTestStart}[5]{
-\textbf{#1} \\
+\begin{samepage}
+{\bf \textrm{#1}}
 \begin{center}
 #5
 \end{center}
@@ -15,10 +16,7 @@
 
 #4
 %% \end{minipage}
-
-\vspace{.2cm}
-\hrule
-\vspace{.2cm}
+\end{samepage}
 }
 
 \newcommand{\codePrefix}{
@@ -106,106 +104,103 @@
 \codePostfix
 }
 
-\section{Store Buffering (SB)}
+\newcommand{\possibleOutcomes}{Результаты в оригинальной модели C/C++11:}
+\newcommand{\midTests}{
+  \vspace{.2cm} \hrule \vspace{.2cm}
+}
+
+\section{Буферизация записи (store buffering, SB)}
 \label{app:sb}
 
-\litmusTestStart{SB\_rel+acq}{\tick}{History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-a = 0 \land b = 1\\
-a = 1 \land b = 0\\
-a = 1 \land b = 1\\
-\end{array}\]}{%
+\litmusTestStart{SB-rel-acq}{\tick}{History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\] %% \[\begin{array}{l}
+%% a = 0 \land b = 0\\
+%% a = 0 \land b = 1\\
+%% a = 1 \land b = 0\\
+%% a = 1 \land b = 1\\
+%% \end{array}\]
+}{%
 \sbTemplate{\rel}{\rel}{\rel}{\acq}{\rel}{\acq}
 }
 
-\litmusTestStart{SB\_sc}{\tick}{SC + History + Viewfronts}{
-Forbidden outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{SB-sc}{\tick}{SC + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \sbTemplate{\sco}{\sco}{\sco}{\sco}{\sco}{\sco}
 }
 
-\litmusTestStart{SB\_sc+rel}{\tick}{SC + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-a = 0 \land b = 1\\
-a = 1 \land b = 0\\
-a = 1 \land b = 1\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{SB-sc-rel}{\tick}{SC + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \sbTemplate{\sco}{\sco}{\rel}{\sco}{\sco}{\sco}
 }
 
-\litmusTestStart{SB\_sc+acq}{\tick}{SC + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-a = 0 \land b = 1\\
-a = 1 \land b = 0\\
-a = 1 \land b = 1\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{SB-sc-acq}{\tick}{SC + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \sbTemplate{\sco}{\sco}{\sco}{\acq}{\sco}{\sco}
 }
 
 %\newpage
 
-\section{Load Buffering (LB)}
+\section{Буферизация чтения (load buffering, LB)}
 \label{app:lb}
 
-\litmusTestStart{LB\_rlx}{\tick}{Postponed Reads + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-a = 0 \land b = 1\\
-a = 1 \land b = 0\\
-a = 1 \land b = 1\\
-\end{array}\]}{
+\litmusTestStart{LB-rlx}{\tick}{Postponed Reads + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \lbTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
 }
 
-\litmusTestStart{LB\_rel+rlx}{\tick}{Postponed Reads + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-a = 0 \land b = 1\\
-a = 1 \land b = 0\\
-a = 1 \land b = 1\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-rel-rlx}{\tick}{Postponed Reads + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \lbTemplate{\rlx}{\rlx}{\rlx}{\rel}{\rlx}{\rel}
 }
 
-\litmusTestStart{LB\_acq+rlx}{\fail}{Postponed Reads + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \land b = 0\\
-a = 0 \land b = 1\\
-a = 1 \land b = 0\\
-a = 1 \land b = 1\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-acq-rlx}{\fail}{Postponed Reads + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \lbTemplate{\rlx}{\rlx}{\acq}{\rlx}{\acq}{\rlx}
 
-Our semantics doesn't allow the $a = 1 \land b = 1$ outcome for the program.
-It doesn't allow reordering of an acquire read with a subsequent write.
-The known sound compilation schemes of acquire read to major platforms (x86, ARM, Power) don't
-allow the behavior either. 
+%% Our semantics doesn't allow the $a = 1 \land b = 1$ outcome for the program.
+%% It doesn't allow reordering of an acquire read with a subsequent write.
+%% The known sound compilation schemes of acquire read to major platforms (x86, ARM, Power) don't
+%% allow the behavior either. 
 }
 
-\litmusTestStart{LB\_rel+acq+rlx}{\tick}{Postponed Reads + History + Viewfronts}{
-Forbidden outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 1\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-rel-acq-rlx}{\tick}{Postponed Reads + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0].\]
+}{%
 \lbTemplate{\rlx}{\rlx}{\acq}{\rlx}{\rlx}{\rel}
 }
 
-\litmusTestStart{LB\_rlx+use}{\tick}{Postponed Reads + History + Viewfronts}{
-Allowed outcome:\\
-\[\begin{array}{l}
-a = 1 \land b = 1\\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-rlx-use}{\tick}{Postponed Reads + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
@@ -214,17 +209,19 @@ a = 1 \land b = 1\\
   \writeInstParam{\rlx}{x}{1}; & \writeInstParam{\rlx}{y}{1}; \\
 \end{tabular}
 \codePostfix
-
-%% Comment:
-%% Unfortunately, our semantics isn't able to reorder writes,
-%% thus, we can't store 1s to z1 and z2.
 }
 
-\litmusTestStart{LB\_rlx+let}{\tick}{Postponed Reads + History + Viewfronts}{
-Allowed outcome:\\
-\[\begin{array}{l}
-a = 1 \land a' = 2 \land b = 1 \land b' = 2 \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-rlx-let}{\tick}{Postponed Reads + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, a' = 1, b = 0, b' = 1], [a = 0, a' = 1, b = 1, b' = 2],\]%
+\[[a = 1, a' = 2, b = 0, b' = 1], [a = 1, a' = 2, b = 1, b' = 2].\]
+}{%
+%% Allowed outcome:\\
+%% \[\begin{array}{l}
+%% a = 1 \land a' = 2 \land b = 1 \land b' = 2 \\
+%% \end{array}\]}{
 \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L}
@@ -235,78 +232,76 @@ a = 1 \land a' = 2 \land b = 1 \land b' = 2 \\
 \codePostfix
 }
 
-\litmusTestStart{LB\_rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}{
-Allowed outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 1 \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-rlx-join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \lbJoinTemplate{\rlx}{\rlx}{\rlx}{\rlx}
-%% Unfortunately, our semantics isn't complete for this snippet,
-%% because it can't postpone write, or anything across a join point.
 }
 
-\litmusTestStart{LB\_rel+rlx+join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}{
-Allowed outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 1 \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-rel-rlx-join}{\tickPP}{Postponed Reads + History + Viewfronts + JN}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \lbJoinTemplate{\rlx}{\rel}{\rlx}{\rel}
 }
 
-\litmusTestStart{LB\_acq+rlx+join}{\fail}{Postponed Reads + History + Viewfronts + JN}{
-Allowed outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 1 \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{LB-acq-rlx-join}{\fail}{Postponed Reads + History + Viewfronts + JN}{
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 0, b = 1], [a = 1, b = 0], [a = 1, b = 1].\]
+}{%
 \lbJoinTemplate{\acq}{\rlx}{\acq}{\rlx}
 }
 
 \section{Message Passing (MP)}
 \label{app:mp}
 
-\litmusTestStart{MP\_rlx+na}{\tick}{NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \\
-a = 5 \\
-\kw{stuck} \\
-\end{array}\]}{
+\litmusTestStart{MP-rlx-na}{\tick}{NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0], [a = 5], \kw{stuck}. \]
+}{%
 \mpTemplate{\rlx}{\na}{\na}{\rlx}{\rlx}{\na}
 }
 
-\litmusTestStart{MP\_rel+rlx+na}{\tick}{NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \\
-a = 5 \\
-\kw{stuck} \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-rel-rlx-na}{\tick}{NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0], [a = 5], \kw{stuck}. \]
+}{%
 \mpTemplate{\rlx}{\na}{\na}{\rel}{\rlx}{\na}
 }
 
-\litmusTestStart{MP\_rlx+acq+na}{\tick}{NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 0 \\
-a = 5 \\
-\kw{stuck} \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-rlx-acq-na}{\tick}{NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0], [a = 5], \kw{stuck}. \]
+}{%
 \mpTemplate{\rlx}{\na}{\na}{\rlx}{\acq}{\na}
 }
 
-\litmusTestStart{MP\_rel+acq+na}{\tick}{NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 5 \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-rel-acq-na}{\tick}{NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 5].\]
+}{%
 \mpTemplate{\rlx}{\na}{\na}{\rel}{\acq}{\na}
 }
 
-\litmusTestStart{MP\_rel+acq+na+rlx}{\tick}{Write-fronts + NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 5 \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-rel-acq-na-rlx}{\tick}{Write-fronts + NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 5].\]
+}{%
 \codePrefix
   $\writeInstParam{\rel}{f}{0}; \writeInstParam{\na}{d}{0};$ \\
   \begin{tabular}{L || L}
@@ -317,11 +312,12 @@ a = 5 \\
 \codePostfix
 }
 
-\litmusTestStart{MP\_rel+acq+na+rlx\_2}{\tick}{Write-fronts + NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a = 5 \land b \in \{0, 1\} \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-rel-acq-na-rlx\_2}{\tick}{Write-fronts + NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 5, b = 0], [a = 5, b = 1].\]
+}{%
 \codePrefix
   $\writeInstParam{\na}{f}{0}; \writeInstParam{\na}{d}{0}; \writeInstParam{\na}{x}{0};$ \\
   \begin{tabular}{L || L}
@@ -333,11 +329,12 @@ a = 5 \land b \in \{0, 1\} \\
 \codePostfix
 }
 
-\litmusTestStart{MP\_con+na}{\tick}{Consume + NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-b \in \{0, 5\} \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-con-na}{\tick}{Consume + NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = \nullPtr, b = 0], [a = d, b = 5].\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{f}{\nullPtr}; \writeInstParam{\na}{d}{0};$ \\
   \begin{tabular}{L || L}
@@ -352,11 +349,12 @@ b \in \{0, 5\} \\
 \codePostfix
 }
 
-\litmusTestStart{MP\_con+na\_2}{\tick}{Consume + NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-b \in \{0, 5\} \land c \in \{0, 1\} \\
-\end{array}\]}{
+\midTests
+
+\litmusTestStart{MP-con-na\_2}{\tick}{Consume + NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = \nullPtr, b = 0, c = 0], [a = d, b = 5, c = 0], [a = d, b = 5, c = 1].\]
+}{%
 \codePrefix
   $\writeInstParam{\na}{p}{\nullPtr}; \writeInstParam{\na}{d}{0};
    \writeInstParam{\na}{x}{0};$ \\
@@ -381,11 +379,12 @@ b \in \{0, 5\} \land c \in \{0, 1\} \\
 \codePostfix
 }
 
-\litmusTestStart{MP\_cas+rel+acq+na from \cite{Vafeiadis-Narayan:OOPSLA13}}{\tick}{NA + History + Viewfronts}{
-Impossible outcomes:\\
-\[\begin{array}{l}
-\kw{stuck}
-\end{array}\]\\}{
+\midTests
+
+\litmusTestStart{MP-cas-rel-acq-na}{\tick}{NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 1], [a = 1, b = 0].\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{f}{1}; \writeInstParam{\na}{d}{0};$ \\
   \begin{tabular}{L || L || L}
@@ -411,12 +410,12 @@ Impossible outcomes:\\
 \codePostfix
 }
 
-\litmusTestStart{MP\_cas+rel+rlx+na}{\tick}{NA + History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-\kw{stuck}
-\end{array}\]\\
-}{
+\midTests
+
+\litmusTestStart{MP-cas-rel-rlx-na}{\tick}{NA + History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 1], [a = 1, b = 0], \kw{stuck}.\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{f}{1}; \writeInstParam{\na}{d}{0};$ \\
   \begin{tabular}{L || L || L}
@@ -445,12 +444,12 @@ Possible outcomes:\\
 \section{Coherence of Read-Read (CoRR)}
 \label{app:corr}
 
-\litmusTestStart{CoRR\_rlx}{\tick}{History + Viewfronts}{
-Impossible outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 2 \land c = 2 \land d = 1 \\
-a = 1 \land b = 2 \land c = 2 \land d = 1 \\
-\end{array}\]\\}{
+\litmusTestStart{CoRR-rlx}{\tick}{History + Viewfronts}{
+  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  $\{a, b, c, d\} \suq \{0, 1, 2\}$, кроме тех, в которых
+  $a > b = 0$ или $c > d = 0$, а также
+\[[a = 1, b = 2, c = 2, d = 1], [a = 2, b = 1, c = 1, d = 2].\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0};$ \\
   \begin{tabular}{L || L || L || L}
@@ -472,13 +471,14 @@ a = 1 \land b = 2 \land c = 2 \land d = 1 \\
 \codePostfix
 }
 
-\litmusTestStart{CoRR\_rel+acq}{\tick}{History + Viewfronts}{
-Impossible outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 2 \land c = 2 \land d = 1 \\
-a = 1 \land b = 2 \land c = 2 \land d = 1 \\
-\end{array}\]\\}{
-%
+\midTests
+
+\litmusTestStart{CoRR-rel-acq}{\tick}{History + Viewfronts}{
+  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  $\{a, b, c, d\} \suq \{0, 1, 2\}$, кроме тех, в которых
+  $a > b = 0$ или $c > d = 0$, а также
+\[[a = 1, b = 2, c = 2, d = 1], [a = 2, b = 1, c = 1, d = 2].\]
+}{%
 \codePrefix
   $\writeInstParam{\rel}{x}{0};$ \\
   \begin{tabular}{L || L || L || L}
@@ -503,50 +503,37 @@ a = 1 \land b = 2 \land c = 2 \land d = 1 \\
 \section{Independent Reads of Independent Writes (IRIW)}
 \label{app:iriw}
 
-\litmusTestStart{IRIW\_rlx}{\tick}{History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a \in \{0, 1\} \land b \in \{0, 1\} \land c \in \{0, 1\} \land d \in \{0, 1\} \\
-\end{array}\]\\}{
-%
+\litmusTestStart{IRIW-rlx}{\tick}{History + Viewfronts}{
+  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  $\{a, b, c, d\} \suq \{0, 1\}$.
+}{%
 \iriwTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
-%% Comment:
-%% It is possible to get
-%% \lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
 }
 
-\litmusTestStart{IRIW\_rel+acq}{\tick}{History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-a \in \{0, 1\} \land b \in \{0, 1\} \land c \in \{0, 1\} \land d \in \{0, 1\} \\
-\end{array}\]\\}{
-%
+\litmusTestStart{IRIW-rel-acq}{\tick}{History + Viewfronts}{
+  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  $\{a, b, c, d\} \suq \{0, 1\}$.
+}{%
 \iriwTemplate{\rel}{\rel}{\rel}{\rel}{\acq}{\acq}{\acq}{\acq}
-%% Comment:
-%% It is possible to get
-%% \lstinline{r1 = 1; r2 = 0; r3 = 1; r4 = 0}
 }
 
-\litmusTestStart{IRIW\_sc}{\tick}{SC + History + Viewfronts}{
-Forbidden outcomes:\\
-\[\begin{array}{l}
-a = 1 \land b = 0 \land c = 1 \land d = 0 \\
-\end{array}\]\\}{
-%
+\litmusTestStart{IRIW-sc}{\tick}{SC + History + Viewfronts}{
+  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  $\{a, b, c, d\} \suq \{0, 1\}$, кроме $[a = 1, b = 0, c = 1, d = 0]$.
+}{%
 \iriwTemplate{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}
 }
 
 \section{Write-to-Read Causality (WRC)}
 \label{app:wrc}
 
-\litmusTestStart{WRC\_rel+acq}{\tick}{History + Viewfronts}{
-Forbidden outcomes:\\
-\[\begin{array}{l}
-b = 1 \land c = 0 \\
-\end{array}\]\\}{
-%
+\litmusTestStart{WRC-rel-acq}{\tick}{History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 1, b = 0, c = 0],\]
+\[[a = 1, b = 0, c = 1], [a = 1, b = 1, c = 1].\]
+}{%
 \codePrefix
-  $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{1};$ \\
+  $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{0};$ \\
 \begin{tabular}{L || L || L}
 \writeInstParam{\rel}{x}{1} &
 \readInstParam{\acq}{a}{x}; &
@@ -559,14 +546,16 @@ b = 1 \land c = 0 \\
 \codePostfix
 }
 
-\litmusTestStart{WRC\_rlx}{\tick}{History + Viewfronts}{
-Possible outcomes:\\
-\[\begin{array}{l}
-b \in \{0, 1\} \land c \in \{0, 1\} \\
-\end{array}\]\\}{
-%
+\midTests
+
+\litmusTestStart{WRC-rlx}{\tick}{History + Viewfronts}{
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 1, b = 0, c = 0],\]
+\[[a = 1, b = 0, c = 1], [a = 1, b = 1, c = 1],\]
+\[[a = 1, b = 1, c = 0].\]
+}{%
 \codePrefix
-  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{1};$ \\
+  $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L || L}
 \writeInstParam{\rlx}{x}{1} &
 \readInstParam{\rlx}{a}{x}; &
@@ -579,14 +568,16 @@ b \in \{0, 1\} \land c \in \{0, 1\} \\
 \codePostfix
 }
 
-\litmusTestStart{WRC\_cas+rel}{\tick}{History + Viewfronts}{
+\midTests
+
+\litmusTestStart{WRC-cas-rel}{\tick}{History + Viewfronts}{
 Impossible outcomes:\\
 \[\begin{array}{l}
 b = 2 \land c = 0 \\
 \end{array}\]\\}{
 %
 \codePrefix
-  $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{1};$ \\
+  $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{0};$ \\
 \begin{tabular}{L || L || L}
 \writeInstParam{\rel}{x}{1}; &
 \casInstParam{\rel}{\acq}{a}{y}{1}{2} &
@@ -599,7 +590,7 @@ b = 2 \land c = 0 \\
 \codePostfix
 }
 
-\litmusTestStart{WRC\_cas+rlx}{\tick}{History + Viewfronts}{
+\litmusTestStart{WRC-cas-rlx}{\tick}{History + Viewfronts}{
 Impossible outcomes:\\
 \[\begin{array}{l}
 b = 2 \land c = 0 \\
@@ -627,8 +618,8 @@ unlike the C11 standard. But such reads are considered to be an
 undesirable behavior by most of the standard's
 clients~\cite{Batty-al:ESOP15}.
 
-\litmusTestStart{OTA\_lb}{\fail}{Postponed reads + History + Viewfronts}{
-Possible outcomes:\\
+\litmusTestStart{OTA-lb}{\fail}{Postponed reads + History + Viewfronts}{
+\possibleOutcomes\\
 \[\begin{array}{l}
 a = 0 \land b = 0 \\
 \end{array}\]\\}{
@@ -647,8 +638,8 @@ a = 0 \land b = 0 \\
 %% \lstinline{r1} and \lstinline{r2} can get arbitrary values.
 }
 
-\litmusTestStart{OTA\_if}{\fail}{Postponed reads + History + Viewfronts}{
-Possible outcomes:\\
+\litmusTestStart{OTA-if}{\fail}{Postponed reads + History + Viewfronts}{
+\possibleOutcomes\\
 \[\begin{array}{l}
 a = 0 \land b = 0 \\
 \end{array}\]\\}{
@@ -675,8 +666,8 @@ a = 0 \land b = 0 \\
 \section{Write Reorder (WR), or 2+2W from \cite{Lahav-al:POPL16}}
 \label{app:wr}
 
-\litmusTestStart{WR\_rlx}{\tick}{History + Viewfronts + Operational Buffers}{
-Possible outcomes:\\
+\litmusTestStart{WR-rlx}{\tick}{History + Viewfronts + Operational Buffers}{
+\possibleOutcomes\\
 \[\begin{array}{l}
   a = 1 \land b = 2 \\
   a = 2 \land b = 1 \\
@@ -686,8 +677,8 @@ Possible outcomes:\\
 \wrTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
 }
 
-\litmusTestStart{WR\_rlx+rel}{\tick}{History + Viewfronts + Operational Buffers}{
-Possible outcomes:\\
+\litmusTestStart{WR-rlx-rel}{\tick}{History + Viewfronts + Operational Buffers}{
+\possibleOutcomes\\
 \[\begin{array}{l}
   a = 1 \land b = 2 \\
   a = 2 \land b = 1 \\
@@ -697,8 +688,8 @@ Possible outcomes:\\
 \wrTemplate{\rlx}{\rlx}{\rlx}{\rel}{\rlx}{\rel}{\rlx}{\rlx}
 }
 
-\litmusTestStart{WR\_rel}{\tick}{History + Viewfronts + Operational Buffers}{
-Possible outcomes:\\
+\litmusTestStart{WR-rel}{\tick}{History + Viewfronts + Operational Buffers}{
+\possibleOutcomes\\
 \[\begin{array}{l}
   a = 1 \land b = 2 \\
   a = 2 \land b = 1 \\
@@ -717,9 +708,9 @@ Possible outcomes:\\
 %% \section{Value Stealing}
 %% \label{app:ss}
 
-%% \litmusTestStart{VS\_rlx}{\tick}{}
+%% \litmusTestStart{VS-rlx}{\tick}{}
 %% \begin{minipage}[t]{0.3\linewidth}
-%% Possible outcomes:\\
+%% \possibleOutcomes\\
 %% \lstinline{  r1 = 0}\\
 %% \lstinline{  r1 = 1}\\
 %% \end{minipage}
@@ -760,8 +751,8 @@ Possible outcomes:\\
 \section{Speculative Execution}
 \label{app:se}
 
-\litmusTestStart{SE\_simple}{\tick}{}{
-Possible outcomes:\\
+\litmusTestStart{SE-simple}{\tick}{}{
+\possibleOutcomes\\
 \[\begin{array}{l}
   c \in \{0, 1\}
 \end{array}\]}{
@@ -790,8 +781,8 @@ Possible outcomes:\\
 \codePostfix
 }
 
-\litmusTestStart{SE\_prop}{\tick}{}{
-Possible outcomes:\\
+\litmusTestStart{SE-prop}{\tick}{}{
+\possibleOutcomes\\
 \[\begin{array}{l}
   c \in \{0, 1\}
 \end{array}\]}{
@@ -821,8 +812,8 @@ Possible outcomes:\\
 \codePostfix
 }
 
-\litmusTestStart{SE\_nested}{\tick}{}{
-Possible outcomes:\\
+\litmusTestStart{SE-nested}{\tick}{}{
+\possibleOutcomes\\
 \[\begin{array}{l}
   c \in \{0, 1\}
 \end{array}\]}{
@@ -861,7 +852,7 @@ Possible outcomes:\\
 
 \begin{minipage}[t]{0.4\linewidth}
 \textbf{Dekker's lock}\\\\
-Possible outcomes:\\
+\possibleOutcomes\\
 \[\begin{array}{l}
   \Stuck
 \end{array}\]

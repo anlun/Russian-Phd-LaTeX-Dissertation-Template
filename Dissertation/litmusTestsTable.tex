@@ -9,83 +9,83 @@
 %           & NA-front & Postponed operations & Acquire Read Restrictions (& Value Stealing) & Consume & Joining threads w/ non-empty operation buffers & \textbf{Full Support} \\
 
 \hline\hline
-\multicolumn{10}{|c|}{Буферизация записи (\textsf{SB})\ifext{, \S\ref{app:sb}}{}} \\
+\multicolumn{10}{|c|}{Буферизация записи (\textrm{SB})\ifext{, \S\ref{app:sb}}{}} \\
 \hline
-\textsf{rel-acq}   & \tick & &       & & & & & & \tick\\ 
-\textsf{sc}        & \tick & & \tick & & & & & & \tick\\ 
-\textsf{sc-rel}    & \tick & & \tick & & & & & & \tick\\ 
-\textsf{sc-acq}    & \tick & & \tick & & & & & & \tick\\ 
+\textrm{rel-acq}   & \tick & &       & & & & & & \tick\\ 
+\textrm{sc}        & \tick & & \tick & & & & & & \tick\\ 
+\textrm{sc-rel}    & \tick & & \tick & & & & & & \tick\\ 
+\textrm{sc-acq}    & \tick & & \tick & & & & & & \tick\\ 
 
 \hline
-\multicolumn{10}{|c|}{Буферизация чтения (\textsf{LB})\ifext{, \S\ref{app:lb}}{}} \\
+\multicolumn{10}{|c|}{Буферизация чтения (\textrm{LB})\ifext{, \S\ref{app:lb}}{}} \\
 \hline
-\textsf{rlx}         & \tick & & & & \tick & & & & \tick\\ 
-\textsf{rel-rlx}     & \tick & & & & \tick & & & & \tick\\ 
-\textsf{acq-rlx}     & \tick & & & & \tick & & & & \fail\\ 
-\textsf{rel-acq-rlx} & \tick & & & & \tick & \tick & & & \tick\\ 
-\textsf{rlx-use}     & \tick & & & & \tick & & & & \tick\\ 
-\textsf{rlx-let}     & \tick & & & & \tick & & & & \tick\\ 
-\textsf{rlx-join}    & \tick & & & & \tick & & & \tick & \tickP\\ 
-\textsf{rel-rlx-join} & \tick & & & & \tick & & & \tick & \tickP\\ 
-\textsf{acq-rlx-join} & \tick & & & & \tick & & & \tick & \fail\\ 
+\textrm{rlx}         & \tick & & & & \tick & & & & \tick\\ 
+\textrm{rel-rlx}     & \tick & & & & \tick & & & & \tick\\ 
+\textrm{acq-rlx}     & \tick & & & & \tick & & & & \fail\\ 
+\textrm{rel-acq-rlx} & \tick & & & & \tick & \tick & & & \tick\\ 
+\textrm{rlx-use}     & \tick & & & & \tick & & & & \tick\\ 
+\textrm{rlx-let}     & \tick & & & & \tick & & & & \tick\\ 
+\textrm{rlx-join}    & \tick & & & & \tick & & & \tick & \tickP\\ 
+\textrm{rel-rlx-join} & \tick & & & & \tick & & & \tick & \tickP\\ 
+\textrm{acq-rlx-join} & \tick & & & & \tick & & & \tick & \fail\\ 
 
 \hline
-\multicolumn{10}{|c|}{Передача сообщения (\textsf{MP})\ifext{, \S\ref{app:mp}}{}} \\
+\multicolumn{10}{|c|}{Передача сообщения (\textrm{MP})\ifext{, \S\ref{app:mp}}{}} \\
 \hline
-\textsf{rlx-na}            & \tick &       & & \tick & & &       & & \tick\\ 
-\textsf{rel-rlx-na}        & \tick &       & & \tick & & &       & & \tick\\ 
-\textsf{rlx-acq-na}        & \tick &       & & \tick & & &       & & \tick\\ 
-\textsf{rel-acq-na}        & \tick &       & & \tick & & \tick & & & \tick\\ 
-\textsf{rel-acq-na-rlx(\_2)} & \tick & \tick & & \tick & & \tick & & & \tick\\ 
-\textsf{con-na(\_2)}       & \tick &       & & \tick & & & \tick & & \tick\\ 
-\textsf{cas-rel-acq-na}    & \tick &       & & \tick & & \tick & & & \tick\\ 
-\textsf{cas-rel-rlx-na}    & \tick &       & & \tick & & &     & & \tick\\ 
+\textrm{rlx-na}            & \tick &       & & \tick & & &       & & \tick\\ 
+\textrm{rel-rlx-na}        & \tick &       & & \tick & & &       & & \tick\\ 
+\textrm{rlx-acq-na}        & \tick &       & & \tick & & &       & & \tick\\ 
+\textrm{rel-acq-na}        & \tick &       & & \tick & & \tick & & & \tick\\ 
+\textrm{rel-acq-na-rlx(\_2)} & \tick & \tick & & \tick & & \tick & & & \tick\\ 
+\textrm{con-na(\_2)}       & \tick &       & & \tick & & & \tick & & \tick\\ 
+\textrm{cas-rel-acq-na}    & \tick &       & & \tick & & \tick & & & \tick\\ 
+\textrm{cas-rel-rlx-na}    & \tick &       & & \tick & & &     & & \tick\\ 
 
 \hline
-\multicolumn{10}{|c|}{Корректность повторного чтения (\textsf{CoRR})\label{acr:corr}\ifext{, \S\ref{app:corr}}{}} \\
+\multicolumn{10}{|c|}{Корректность повторного чтения (\textrm{CoRR})\label{acr:corr}\ifext{, \S\ref{app:corr}}{}} \\
 \hline
-\textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
-\textsf{rel-acq}  & \tick & &       & & &  & & & \tick\\ 
+\textrm{rlx}      & \tick & &       & & &  & & & \tick\\ 
+\textrm{rel-acq}  & \tick & &       & & &  & & & \tick\\ 
 
 \hline
-\multicolumn{10}{|c|}{Независимые чтения независимых записей (\textsf{IRIW})\label{acr:iriw}\ifext{, \S\ref{app:iriw}}{}} \\
+\multicolumn{10}{|c|}{Независимые чтения независимых записей (\textrm{IRIW})\label{acr:iriw}\ifext{, \S\ref{app:iriw}}{}} \\
 \hline
-\textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
-\textsf{rel-acq}  & \tick & &       & & &  & & & \tick\\ 
-\textsf{sc}       & \tick & & \tick & & &  & & & \tick\\ 
+\textrm{rlx}      & \tick & &       & & &  & & & \tick\\ 
+\textrm{rel-acq}  & \tick & &       & & &  & & & \tick\\ 
+\textrm{sc}       & \tick & & \tick & & &  & & & \tick\\ 
 
 \hline
-\multicolumn{10}{|c|}{Зависимость запись-чтение (\textsf{WRC})\label{acr:wrc}\ifext{, \S\ref{app:wrc}}{}} \\
+\multicolumn{10}{|c|}{Зависимость запись-чтение (\textrm{WRC})\label{acr:wrc}\ifext{, \S\ref{app:wrc}}{}} \\
 \hline
-\textsf{rlx}      & \tick & &       & & & &  & & \tick\\ 
-\textsf{rel-acq}  & \tick & &       & & & &  & & \tick\\ 
-\textsf{cas-rel}  & \tick & &       & & & \tick & & & \tick\\ 
-\textsf{cas-rlx}  & \tick & &       & & & &  & & \tick\\ 
+\textrm{rlx}      & \tick & &       & & & &  & & \tick\\ 
+\textrm{rel-acq}  & \tick & &       & & & &  & & \tick\\ 
+\textrm{cas-rel}  & \tick & &       & & & \tick & & & \tick\\ 
+\textrm{cas-rlx}  & \tick & &       & & & &  & & \tick\\ 
 
 \hline
-\multicolumn{10}{|c|}{``Значения из воздуха'' (\textsf{OOTA})\ifext{, \S\ref{app:ota}}{}} \\
+\multicolumn{10}{|c|}{``Значения из воздуха'' (\textrm{OOTA})\ifext{, \S\ref{app:ota}}{}} \\
 \hline
-\textsf{lb}       & \tick & &       & & \tick & & & & \fail\\ 
-\textsf{if}       & \tick & &       & & \tick & & & & \fail\\ 
+\textrm{lb}       & \tick & &       & & \tick & & & & \fail\\ 
+\textrm{if}       & \tick & &       & & \tick & & & & \fail\\ 
 
 \hline
-\multicolumn{10}{|c|}{Независимые записи (\textsf{WR})\label{acr:wr}\ifext{, \S\ref{app:wr}}{}} \\
+\multicolumn{10}{|c|}{Независимые записи (\textrm{WR})\label{acr:wr}\ifext{, \S\ref{app:wr}}{}} \\
 \hline
-\textsf{rlx}      & \tick & &       & & \tick & & & & \tick\\ 
-\textsf{rlx-rel}  & \tick & &       & & \tick & \tick & & & \tick\\ 
-\textsf{rel}      & \tick & &       & & \tick & \tick & & & \tick\\ 
+\textrm{rlx}      & \tick & &       & & \tick & & & & \tick\\ 
+\textrm{rlx-rel}  & \tick & &       & & \tick & \tick & & & \tick\\ 
+\textrm{rel}      & \tick & &       & & \tick & \tick & & & \tick\\ 
 
 %% \hline
-%% \multicolumn{11}{|c|}{Value Stealing (\textsf{VS})\ifext{, \S\ref{app:ss}}{}} \\
+%% \multicolumn{11}{|c|}{Value Stealing (\textrm{VS})\ifext{, \S\ref{app:ss}}{}} \\
 %% \hline
-%% \textsf{rlx}      & \tick & &       & & \tick & \tick & \tick & & & \tick\\ 
+%% \textrm{rlx}      & \tick & &       & & \tick & \tick & \tick & & & \tick\\ 
 
 \hline
-\multicolumn{10}{|c|}{Спекулятивное исполнение (\textsf{SE})\ifext{, \S\ref{app:se}}{}} \\
+\multicolumn{10}{|c|}{Спекулятивное исполнение (\textrm{SE})\ifext{, \S\ref{app:se}}{}} \\
 \hline
-\textsf{simple}      & \tick & &       & & \tick & & & & \tick\\ 
-\textsf{prop}        & \tick & &       & & \tick & & & & \tick\\ 
-\textsf{nested}      & \tick & &       & & \tick & & & & \tick\\ 
+\textrm{simple}      & \tick & &       & & \tick & & & & \tick\\ 
+\textrm{prop}        & \tick & &       & & \tick & & & & \tick\\ 
+\textrm{nested}      & \tick & &       & & \tick & & & & \tick\\ 
 
   \hline
   \multicolumn{10}{|c|}{Блокировки \ifext{, \S\ref{app:locks}}{}} \\
