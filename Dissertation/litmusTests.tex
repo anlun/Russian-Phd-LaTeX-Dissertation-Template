@@ -2,6 +2,8 @@
 \chapter{Каталог тестов для модели C/C++11}
 \label{sec:litmusTests}
 
+\newcommand{\UndefinedBeh}{\kw{undefined behavior}}
+
 \newcommand{\litmusTestStart}[5]{
 \begin{samepage}
 {\bf \textrm{#1}}
@@ -109,7 +111,7 @@
   \vspace{.2cm} \hrule \vspace{.2cm}
 }
 
-\section{Буферизация записи (store buffering, SB)}
+\section{Буферизация записи, SB}
 \label{app:sb}
 
 \litmusTestStart{SB-rel-acq}{\tick}{History + Viewfronts}{
@@ -153,7 +155,7 @@
 
 %\newpage
 
-\section{Буферизация чтения (load buffering, LB)}
+\section{Буферизация чтения, LB}
 \label{app:lb}
 
 \litmusTestStart{LB-rlx}{\tick}{Postponed Reads + History + Viewfronts}{
@@ -259,12 +261,12 @@
 \lbJoinTemplate{\acq}{\rlx}{\acq}{\rlx}
 }
 
-\section{Message Passing (MP)}
+\section{Передача сообщения, MP}
 \label{app:mp}
 
 \litmusTestStart{MP-rlx-na}{\tick}{NA + History + Viewfronts}{
 \possibleOutcomes
-\[[a = 0], [a = 5], \kw{stuck}. \]
+\[ \UndefinedBeh. \]
 }{%
 \mpTemplate{\rlx}{\na}{\na}{\rlx}{\rlx}{\na}
 }
@@ -273,7 +275,7 @@
 
 \litmusTestStart{MP-rel-rlx-na}{\tick}{NA + History + Viewfronts}{
 \possibleOutcomes
-\[[a = 0], [a = 5], \kw{stuck}. \]
+\[ \UndefinedBeh. \]
 }{%
 \mpTemplate{\rlx}{\na}{\na}{\rel}{\rlx}{\na}
 }
@@ -282,7 +284,7 @@
 
 \litmusTestStart{MP-rlx-acq-na}{\tick}{NA + History + Viewfronts}{
 \possibleOutcomes
-\[[a = 0], [a = 5], \kw{stuck}. \]
+\[ \UndefinedBeh. \]
 }{%
 \mpTemplate{\rlx}{\na}{\na}{\rlx}{\acq}{\na}
 }
@@ -414,7 +416,7 @@
 
 \litmusTestStart{MP-cas-rel-rlx-na}{\tick}{NA + History + Viewfronts}{
 \possibleOutcomes
-\[[a = 0, b = 1], [a = 1, b = 0], \kw{stuck}.\]
+\[ \UndefinedBeh.\]
 }{%
 \codePrefix
   $\writeInstParam{\rlx}{f}{1}; \writeInstParam{\na}{d}{0};$ \\
@@ -441,7 +443,7 @@
 \codePostfix
 }
 
-\section{Coherence of Read-Read (CoRR)}
+\section{Корректность повторного чтения, CoRR}
 \label{app:corr}
 
 \litmusTestStart{CoRR-rlx}{\tick}{History + Viewfronts}{
@@ -500,7 +502,7 @@
 \codePostfix
 }
 
-\section{Independent Reads of Independent Writes (IRIW)}
+\section{Независимые чтения независимых записей, IRIW}
 \label{app:iriw}
 
 \litmusTestStart{IRIW-rlx}{\tick}{History + Viewfronts}{
@@ -524,7 +526,7 @@
 \iriwTemplate{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}
 }
 
-\section{Write-to-Read Causality (WRC)}
+\section{Зависимость запись-чтение, WRC}
 \label{app:wrc}
 
 \litmusTestStart{WRC-rel-acq}{\tick}{History + Viewfronts}{
@@ -571,11 +573,12 @@
 \midTests
 
 \litmusTestStart{WRC-cas-rel}{\tick}{History + Viewfronts}{
-Impossible outcomes:\\
-\[\begin{array}{l}
-b = 2 \land c = 0 \\
-\end{array}\]\\}{
-%
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 1, b = 0, c = 0],\]
+\[[a = 1, b = 0, c = 1], [a = 1, b = 0, c = 1],\]
+\[[a = 1, b = 1, c = 1], [a = 1, b = 1, c = 1],\]
+\[[a = 1, b = 2, c = 1].\]
+}{%
 \codePrefix
   $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{0};$ \\
 \begin{tabular}{L || L || L}
@@ -590,18 +593,21 @@ b = 2 \land c = 0 \\
 \codePostfix
 }
 
+\midTests
+
 \litmusTestStart{WRC-cas-rlx}{\tick}{History + Viewfronts}{
-Impossible outcomes:\\
-\[\begin{array}{l}
-b = 2 \land c = 0 \\
-\end{array}\]\\}{
-%
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 1, b = 0, c = 0],\]
+\[[a = 1, b = 0, c = 1], [a = 1, b = 0, c = 1],\]
+\[[a = 1, b = 1, c = 1], [a = 1, b = 1, c = 1],\]
+\[[a = 1, b = 2, c = 1].\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
 \begin{tabular}{L || L || L}
 \writeInstParam{\rlx}{x}{1}; &
 \casInstParam{\rlx}{\rlx}{a}{y}{1}{2} &
-\readInstParam{\rlx}{b}{y}; \\
+\readInstParam{\acq}{b}{y}; \\
 
 \writeInstParam{\rel}{y}{1} &
 &
@@ -610,20 +616,17 @@ b = 2 \land c = 0 \\
 \codePostfix
 }
 
-\section{Out-of-Thin-Air reads}
+\section{Значения из воздуха, OOTA}
 \label{app:ota}
 
-In our semantics it is not possible to get out-of-thin-air results,
-unlike the C11 standard. But such reads are considered to be an
-undesirable behavior by most of the standard's
-clients~\cite{Batty-al:ESOP15}.
+%% In our semantics it is not possible to get out-of-thin-air results,
+%% unlike the C11 standard. But such reads are considered to be an
+%% undesirable behavior by most of the standard's
+%% clients~\cite{Batty-al:ESOP15}.
 
 \litmusTestStart{OTA-lb}{\fail}{Postponed reads + History + Viewfronts}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-a = 0 \land b = 0 \\
-\end{array}\]\\}{
-%
+  Оригинальная модель C/C++11 разрешает для этой программы любой результат, в котором $a = b$.
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
   \begin{tabular}{L || L}
@@ -638,12 +641,12 @@ a = 0 \land b = 0 \\
 %% \lstinline{r1} and \lstinline{r2} can get arbitrary values.
 }
 
+\midTests
+
 \litmusTestStart{OTA-if}{\fail}{Postponed reads + History + Viewfronts}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-a = 0 \land b = 0 \\
-\end{array}\]\\}{
-%
+\possibleOutcomes
+\[[a = 0, b = 0], [a = 1, b = 1].\]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
   \begin{tabular}{L || L}
@@ -663,39 +666,31 @@ a = 0 \land b = 0 \\
 %% \lstinline{r1} and \lstinline{r2} can be 1s at the end of execution.
 }
 
-\section{Write Reorder (WR), or 2+2W from \cite{Lahav-al:POPL16}}
+\section{Независимые записи, WR}
 \label{app:wr}
 
 \litmusTestStart{WR-rlx}{\tick}{History + Viewfronts + Operational Buffers}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-  a = 1 \land b = 2 \\
-  a = 2 \land b = 1 \\
-  a = 2 \land b = 2 \\
-\end{array}\]}{
-%
+\possibleOutcomes
+\[[a = 1, b = 2], [a = 1, b = 2], [a = 1, b = 2], [a = 2, b = 2].\]
+}{%
 \wrTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
 }
 
+\midTests
+
 \litmusTestStart{WR-rlx-rel}{\tick}{History + Viewfronts + Operational Buffers}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-  a = 1 \land b = 2 \\
-  a = 2 \land b = 1 \\
-  a = 2 \land b = 2 \\
-\end{array}\]}{
-%
+\possibleOutcomes
+\[[a = 1, b = 2], [a = 1, b = 2], [a = 1, b = 2], [a = 2, b = 2].\]
+}{%
 \wrTemplate{\rlx}{\rlx}{\rlx}{\rel}{\rlx}{\rel}{\rlx}{\rlx}
 }
 
+\midTests
+
 \litmusTestStart{WR-rel}{\tick}{History + Viewfronts + Operational Buffers}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-  a = 1 \land b = 2 \\
-  a = 2 \land b = 1 \\
-  a = 2 \land b = 2 \\
-\end{array}\]}{
-%
+\possibleOutcomes
+\[[a = 1, b = 2], [a = 1, b = 2], [a = 1, b = 2], [a = 2, b = 2].\]
+}{%
 \wrTemplate{\rel}{\rel}{\rel}{\rel}{\rel}{\rel}{\acq}{\acq}
 %% This is an example of the program from \cite{Lahav-al:POPL16}.
 %% The weak behavior (\lstinline{r1 = r2 = 1}) is allowed in C11,
@@ -748,15 +743,14 @@ a = 0 \land b = 0 \\
 
 %% \litmusTestEnd
 
-\section{Speculative Execution}
+\section{Спекулятивное исполнение, SE}
 \label{app:se}
 
 \litmusTestStart{SE-simple}{\tick}{}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-  c \in \{0, 1\}
-\end{array}\]}{
-%
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 0, b = 1, c = 0],\]
+\[[a = 1, b = 1, c = 1]. \]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0};
   \writeInstParam{\rlx}{y}{0};
@@ -772,7 +766,7 @@ a = 0 \land b = 0 \\
 
     \begin{array}{@{}l@{}}
       \readInstParam{\rlx}{b}{y}; \\
-      \iteml{a}{
+      \iteml{b}{
         \writeInstParam{\rlx}{x}{1}
       }{\skipc}
     \end{array}
@@ -781,12 +775,13 @@ a = 0 \land b = 0 \\
 \codePostfix
 }
 
+\midTests
+
 \litmusTestStart{SE-prop}{\tick}{}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-  c \in \{0, 1\}
-\end{array}\]}{
-%
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 0, b = 1, c = 0],\]
+\[[a = 1, b = 1, c = 1]. \]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0};
   \writeInstParam{\rlx}{y}{0};
@@ -803,7 +798,7 @@ a = 0 \land b = 0 \\
 
     \begin{array}{@{}l@{}}
       \readInstParam{\rlx}{b}{y}; \\
-      \iteml{a}{
+      \iteml{b}{
         \writeInstParam{\rlx}{x}{1}
       }{\skipc}
     \end{array}
@@ -812,12 +807,13 @@ a = 0 \land b = 0 \\
 \codePostfix
 }
 
+\midTests
+
 \litmusTestStart{SE-nested}{\tick}{}{
-\possibleOutcomes\\
-\[\begin{array}{l}
-  c \in \{0, 1\}
-\end{array}\]}{
-%
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0, d = \bot], [a = 0, b = 1, c = 0, d = \bot],\]
+\[[a = 1, b = 1, c = 0, d = 0], [a = 1, b = 1, c = 1, d = 1]. \]
+}{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0};
   \writeInstParam{\rlx}{y}{0};
@@ -827,8 +823,8 @@ a = 0 \land b = 0 \\
     \begin{array}{@{}l@{}}
       \readInstParam{\rlx}{a}{x}; \\
       \iteml{a}{
-        \readInstParam{\rlx}{b}{f}; \\
-        \iteml{b}{
+        \readInstParam{\rlx}{d}{f}; \\
+        \iteml{d}{
           \writeInstParam{\rlx}{z}{1}; \\
           \writeInstParam{\rlx}{y}{1}
         }{\writeInstParam{\rlx}{y}{1}}
@@ -847,19 +843,13 @@ a = 0 \land b = 0 \\
 \codePostfix
 }
 
-\section{Locks}
+\section{Блокировки}
 \label{app:locks}
 
-\begin{minipage}[t]{0.4\linewidth}
-\textbf{Dekker's lock}\\\\
-\possibleOutcomes\\
-\[\begin{array}{l}
-  \Stuck
-\end{array}\]
-Requires: RA + na\\
-Fully Supported: $\tick$\\
-\end{minipage}
-%
+\litmusTestStart{Блокировка Деккера}{\tick}{}{
+\possibleOutcomes
+\[ \UndefinedBeh. \]
+}{%
 \codePrefix
 $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{0}; \writeInstParam{\na}{d}{0};$ \\
 \begin{tabular}{L || L}
@@ -879,21 +869,15 @@ $\writeInstParam{\rel}{x}{0}; \writeInstParam{\rel}{y}{0}; \writeInstParam{\na}{
   \end{array}
 \end{tabular}
 \codePostfix
+}
 
-\vspace{.2cm}
-\hrule
-\vspace{.2cm}
+\midTests
 
-\begin{minipage}[t]{0.4\linewidth}
-\textbf{Cohen's lock}\\\\
-Impossible outcomes (according to \cite{Turon-al:OOPSLA14}):\\
-\[\begin{array}{l}
-  \Stuck
-\end{array}\]
-Requires: RA + na\\
-Fully Supported: $\tick$\\
-\end{minipage}
-%
+\litmusTestStart{Блокировка Коэна \cite{Turon-al:OOPSLA14}}{\tick}{}{
+\possibleOutcomes
+\[[a = 1, b = 1, c = 1, d = 1], [a = 1, b = 2, c = 1, d = 2],\]
+\[[a = 2, b = 1, c = 2, d = 1], [a = 2, b = 2, c = 2, d = 2].\]
+}{%
 \codePrefix
   $\writeInstParam{\rel}{x}{0};\writeInstParam{\rel}{y}{0};\writeInstParam{\na}{d}{0};$ \\
   \begin{tabular}{L || L}
@@ -918,7 +902,4 @@ Fully Supported: $\tick$\\
     \end{array}
   \end{tabular}
 \codePostfix
-
-\vspace{.2cm}
-\hrule
-%% \end{figure*}
+}
