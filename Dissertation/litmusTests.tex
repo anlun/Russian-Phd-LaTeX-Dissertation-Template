@@ -843,6 +843,23 @@
 \codePostfix
 }
 
+\section{\textrm{ARM-weak}}
+\label{app:armweak}
+
+\litmusTestStart{}{\tick}{}{
+\possibleOutcomes
+\[[a = 0, b = 0, c = 0], [a = 0, b = 1, c = 0], [a = 0, b = 1, c = 1],
+  [a = 1, b = 1, c = 1].\]
+}{%
+\codePrefix
+  $\writeInst{x}{0}; \writeInst{y}{0};$ \\
+\begin{tabular}{L || L || L}
+  \readInst{a}{x}; \; \valuecom{1} & \readInst{b}{x}; & \readInst{c}{y}; \\
+  \writeInst{x}{1}                 & \writeInst{y}{b} & \writeInst{x}{c} \\
+\end{tabular}
+\codePostfix
+}
+
 \section{Блокировки}
 \label{app:locks}
 
