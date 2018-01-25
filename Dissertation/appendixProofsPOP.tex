@@ -1,0 +1,654 @@
+\chapter{Доказательство лемм \ref{lem-snd} и \ref{lem-fst} о симуляции модели ARMv8 POP}
+\label{sec:appendix-pop-proofs}
+
+\noindent
+\textbf{Лемма \ref{lem-snd}.}
+$\forall (\aT, \p) \in \simrelPre. \;
+\exists \p'. \Cfprom \vdash \p \promStep \p' \land (\aT, \p') \in \simrelPre \cup \simrel$.
+\begin{proof}
+Зафиксируем $\aT, \p$.
+Поскольку $(\aT, \p) \in \simrelPre$, то $\invPromUptoARMnot(\aT, \p)$ выполняется.
+Как следствие, существует единственный поток с идентификатором $\tId$, плёнка $\tape = \aT.\tapef(\tId)$ и
+путь $\cpath = \p.\TSfprom(\tId).\cpath$ такие, что экземпляр $\tape(\cpath)$ завершён.
+Далее в доказательстве мы конструируем состояние обещающей машины $\p'$ такое, что 
+оно удовлетворяет утверждению теоремы.
+
+Введём обозначения:
+\[\begin{array}{l l l}
+  \Carm & \triangleq & \Cfarm(\tId); \\
+  \angled{\Rcur, \Racq, \Rrel} & \triangleq & \p.\TSfprom(\tId).\V; \\
+  \Rcur', \Racq', \Rrel' & \triangleq & \p'.\TSfprom(\tId).\V;\\
+  \cpath' & \triangleq & \p'.\TSfprom(\tId).\cpath;\\
+  \PromState & \triangleq & \p.\TSfprom(\tId).\PromState;\\
+  \PromState' & \triangleq & \p'.\TSfprom(\tId).\PromState;\\
+  \PromSet' & \triangleq & \p'.\TSfprom(\tId).\PromSet;\\
+  \PromSet & \triangleq & \p.\TSfprom(\tId).\PromSet;\\
+  \hmap   & \triangleq & \aT.\hmap.
+\end{array}\]
+Мы покажем, что обещающая машина в состоянии $\p$ может сделать переход, связанный с $\tape(\cpath)$, в состояние $\p'$,
+и при этом будет выполняться $(\aT, \p') \in \simrelPre \cup \simrel$.
+Далее мы проведём разбор вариантов состояния экземпляра $\tape(\cpath)$.
+
+Очевидно, что для любого нового состояния $\p'$, такого что $\p \promStep \p'$, выполняется 
+$(\aT, \p') \in \invReach \cap \invMemThree$.
+Выполнение $\invPrefix(\aT, \p')$ следует из того, что
+  $\cpath' \in \nextPathCom{\cpath}{\Carm}{\tape}$, $\invAnextCommitted(\aT)$, и исполнение экземпляра $\tape(\cpath)$ завершено.
+Поскольку переход $\p \promStep \p'$ будет использован для того, чтобы ``нагнать'' исполнение машины \ARMt,
+то он не является переходом \transenv{Завершения записи}. Как следствие, $\p'.\Mprom = \p.\Mprom$, и 
+утверждение $\invMemTwo(\aT, \p')$ следует из $\invMemTwo(\aT, \p)$.
+Кроме того, очевидно, что будет выполняться
+либо $\invPromUptoARM(\aT, \p')$, либо $\invPromUptoARMnot(\aT, \p')$ в зависимости от
+завершённости экземпляра $\tape(\cpath')$.
+
+%% \textbf{Note}:
+%% %% ($CorrectType$): \\
+%% $\aT.\Cfarm = \p.\Cfprom$ and the type of the 
+%%  the type of the step $\p \promStep \p'$ corresponds to $\tape(\cpath)$.
+%% $\invATapeCf(\aT)$,
+
+Рассмотрим варианты состояния экземпляра $\tape(\cpath)$.
+\begin{itemize}
+  \item $\tape(\cpath) = \tapeNop$, $\tape(\cpath) = \tapeAssign$ или $\tape(\cpath) = \tapeIfGoto{\IfState}{\z}$. \\
+    Во всех трёх случаях переход обещающей машины $\p \promStep \p'$ будет внутренним, т.е. $\epsilon$-переходом.
+    %% By the transition definition, $\cpath' = \nextPathProm(\cpath, 1) = \cpath ++ [\lastInstr{\cpath} + 1]$.
+    Поскольку $\epsilon$-переход не меняет состояние памяти, то утверждение $\invMemOne(\aT, \p')$ непосредственно
+    следует из $\invMemOne(\aT, \p)$.
+    Аналогично выполняются $\invView (\aT, \p')$ (поскольку $\p'.\TSfprom(\tId).\V = \p.\TSfprom(\tId).\V$),
+    $\invState(\aT, \p')$ (поскольку $\p'.\TSfprom(\tId).\PromState = \p.\TSfprom(\tId).\PromState$ и
+    $\regstcom(\Carm(\tId), \tape, \cpath') = \regstcom(\Carm(\tId), \tape, \cpath')$) и 
+    $\invComWrite(\aT, \p')$ (поскольку экземпляр $\tape(\cpath)$ не является ни записью, ни барьером).
+
+  \item $\tape(\cpath) = \tapeFence{\Committed}{\LD}$. \\
+    Обещающая машина делает переход, соответствующий приобретающему барьеру памяти.
+    Как следствие, новый базовый фронт $\Rcur'$ равен старому приобретающему фронту $\Racq$.
+    Утверждения $\invMemOne(\aT, \p')$ и $\invState(\aT, \p')$ выполняются, поскольку
+    переход не меняет состояния локальных переменных и памяти.
+
+    Проверим, что выполняется $\invView (\aT, \p')$. Для этого нам нужно показать, что следующее утверждение верно:
+      \[\begin{array}{l}
+        \forall \tId', \tape' = \aT.\tapef(\tId'), \cpath'' = \p.\TSfprom(\tId').\cpath, \\
+        \quad (\p'.\TSfprom(\tId').\Racq \le \bigsqcup \readsSatisfiedR(\cpath'', \tape', \hmap) \\
+        \quad \quad \sqcup \bigsqcup \opstau(\tId', \cpath'', \tape', \hmap)) \land \\
+        \quad (\p'.\TSfprom(\tId').\Rcur \le \bigsqcup \readsSatisfiedR(\lastLD(\tape', \cpath''), \tape', \hmap) \\
+        \quad \quad \sqcup \bigsqcup \opstau(\tId', \cpath'', \tape', \hmap)) \land \\
+        \quad (\p'.\TSfprom(\tId').\Rrel \le \bigsqcup \readsSatisfiedR(\lastLDSY(\tape', \cpath''), \tape', \hmap) \\
+        \quad \quad \sqcup \bigsqcup \opstau(\tId', \lastSY(\tape', \cpath''), \tape', \hmap))).
+      \end{array}\]
+    Зафиксируем $\tId', \tape', \cpath''$. Если $\tId' \not = \tId$, то утверждение следует из $\invView(\aT, \p)$ и 
+    $\p'.\TSfprom(\tId').\V = \p.\TSfprom(\tId').\V$.
+    Пусть $\tId' = \tId$. Как следствие, $\tape' = \tape$ и $\cpath'' = \cpath'$.
+    Также верно, что
+    \begin{itemize}
+      \item $\p'.\TSfprom(\tId).\Racq = \p.\TSfprom(\tId).\Racq = \Racq$,
+      \item $\p'.\TSfprom(\tId).\Rcur = \p.\TSfprom(\tId).\Racq = \Racq$,
+      \item $\p'.\TSfprom(\tId).\Rrel = \p.\TSfprom(\tId).\Rrel = \Rrel$.
+    \end{itemize}
+    Тогда утверждение в упрощённой форме выглядит так:
+     \[\begin{array}{l}
+       \quad (\Racq \le \bigsqcup \readsSatisfiedR(\cpath', \tape, \hmap) \\
+       \quad \quad \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap)) \land \\
+       \quad (\Racq \le \bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath'), \tape, \hmap) \\
+       \quad \quad \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap)) \land \\
+       \quad (\Rrel \le \bigsqcup \readsSatisfiedR(\lastLDSY(\tape, \cpath'), \tape, \hmap) \\
+       \quad \quad \sqcup \bigsqcup \opstau(\tId, \lastSY(\tape, \cpath'), \tape', \hmap))).
+     \end{array}\]
+     Первый и третий конъюнкты следует из того, что выполняется $\invView(\aT, \p)$ и $\cpath' > \cpath$.
+     Второй конъюнкт следует из определения $\lastLD(\tape, \cpath')$ и $\invView(\aT, \p)$.
+
+     Утверждение $\invComWrite(\aT, \p')$ выполняется, поскольку экземпляр $\tape(\cpath)$ не является ни записью,
+     ни $\SY$-барьером.
+
+   \item $\tape(\cpath) = \tapeFence{\Committed}{\SY}$. \\
+    Обещающая машина делает переход, соответствующий высвобождающему барьеру памяти.
+    Как следствие, новый высвобождающий фронт $\Rrel'$ равен старому базовому фронту $\Rcur$.
+    Утверждения $\invMemOne(\aT, \p')$ и $\invState(\aT, \p')$ выполняются, поскольку
+    переход не меняет состояния локальных переменных и памяти.
+    То, что утверждение $\invView(\aT, \p')$ выполняется, может быть показано аналогичными выкладками,
+    что и в случае $\tape(\cpath) = \tapeFence{\Committed}{\LD}$.
+     
+    Из верности утверждения $\invComWrite(\aT, \p)$ следует, что
+    не существует незавершённого экземпляра записи с путём $\cpath^{write} > \cpath$.
+    Это означает, что выполняется $\invComWrite(\aT, \p')$.
+
+    \item  $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\writeEvt{\tId''}{ \cpath''}{ x}{\stval}})}$. \\
+      We know that for all $\cpath^{*} < \cpath$, $\tape(\cpath)$ is committed. It means that
+      the corresponding write $(\tId'', \cpath'')$ is either committed as it's a write from other thread,
+      or it's committed as $\cpath'' < \cpath$.
+      \[\begin{array}{l}
+      \aT.\tapef(\tId'', \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{x}{\stval})}; \\
+      (\tau, \_, \R') \triangleq \aT.\hmap(\tId'', \cpath'') \not = (\bot, \_ , \bot). \\
+      \end{array}\]
+      
+      We know that $\exists \expr, \Carm[\lastInstr{\cpath}] = ``\readInst{\reg}{\expr}"$,
+      $\semf{\expr}{\p.\TSfprom(\tId).\PromState} = \semfcom{\expr}{} = x$ by $\invState(\aT, \p)$ and $\invATapeCfState(\aT)$.
+      It means that the Promise machine can read from the same location as the ARM+$\tau$ machine did.
+
+   Let's prove that $\writeEvt{x}{\stval}{\tau}{\R} \in \p.\Mprom \setminus \p.\TSfprom(\tId).\PromSet$, \ie,
+   the Promise thread can read from the same write. By $\invMemOne(\aT, \p)$ we know that
+   \[\begin{array}{l}
+     \exists \R \le \R',
+     (\cpath'' < \p.\TSfprom(\tId'').\cpath => \writeEvt{x}{\stval}{\tau}{\R} \in \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet) \land \\
+    \quad \quad (\cpath'' \ge \p.\TSfprom(\tId'').\cpath => \writeEvt{x}{\stval}{\tau}{\R} \in \p.\TSfprom(\tId'').\PromSet) \\
+   \end{array}\]
+
+   Fix $\R$. If $\tId'' = \tId$, then, as we know that $\cpath'' < \cpath$ by $\invAReadWriteOne(\aT)$ (\app{\ref{inv:invAReadWriteOne}}),
+   the first conjunction holds.
+   Suppose, $\tId'' \not = \tId$.
+   If $\cpath'' < \p.\TSfprom(\tId'').\cpath$, then
+      $\writeEvt{x}{\stval}{\tau}{\R} \in \p.\Mprom \setminus \p.\TSfprom(\tId).\PromSet$ holds.
+   If $\cpath'' \ge \p.\TSfprom(\tId'').\cpath$, then
+      as $\p.\TSfprom(\tId'').\PromSet$ and $\p.\TSfprom(\tId).\PromSet$ are disjoint, the statement holds.
+
+  Let's prove that $\Rcur(x) \le \tau$:
+  \[\begin{array}{l}
+    \Rcur(x) \le (\bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath), \tape, \hmap)
+                  \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap))(x) \\
+    \quad \quad \quad
+        \le (\bigsqcup \readsSatisfiedR(\lastCF(\tape, \cpath), \tape, \hmap)
+                  \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap))(x) \\
+    \quad \quad \quad
+     \le \tau, \text{by } \invAview(\aT).
+  \end{array}\]
+  
+  We know that $\Rcur' = \Rcur \sqcup [x@\tau]$, $\Racq' = \Racq \sqcup \R, \R \le \R'$,
+  $\cpath' = \cpath ++ [\lastInstr{\cpath} + 1]$, $\PromState' = \PromState[\reg \mapsto \stval]$.
+
+  $\invMemOne(\aT, \p')$ holds for the same reason as in $\tape(\cpath) = \Nop$.
+  $\invState(\aT, \p')$ holds as
+  $\PromState' = \PromState[\reg \mapsto \stval] =$
+  $\regstcom(\Carm, \tape, \cpath)[\reg \mapsto \stval] = \regstcom(\Carm, \tape, \cpath')$.
+  
+  We check $\invView (\aT, \p')$.
+  \[\begin{array}{l}
+    \Racq' \le \bigsqcup \readsSatisfiedR(\cpath', \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \quad (\Racq' = \Racq \sqcup \R) \\
+    \Racq \sqcup \R \le \bigsqcup \readsSatisfiedR(\cpath', \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \Racq \sqcup \R \le \R' \sqcup \bigsqcup \readsSatisfiedR(\cpath, \tape, \hmap) \sqcup
+          [x@\tau] \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap) \\
+    \quad (\R' \sqcup [x@\tau] = \R') \\
+    \Racq \sqcup \R \le \R' \sqcup \bigsqcup \readsSatisfiedR(\cpath, \tape, \hmap)
+          \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap) \\
+  \end{array}\]
+  We know that $\Racq \le \bigsqcup \readsSatisfiedR(\cpath, \tape, \hmap)$ $\sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap)$
+  by $\invView(\aT, \p)$, and $\R \le \R'$. The statement holds.
+
+  \[\begin{array}{l}
+    \Rcur' \le \bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath'), \tape, \hmap)
+                 \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \quad (\Rcur' = \Rcur \sqcup [x@\tau]) \\
+    \Rcur \sqcup [x @ \tau] \le \bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath'), \tape, \hmap)
+                 \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \quad (\tape(\cpath').type \not = Fence) \\
+    \Rcur \sqcup [x @ \tau] \le \bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath), \tape, \hmap)
+                 \sqcup [x @ \tau] \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \Rcur \le \bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath), \tape, \hmap)
+                 \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \Rcur \le \bigsqcup \readsSatisfiedR(\aT, \tId, \lastLD(\tape, \cpath)) \sqcup \bigsqcup \opstau(\aT, \tId, \cpath) \\
+  \end{array}\]
+    Follows from $\invView(\aT, \p)$.
+    
+    $\Rrel' = \Rrel$, so the $\invView(\aT, \p')$ holds.
+
+    $\invComWrite(\aT, \p')$: Obviously holds as $\tape(\cpath)$ is not a write or a fence and $\invComWrite(\aT, \p)$ holds.
+
+  \item $\tape(\cpath) = \tapeWrite{(\tapeWriteCommitted{\InMemory}{x}{\stval})}$.
+    We know $(\tau, \_, \R') \triangleq \aT.\tmap(\tId, \cpath) \not = \bot$, as the write is committed.
+    $\exists \expr_0, \expr_1, \Carm[\lastInstr{\cpath}] = ``[\expr_0] := \expr_1''$.
+    By $\invATapeCfState(\aT)$ (\app{\ref{inv:invATapeCfState}}) we know that $x = \semfcom{\expr_0}{}$ and
+    $\stval = \semfcom{\expr_1}{}$. The Promise machine is able to write the same value to the same locaiton
+    due to $\invState(\aT, \p)$.
+
+    $\writeEvt{x}{\stval}{\tau}{\R} \in \p.\TSfprom(\tId).\PromSet$
+    directly follows from $\invMemOne(\aT, \p)$.
+    $\R = \Rrel \sqcup [x@\tau]$ as the Promise machine wasn't able to promise the write through a release fence---
+    $\Rrel$ remained the same starting from the moment the message was promised.
+
+    $\invState(\aT, \p')$ holds trivially (no changes in the variable states for both machines).
+
+    We need to check $\Rcur(x) < \tau$.
+    \[\begin{array}{l}
+  \Rcur(x) \le (\bigsqcup \readsSatisfiedR(\lastLD(\tape, \cpath), \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap))(x) \\
+  \quad \quad \quad \le (\bigsqcup \readsSatisfiedR(\lastCF(\tape, \cpath), \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap))(x) \\
+  \quad \quad \quad < \tau\\
+    \end{array}\]
+  by $\invAview(\aT)$ (\app{\ref{thm:invAview}}).
+  
+    We need to check $\R \le R'$.
+    \[\begin{array}{l}
+  \Rrel \le \bigsqcup \readsSatisfiedR(\aT, \tId, \lastLDSY(\tape, \cpath)) \sqcup \bigsqcup \opstau(\aT, \tId, \lastSY(\tape, \cpath)) \\
+  \quad (\R = \Rrel \sqcup [x@\tau]) \\
+  \R \le [x@\tau] \sqcup \bigsqcup \readsSatisfiedR(\aT, \tId, \lastLDSY(\tape, \cpath)) \sqcup \bigsqcup \opstau(\aT, \tId, \lastSY(\tape, \cpath)) \\
+  \quad (\lastLDSY(\tape, \cpath) \le \lastSY) \\
+  \R \le [x@\tau] \sqcup \bigsqcup \readsSatisfiedR(\aT, \tId, \lastSY  (\tape, \cpath)) \sqcup \bigsqcup \opstau(\aT, \tId, \lastSY(\tape, \cpath)) \\
+  \quad (\text{by definition of the $\rmap$ component}) \\
+  \R \le \R'.
+    \end{array}\]
+
+We know that:
+    \[\begin{array}{l}
+\Rcur' = \Rcur \sqcup [x@\tau];\\
+\Racq' = \Racq \sqcup [x@\tau];\\
+\PromSet' = \PromSet \setminus \{ \writeEvt{x}{\stval}{\tau}{\R} \};\\
+\cpath' = \cpath ++ [\lastInstr{\cpath} + 1].
+    \end{array}\]
+
+Let's check $\invMemOne(\aT, \p')$.
+We need to show:
+\[\begin{array}{l}
+  \forall \tId', y, \stval', \tau', \R'', \cpath'', \\
+  \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId', \cpath''),
+    (\tau', \_, \R'') = \aT'.\hmap(\tId', \cpath'') => \\
+  \exists \R''' \le \R'': \\
+  \quad (\cpath'' <   \p'.\TSfprom(\tId').\cpath => \writeEvt{y}{\stval'}{\tau'}{\R'''} \in
+      \p'.\Mprom \setminus \underset{\tId}{\bigcup} \p'.\TSfprom(\tId).\PromSet) \land \\
+  \quad (\cpath'' \ge \p'.\TSfprom(\tId').\cpath => \writeEvt{y}{\stval'}{\tau'}{\R'''} \in \p'.\TSfprom(\tId').\PromSet).\\
+\end{array}\]
+  Fix $\tId', y, \stval', \tau', \R'', \cpath''$.
+  We know that
+  $\p'.\TSfprom(\tId).\PromSet = \p.\TSfprom(\tId).\PromSet \setminus \{ \writeEvt{x}{\stval}{\tau}{\R} \}$.
+  We also know that
+  $\p'.\Mprom \setminus \underset{\tId}{\bigcup} \p'.\TSfprom(\tId).\PromSet = \{ \writeEvt{x}{\stval}{\tau}{\R} \} \cup \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet$.
+    
+  If $\tId' \not = \tId$, then
+    $\p'.\TSfprom(\tId').\cpath = \p.\TSfprom(\tId').\cpath$ and
+    $\p'.\TSfprom(\tId').\PromSet = \p.\TSfprom(\tId').\PromSet$.
+  The simplified statement follows from $\invMemOne(\aT, \p)$.
+  
+  Suppose, $\tId' = \tId$. If $\cpath'' \not = \cpath$, then $(y, \tau') \not = (x, \tau)$ by uniqueness of timestamps,
+  so the simplified statement follows from $\invMemOne(\aT, \p)$.
+  If $\cpath'' = \cpath$, then, as we know, $\cpath < \cpath'$, so exists $\R''' = \R$,
+  $\writeEvt{y}{\stval'}{\tau'}{\R'''} = \writeEvt{x}{\stval}{\tau}{\R}$. The statement holds.
+  
+
+  Let's show $\invView (\aT, \p')$.
+  \[\begin{array}{l}
+    \Racq' \le \bigsqcup \readsSatisfiedR(\cpath', \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \quad (\Racq' = \Racq \sqcup [x@\tau]) \\
+    \Racq \sqcup [x@\tau]
+      \le \bigsqcup \readsSatisfiedR(\cpath', \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \quad (\tape(\cpath).type \not = Read) \\
+    \Racq \sqcup [x@\tau]
+      \le \bigsqcup \readsSatisfiedR(\cpath, \tape, \hmap) \sqcup \bigsqcup \opstau(\tId, \cpath', \tape, \hmap) \\
+    \Racq \sqcup [x@\tau]
+      \le \bigsqcup \readsSatisfiedR(\cpath, \tape, \hmap) \sqcup [x@\tau] \sqcup \bigsqcup \opstau(\tId, \cpath, \tape, \hmap) \\
+  \end{array}\]
+  Follows from $\invView(\aT, \p')$
+
+  The same proof for $\Rcur'$. $\Rrel' = \Rrel$, the statement holds.
+
+  $\invComWrite(\aT, \p')$: Obviously holds as there is no $\cpath$-previous instruction, which is not executed by the Promise thread.
+  \end{itemize}
+
+Now we show that the Promise machine can certify the step $\p \promStepgen{} \p'$,
+\ie, show that the thread $\tId$ can make a finite number of steps
+and fulfill all its promises at these steps.
+As we know that $\simrelBase(\aT, \p')$, we apply \app{\ref{cert-thm}}.
+
+%% \[
+%% \begin{array}{l}
+%% \textLet \TS' \triangleq \p'.\TSfprom(\tId) \textIn \\
+%% \exists k, \{\ptid_i\}_{i \in [0..k]}, (\forall i \in [0..k), \ptid_i \promTStepgen{} \ptid_{i + 1}), \\
+%% \quad \ptid_0 = \angled{\p'.\Mprom, \TS'.\cpath, \TS'.\PromState, \TS'.\V, \TS'.\PromSet, \p'.\Cfprom(\tId)},
+%%       \ptid_k.\PromSet = \emptyset.
+%% \end{array}
+%% \]
+%% Note that the promises of the thread $\tId$ at the state $\p'$ ($\p'.\TSfprom(\tId).\PromSet$)
+%% correspond to writes committed by the same $\tId$ in the ARM+$\tau$ machine, each of which are indexed
+%% by $\cpath^{*}$ greater than the Promise thread pointer ($\cpath' = \p'.\TSfprom(\tId).\cpath$).
+
+%% We have to show that the Promise machine can make transitions corresponding to instruction instances (elements of
+%% $\aT'.\tapef(\tId)$) in the $\cpath' .. \cpath^{end}$ range.
+%% The transitions of the Promise machine are determined by a certificate constructed from the program
+%% and $\aT'.\tapef(\tId)$.
+
+%% The $\Certificate : \Path \rightharpoonup \CommandState$ is a partial function, where
+%% \[
+%% \CommandState ::= \angled{\loc@\tau} \mid \loc \mid \Any
+%%   %% \Committed \mid \Taken \mid \Ignored \mid \tapeAssign \mid \tapeNop \mid \Any
+%% \]
+%% A $\Certificate$ is a guidence for a thread which steps should it take to
+%% fulfill its promises. We construct a $\Certificate$ from the corresponding ARM thread's state
+%% via the following function:
+%% \[
+%% \tapeToCertificate(\tape, \Carm, \tId, \hmap) \triangleq \\
+%% \]
+%% \[
+%% \quad \lambda \cpath .
+%% \begin{cases}
+%% \angled{\loc@\tmap(\tId, \cpath)} &
+%%                      \textIf \exists \loc, \tape(\cpath) = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})}; \\
+%% \angled{\loc@\tmap(\tId', \cpath')} &
+%%                      \textIf \exists \loc, \tId', \cpath', \tape(\cpath) =
+%%                        \tapeRead(\tapeSatisfied{\Committed}{\stRequestWrite{\tId'}{\cpath'}{\loc}{\_}}); \\
+%% \loc & \textIf \exists \reg, \expr_0, \expr_1, \loc = |[\expr_0|]_{com}^{\cpath}, \\
+%%      & \Carm[\lastInstr{\cpath}] \in \{``\reg := [\expr_0]", ``[\expr_0] := \expr_1"\}; \\
+%% %% \Fstate  & \textIf \exists \Fstate, \tape(\cpath) = \tapeFence{\Fstate}{\_};\\
+%% %% \IfState & \textIf \exists \IfState, \tape(\cpath) = \tapeIfGoto{\IfState}{\_};\\
+%% %% \tape(\cpath) & \textIf \tape(\cpath) \in \{ \tapeAssign, \tapeNop \};\\
+%% \Any    & \text{otherwise}.
+%% \end{cases}
+%% \]
+%% %% and check if the Promise thread may certify its step with the constructed $\Certificate$.
+
+%% A $\Certificate$ guides a Promise thread execution in the following way. If
+%% the next instruction to be executed, $\Cprom[\lastInstr{\cpath}]$, is:
+%% \begin{description}
+%%   \item[a read,] then $\Certificate(\cpath)$ is
+%%     either $\angled{x@\tau}$ for some $x$ and $\tau$---the thread
+%%     has to read from a write to $x$ with a timestamp $\tau$;
+%%     or $x$---the thread has to read from $x$ with a minimal
+%%     timestamp possible ($\Rcur(x)$).
+%%   \item[a write,] then $\Certificate(\cpath)$ is
+%%     either $\angled{x@\tau}$ for some $x$ and $\tau$---the thread
+%%     has to promise to $x$ with a timestamp $\tau$,
+%%     and fulfill the promise immediately;
+%%     or $x$---the thread has write to $x$ with a minimal
+%%     timestamp possible ($\Rcur(x) + \epsilon$).
+%% \end{description}
+%% In other cases the thread just executes the next instruction without restrictions.
+%% %% The certification continues to execute the thread until it fulfills all its promises.
+
+%% For the certification execution we show the following invariant:
+%% \[\begin{array}{l}
+%% \forall i \in [0..k], \PromState = \ptid_i.\PromState, \regstcom = \regstcom(\ptid_i.\Cprom, \tape, \ptid_i.\cpath),\\
+%% \quad \forall \reg, \regstcom(\reg) \in \{\PromState(\reg), \bot\}.
+%% \end{array}\]
+%% This invariant guarantees that the Promise machine is able to evaluate expressions, which correspond to
+%% committed instruction instances, getting the same values as the ARM+$\tau$ machine did:
+%% take the same branches at conditional instructions,
+%% read from the same locations, \emph{etc}.
+%% As far as the certification execution reads the same values (the same writes exist due to $\invMemOne(\aT', \p')$
+%% and $\invMemTwo(\aT', \p')$) on committed read instructions as the ARM+$\tau$ machine did, the invariant is trivially
+%% holds.
+
+%% The main problem is to show that the Promise machine can read with the same timestamps, and write with the
+%% same timestamps and lesser message views as the ARM+$\tau$ machine did.
+%% It's easy to show for the message views. We know that when the thread $\tId$ promised some write
+%% $\writeEvt{y}{\stval'}{\tau'}{\R'}$, it assigned $\R'$ to be equal to combination of its $\Rrel$
+%% at the moment and $[y@\tau']$. The only instuction, which is able to modify $\Rrel$, is
+%% a release fence---an \SY fence in ARM+$\tau$.
+%% As far as $\invPromUptoARM(\aT, \p)$ holds and $\cpath' = \p'.\TSfprom(\tId).\cpath = \p.\TSfprom(\tId).\cpath$,
+%% we know that there are no \SY instances in the $\cpath' .. \cpath^{end}$ range.
+%% So, if the current view of the thread $\tId$ is less than a necessary timestamp at the moment it has to fulfill
+%% a promise ($\ptid_i.\cpath$ points to a committed write), then the release view is correct and doesn't prevent
+%% of making a transition.
+
+%% We know that all instruction instances of the ARM execution in the $\cpath' .. \cpath^{end}$ range
+%% have fully determined addresses, $\ie$, the constructed certificate determines target locations for all
+%% write and read instances in the range.
+%% By the introduced state invariant, the addresses are determined in the same
+%% way for the Promise machine. We also know that if there are $\LD$ fences in the $\cpath' .. \cpath^{end}$ range,
+%% then they are committed (by the precondition of \transenv{Write commit} transition), and every read before
+%% the last $\LD$ fence is committed as well.
+%% By $\invView(\aT', \p')$ we know that views of the Promise machine at $\ptid_0$ are less than the corresponding
+%% views of the ARM machine.
+%% Due to the way the certificate guides the execution,
+%% we know that for every $i \in [0..k]$ and $\ptid_k.\cpath$ in the $\cpath' .. \cpath^{end}$ range,
+%% \[\begin{array}{l}
+%% \textLet viewf = \lambda \cpath. \Rarm(\aT', \tId, \cpath) \textIn \\
+%% \ptid_k.\Rcur \le viewf(\ptid_k.\cpath) \sqcup\\
+%% \quad \bigsqcup \{[y@viewf(\cpath') + \epsilon] \mid \cpath' < \ptid_k.\cpath, \Carm[\lastInstr{\cpath'}] = ``[\expr] := \_'',\\
+%% \quad \quad  \quad \quad y \triangleq |[\expr|]^{\ptid_k.\PromState}, \tape(\cpath') \; \text{is not committed}\}
+%% \end{array}\]
+%% where the set of singleton views corresponds to writes, which are not committed by the ARM machine, but have to be committed
+%% by the Promise machine. Due to \cref{thm:invAview} and as we may choose $\epsilon$ in such a way
+%% that $[y@viewf(\cpath') + \epsilon]$ is smaller than a timestamp of any promised write to the location $y$,
+%% the Promise machine is able to fulfill its promises during the certification.
+\end{proof}
+
+%% \lemmaFst*
+\begin{proof}
+  Let's consider the first clause.
+  Fix $\aT, \p$, and $\aT'$ such that $\aT \armStepgen{\lnot \; \transenv{Write commit} \; \tId} \aT'$.
+  Some notations:
+\[
+\begin{array}{l l l}
+\multicolumn{3}{l}{\angled{\cpath', \PromState, \angled{\Rcur, \Racq, \Rrel}, \PromSet} \triangleq \p.\TSfprom(\tId);}\\
+\tape     & \triangleq & \aT.\tapef(\tId); \\
+%% \cpathSY & \triangleq & \lastSY(\tape, \cpath');\\
+%% \cpathLDSY & \triangleq & \lastLDSY(\tape, \cpath').\\
+\end{array}
+\]
+  We need to show that $(\simrel \cup \simrelPre)(\aT', \p)$ holds.
+  $(\aT', \p) \in \invReach \cap \invMemThree$ obviously holds.
+  $\invPrefix(\aT', \p), \invView(\aT', \p)$ hold because
+  the rules of the ARM machine don't change the committed prefix of $\aT.\tapef(\tId)$.
+
+  As $\simrel(\aT, \p)$ holds and every instruction before committed $\SY$ fence has to be committed according to
+  {\sf \bf Fence commit} $\SY$ rule requirements, every $\SY$ fence committed by the ARM machine is executed by the Promise
+  machine. If the step $\aT \armStepgen{} \aT'$ is {\sf \bf Fence commit} $\SY$, then there has to be committed writes,
+  which are $\cpath$-after the fence (according to requirements of {\sf \bf Write commit} rule). Thus,
+  $\invComWrite(\aT', \p)$ holds. If the step $\aT \armStepgen{} \aT'$ is not {\sf \bf Fence commit} $\SY$ and {\sf \bf Write commit},
+  then $\invComWrite(\aT', \p)$ directly follows from $\invComWrite(\aT, \p)$.
+
+We check that either $\invPromUptoARM(\aT', \p)$ or $\invPromUptoARMnot(\aT', \p)$ holds.
+If the transition is \transenv{Propagate}, then $\invPromUptoARM(\aT', \p)$ holds, as the ARM machine
+doesn't commit on the step. Otherwise, it operates on some instruction instance $(\tId, \cpath)$.
+
+Consider, if $\cpath'$ is equal to $\cpath$ or not:
+\begin{itemize}
+  \item $\cpath' = \cpath$. 
+    If $\aT'.\tapef(\tId, \cpath)$ is not committed, then,
+    as we know that $\forall \tId' \not = \tId, \invPromUptoARMtId(\tId', \aT', \p)$,
+    $\invPromUptoARM(\aT', \p)$ holds.
+
+    Suppose, $\aT'.\tapef(\tId, \cpath)$ is committed.\\
+    $\forall \tId' \not = \tId, \invPromUptoARMtId(\tId', \aT', \p')$: \\
+      As $\invPromUptoARMtId(\tId', \aT, \p)$ holds,
+      and $\forall \tId' \not = \tId$, $\aT'.\tapef(\tId') = \aT.\tapef(\tId') \land$
+          $\p'.\TSfprom(\tId').\cpath = \p.\TSfprom(\tId').\cpath$.
+    Thus, $\invPromUptoARMnot(\aT', \p')$ holds.
+  \item $\cpath' \not = \cpath$.
+    We know that $\aT'.\TSfprom(\tId).\tape(\cpath) = \aT.\TSfprom(\tId).\tape(\cpath)$ and it is not committed
+    because $\invPromUptoARM(\aT, \p)$ holds.
+    $\forall \tId' \not = \tId, \invPromUptoARMtId(\tId', \aT', \p')$.
+    Thus, $\invPromUptoARM(\aT', \p')$ holds.
+\end{itemize}
+
+$(\aT', \p) \in \invMemOne \cap \invMemTwo$ holds because
+  $\lnot$ \transenv{Write commit} transitions of the ARM machine don't increase a number of committed write instances and
+  don't change committed cells of $\aT.\tapef(\tId)$.
+  
+The first clause is proved.
+
+  Let's consider the second clause. \\
+  Fix $\aT, \p$, and $\aT'$ such that $\aT \armStepWriteCommit \aT'$.
+  Some notations:
+\[
+\begin{array}{l l l}
+\multicolumn{3}{l}{\angled{\cpath', \PromState, \angled{\Rcur, \Racq, \Rrel}, \PromSet} \triangleq \p.\TSfprom(\tId);}\\
+\R' & \triangleq & \Rrel \sqcup [x @ \tau]; \\
+\PromSet' & \triangleq & \PromSet \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}; \\
+\TSfprom' & \triangleq & \p.\TSfprom[\tId \mapsto \angled{\cpath', \PromState, \angled{\Rcur, \Racq, \Rrel}, \PromSet'}]; \\
+\tape     & \triangleq & \aT.\tapef(\tId); \\
+\hmap     & \triangleq & \aT.\hmap; \\
+%% \cpathSY & \triangleq & \lastSY(\tape, \cpath');\\
+%% \cpathLDSY & \triangleq & \lastLDSY(\tape, \cpath').\\
+\end{array}
+\]
+We know that $\tau$ hasn't been used for messages to the location $x$, as
+it hasn't been used for committed writes in $\aT$
+(by ARM+$\tau$ \transenv{Write commit} preconditions)
+and $\invMemOne(\aT, \p)$, $\invMemTwo(\aT, \p)$ hold.
+The \transenv{Promise write} transition doesn't have any other preconditions
+(except for certification, which holds as in the previous lemma), so
+it can make a step $\p \promStepPromiseRPrime \p'$,
+where $\p' = \angled{\p.\Mprom \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}, \TSfprom'}$.
+
+We need to show that $(\simrelPre \cup \simrel)(\aT', \p')$ holds.
+$(\aT', \p') \in \invReach \cap \invMemThree$ obviously holds. \\
+$\invPrefix(\aT', \p'), \invView(\aT', \p'), \invState(\aT', \p')$ hold because
+  the \transenv{Write Commit} transition doesn't change the committed prefix of $\aT.\tapef(\tId)$.
+
+  As $\simrel(\aT, \p)$ holds and every instruction before committed $\SY$ fence has to be committed according to
+  {\sf \bf Fence commit} $\SY$ rule requirements, every $\SY$ fence committed by the ARM machine is executed by the Promise
+  machine. Thus, $\invComWrite(\aT', \p)$ obviously holds.
+
+\noindent
+Let's show that $\invMemOne(\aT', \p')$ holds.
+  We need to show: \\
+  \[\begin{array}{l}
+  \forall \tId', y, \stval', \tau', \R'', \cpath'', \\
+  \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId', \cpath''),
+    (\tau', \_, \R'') = \aT'.\hmap(\tId', \cpath'') => \\
+  \exists \R''' \le \R'': \\
+  \quad (\cpath'' <   \p'.\TSfprom(\tId').\cpath => \writeEvt{y}{\stval'}{\tau'}{\R'''} \in
+      \p'.\Mprom \setminus \underset{\tId}{\bigcup} \p'.\TSfprom(\tId).\PromSet) \land \\
+  \quad (\cpath'' \ge \p'.\TSfprom(\tId').\cpath => \writeEvt{y}{\stval'}{\tau'}{\R'''} \in \p'.\TSfprom(\tId').\PromSet).\\
+  \end{array}\]
+  Fix $\tId', y, \stval', \tau', \R'', \cpath''$.
+  We know that the set of fulfilled messages are the same for $\p$ and $\p'$:
+  \[\begin{array}{l}
+  \p'.\Mprom \setminus \underset{\tId}{\bigcup} \p'.\TSfprom(\tId).\PromSet = \\
+    (\p.\Mprom \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}) \setminus
+       (\{\writeEvt{x}{\stval}{\tau}{\R'}\} \cup \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet)\} = \\
+    \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet.
+  \end{array}\]
+  
+  Let's check two cases: $\tId'$ is equal to $\tId$ or not.
+  \begin{itemize}
+    \item $\tId' = \tId$.
+    We know $\p'.\TSfprom(\tId).\cpath = \p.\TSfprom(\tId).\cpath = \cpath'$.
+    We want to show:
+    \[\begin{array}{l}
+    \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId, \cpath''),
+       (\tau', \_, \R'') = \aT'.\hmap(\tId, \cpath'') => \\
+    \exists \R''' \le \R'': \\
+    \quad (\cpath'' <   \cpath' => \writeEvt{y}{\stval'}{\tau'}{\R'''}
+               \in \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet) \land \\
+    \quad (\cpath'' \ge \cpath' => \writeEvt{y}{\stval'}{\tau'}{\R'''}
+               \in \p.\TSfprom(\tId).\PromSet \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}).\\
+    \end{array}\]
+    Let's check if $\cpath''$ is equal to $\cpath$ or not.
+    \begin{itemize}
+      \item $\cpath'' = \cpath$. We know that $(y, \stval', \tau') = (x, \stval, \tau)$ and $\cpath \ge \cpath'$.
+
+        We want to show:
+    \[\begin{array}{l}
+    \tapeWrite{(\tapeWriteCommitted{\_}{x}{\stval})} = \aT'.\tapef(\tId, \cpath),
+       (\tau, \_, \R'') = \aT'.\hmap(\tId, \cpath) => \\
+    \exists \R''' \le \R'': \\
+    \quad (\cpath <   \cpath' => \writeEvt{x}{\stval}{\tau}{\R'''}
+               \in \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet) \land \\
+    \quad (\cpath \ge \cpath' => \writeEvt{x}{\stval}{\tau}{\R'''}
+               \in \p.\TSfprom(\tId).\PromSet \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}).\\
+    \end{array}\]
+
+      Let's choose $\R'''$ to be equal to $\R'$. $\R' = \Rrel \sqcup [x @ \tau]$ We need to show that $\R' \le \R$.
+We know that $\cpath \ge \cpath'$, as it follows from
+$\invPrefix(\aT, \p)$ and $\tape(\cpath) = \tapeWrite{(\tapePending{x}{\stval})}$,
+which is the precondition of the ARM+$\tau$ \transenv{Write commit} transition.
+\[
+\begin{array}{l}
+\Rrel \sqcup [x @ \tau] \le\\
+\quad [x @ \tau] \sqcup \bigsqcup \opstau(\tId, \lastSY(\tape, \cpath'), \tape, \hmap) \\
+\quad \quad      \sqcup \bigsqcup \readsSatisfiedR(\lastLDSY(\tape, \cpath'), \tape, \hmap),
+\text{by } \invView(\aT, \p); \\
+\Rrel \sqcup [x @ \tau] \le\\
+\quad [x @ \tau] \sqcup \bigsqcup \opstau(\tId, \lastSY(\tape, \cpath), \tape, \hmap) \\
+\quad \quad      \sqcup \bigsqcup \readsSatisfiedR(\lastLDSY(\tape, \cpath), \tape, \hmap),
+
+\text{because } \cpath \ge \cpath';\\
+\R' \le \\
+\quad [x @ \tau] \sqcup \bigsqcup \opstau(\tId, \lastSY(\tape, \cpath), \tape, \hmap) \\
+\quad \quad      \sqcup \bigsqcup \readsSatisfiedR(\lastLDSY(\tape, \cpath), \tape, \hmap),
+\text{by definition of } \Rrel';\\
+=> \R' \le \aT'.\rmap(\tId', \cpath),
+\text{by definition of } \aT'.\rmap(\tId', \cpath).\\
+\end{array}
+\]
+      Thus, the simplified statement:
+      $\writeEvt{x}{\stval}{\tau}{\R'} \in \p.\TSfprom(\tId).\PromSet \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}$. It obviously holds.
+    \end{itemize}
+
+      \item $\cpath'' \not = \cpath$.
+        We know:
+        \begin{itemize}
+          \item $\forall \cpath^{*}, \aT.\tapef(\tId, \cpath^{*})$ is committed $=>$ 
+                $\aT'.\tapef(\tId, \cpath^{*}) = \aT.\tapef(\tId, \cpath^{*})$;
+          \item $\forall \cpath^{*} \not = \cpath, \aT'.\hmap(\tId, \cpath^{*}) = \aT.\hmap(\tId, \cpath^{*})$;
+          \item $(y, \tau') \not = (x, \tau)$ (by $\invAuniqWrite(\aT')$) $=>$ \\
+                $\forall \Mprom, \writeEvt{y}{\stval'}{\tau'}{\R'''} \in \Mprom \Leftrightarrow \writeEvt{y}{\stval'}{\tau'}{\R'''} \in \Mprom \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\}$.
+        \end{itemize}
+
+        After simplifications:
+    \[\begin{array}{l}
+    \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId, \cpath''),
+       (\tau', \_, \R'') = \aT.\hmap(\tId, \cpath'') => \\
+    \exists \R''' \le \R'': \\
+    \quad (\cpath'' <   \cpath' => \writeEvt{y}{\stval'}{\tau'}{\R'''}
+               \in \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet) \land \\
+    \quad (\cpath'' \ge \cpath' => \writeEvt{y}{\stval'}{\tau'}{\R'''}
+               \in \p.\TSfprom(\tId).\PromSet \}).\\
+    \end{array}\]
+      It follows from $\invMemOne(\aT, \p)$.
+    \item $\tId' \not = \tId$.
+    We know:
+    \[\begin{array}{l}
+      \aT'.\tapef(\tId') = \aT.\tapef(\tId'); \\
+      \forall \cpath, \aT'.\hmap(\tId', \cpath) = \aT.\hmap(\tId', \cpath); \\
+      \p'.\TSfprom(\tId') = \p.\TSfprom(\tId');\\
+      \p'.\TSfprom(\tId').\PromSet = \p.\TSfprom(\tId').\PromSet.
+    \end{array}\]
+        After simplifications:
+    \[\begin{array}{l}
+    \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId, \cpath''),
+       (\tau', \_, \R'') = \aT.\hmap(\tId', \cpath'') => \\
+    \exists \R''' \le \R'': \\
+    \quad (\cpath'' <   \p.\TSfprom(\tId').\cpath => \writeEvt{y}{\stval'}{\tau'}{\R'''}
+               \in \p.\Mprom \setminus \underset{\tId}{\bigcup} \p.\TSfprom(\tId).\PromSet) \land \\
+    \quad (\cpath'' \ge \p.\TSfprom(\tId').\cpath => \writeEvt{y}{\stval'}{\tau'}{\R'''}
+               \in \p.\TSfprom(\tId').\PromSet \}).\\
+    \end{array}\]
+    It follows from $\invMemOne(\aT, \p)$.
+  \end{itemize}
+
+  \noindent
+Let's show that $\invMemTwo(\aT', \p')$ holds.
+  We need to show:
+  \[\begin{array}{l}
+  \forall \writeEvt{y}{\stval'}{\tau'}{\R''} \in \p'.\Mprom, \tau' \not = \tstamp{0} => \\
+  \quad \exists \tId', \cpath'', \R''' \ge \R'', \\
+  \quad \quad \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId', \cpath''),
+        \aT'.\hmap(\tId', \cpath'') = (\tau', \_, \R'''). \\
+  \end{array}\]
+Fix $\writeEvt{y}{\stval'}{\tau'}{\R''}, \tau' \not = \tstamp{0}$. \\
+  \[\begin{array}{l}
+  \writeEvt{y}{\stval'}{\tau'}{\R''} \in \p.\Mprom \cup \{\writeEvt{x}{\stval}{\tau}{\R'}\} => \\
+  \quad \exists \tId', \cpath'', \R''' \ge \R'', \\
+  \quad \quad \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT'.\tapef(\tId', \cpath''),
+        \aT'.\hmap(\tId', \cpath'') = (\tau', \_, \R'''). \\
+  \end{array}\]
+  
+  Let's check two options: \\
+  \begin{itemize}
+    \item $\writeEvt{y}{\stval'}{\tau'}{\R''} \in \p.\Mprom$. We know:
+    \[\begin{array}{l}
+      \forall \tId', \cpath^{*}, \aT.\tapef(\tId', \cpath^{*}) \text{ is committed} =>
+        \aT'.\tapef(\tId', \cpath^{*}) = \aT.\tapef(\tId', \cpath^{*}); \\
+      \forall (\tId', \cpath^{*}) \not = (\tId, \cpath), \aT'.\hmap(\tId', \cpath^{*}) = \aT.\tmap(\tId', \cpath^{*}).
+    \end{array}\]
+    The simplified statement:
+    \[
+      \exists \tId', \cpath'', \R''' \ge \R'',
+      \tapeWrite{(\tapeWriteCommitted{\_}{y}{\stval'})} = \aT.\tapef(\tId', \cpath''),
+      \aT.\hmap(\tId', \cpath'') = (\tau', \_, \R''').
+    \]
+    It follows from $\invMemTwo(\aT, \p)$.
+
+    \item $\writeEvt{y}{\stval'}{\tau'}{\R''} = \writeEvt{x}{\stval}{\tau}{\R'}$. The simplified statement:
+      \[\begin{array}{l}
+    \exists \tId', \cpath'', \R''' \ge \R',
+      \tapeWrite{(\tapeWriteCommitted{\_}{x}{\stval})} = \aT'.\tapef(\tId, \cpath''),
+      \aT'.\hmap(\tId', \cpath'') = (\tau, \_, \R'''). \\
+      \end{array}\]
+
+    Let's take $\tId' = \tId, \cpath'' = \cpath, \R''' = \R$.\\
+    The simplified statement:
+    $\tapeWrite{(\tapeWriteCommitted{\_}{x}{\stval})} = \aT'.\tapef(\tId, \cpath), \aT'.\hmap(\tId, \cpath) = (\tau, \_, \R)$. \\
+    It holds.
+  \end{itemize}
+
+\noindent
+$\invPromUptoARM(\aT', \p) \cup \invPromUptoARMnot(\aT', \p)$: The same proof as in the previous case.
+\end{proof}
