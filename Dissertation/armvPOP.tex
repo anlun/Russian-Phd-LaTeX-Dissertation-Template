@@ -2184,25 +2184,6 @@ $\forall (\aT, \p) \in \simrelPre. \;
 $\forall (\aT, \p) \in \simrelPre. \;
 \exists \p'. \; \Cfprom \vdash \p \promStep^{*} \p' \land (\aT, \p') \in \simrel$.
 \end{lemma}
-\begin{proof}[Доказательство леммы \ref{lem-trd}]
-  Зафиксируем $\aT, \p$.
-  Из того, что $(\aT, \p) \in \simrelPre$, следует $\invPromUptoARMnot(\aT, \p)$.
-  Т.о. известно, что существует единственный поток $\tId$, его плёнка $\tape = \aT.\tapef(\tId)$
-  и путь $\cpath = \p.\TSfprom(\tId).\cpath$, что исполнение экземпляра $\tape(\cpath)$ завершено.
-  Зафиксируем $\tId, \tape, \cpath, \Carm = \Cfarm(\tId)$.
-  
-  Из того, что $\tape(\cpath)$ завершён, следует, что существует конечный набор
-  $\{\cpath_i\}_{i \in [0, n]}$ такой, что:
-  \begin{itemize}
-    \item $\forall i, \tape(\cpath_i)$ завершено.
-    \item $\forall i < n, \cpath_{i + 1} \in \nextPath{\cpath_i}{\Carm}$.
-    \item $\forall \cpath' \in \nextPath{\tape}{\Carm}, \tape(\cpath') = \bot \lor \tape(\cpath')$ не завершено.
-  \end{itemize}
-  Здесь $\nextPath{\cpath_i}{\Carm}$ является функцией, которая по пути экземпляра инструкции восстанавливает
-  путь до непосредственно следующего за ним экземпляра (см. формальное определение в приложении \ref{sec:armpopTrans}).
-  
-  Как следствие предъявленных утверждений, лемма доказывается индукцией по $n$ с помощью леммы \ref{lem-snd}.
-\end{proof}
 
 %% \noindent
 Предположим, что состояния обещающей и \ARMt~машин связаны отношением $\simrel$.
@@ -2231,6 +2212,27 @@ $\forall (\aT, \p) \in \simrel. \;
 \exists \p'. \; \Cfprom \vdash \p \promStep^{*} \p' \land (\aT', \p') \in \simrel$.
 \end{lemma}
 %% \end{restatable}
+
+Доказательтво лемм \ref{lem-snd} и \ref{lem-fst} приведено в приложении \ref{sec:appendix-pop-proofs}.
+\begin{proof}[Доказательство леммы \ref{lem-trd}]
+  Зафиксируем $\aT, \p$.
+  Из того, что $(\aT, \p) \in \simrelPre$, следует $\invPromUptoARMnot(\aT, \p)$.
+  Т.о. известно, что существует единственный поток $\tId$, его плёнка $\tape = \aT.\tapef(\tId)$
+  и путь $\cpath = \p.\TSfprom(\tId).\cpath$, что исполнение экземпляра $\tape(\cpath)$ завершено.
+  Зафиксируем $\tId, \tape, \cpath, \Carm = \Cfarm(\tId)$.
+  
+  Из того, что $\tape(\cpath)$ завершён, следует, что существует конечный набор
+  $\{\cpath_i\}_{i \in [0, n]}$ такой, что:
+  \begin{itemize}
+    \item $\forall i, \tape(\cpath_i)$ завершено.
+    \item $\forall i < n, \cpath_{i + 1} \in \nextPath{\cpath_i}{\Carm}$.
+    \item $\forall \cpath' \in \nextPath{\tape}{\Carm}, \tape(\cpath') = \bot \lor \tape(\cpath')$ не завершено.
+  \end{itemize}
+  Здесь $\nextPath{\cpath_i}{\Carm}$ является функцией, которая по пути экземпляра инструкции восстанавливает
+  путь до непосредственно следующего за ним экземпляра (см. формальное определение в приложении \ref{sec:armpopTrans}).
+  
+  Как следствие предъявленных утверждений, лемма доказывается индукцией по $n$ с помощью леммы \ref{lem-snd}.
+\end{proof}
 %% Леммы \ref{lem-snd} и \ref{lem-fst} доказываются рассмотрением 
 %% могут быть найдены в \cite{Podkopaev-al:ECOOP17TR}.
 
