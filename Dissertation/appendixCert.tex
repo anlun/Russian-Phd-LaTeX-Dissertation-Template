@@ -96,16 +96,16 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
 \quad \textLet \cpath_{\textup{\sf next-last}} \triangleq \cpath_{\textup{\sf last-wcom}}:k \; \textIn \\
 \quad \ainit \armStepP^{*} \aT \land {} \\
 \quad \tT.\cpath \le \cpath_{\textup{\sf next-last}} \land (n = \length(\cpath_{\textup{\sf next-last}}) - \length(\tT.\cpath)) \land {} \\
+\quad (\forall \cpath' \ge \tT.\cpath, \delta(\cpath') = \bot) \land {} \\
+\qquad \cpath'' \ge \cpath' \ge \tT.\cpath \land \tape(\cpath') = \tapeRead{\Rstate} \land
+       \Rstate \not = \tapeSatisfied{\Committed}{\_} \Rightarrow \\
+\qquad \quad \tape(\cpath'') \not = \tapeFence{\_}{\_}) \land {} \\
 \quad (\forall \cpath'. \; \tT.\cpath \le \cpath' < \cpath_{\textup{\sf next-last}} \Rightarrow \\
 \qquad (\Cfprom(\tId)[\lastInstr{\cpath'}] \in \{``\ifGotoInst{\_}{\_}"{}, ``\fenceInst{\_}"{}\} \Rightarrow
              \tape(\cpath') \text{ завершён}) \land {} \\
 \qquad \tape(\cpath') \text{ имеет полностью определённый адрес} \land {} \\
 \qquad \lnot \Cfprom(\tId)[\lastInstr{\cpath'}] = ``\fenceInst{\SY}") \land {} \\
 \quad (\forall \cpath'', \cpath', \Rstate. \\
-\qquad \cpath'' \ge \cpath' \ge \tT.\cpath \land \tape(\cpath') = \tapeRead{\Rstate} \land
-       \Rstate \not = \tapeSatisfied{\Committed}{\_} \Rightarrow \\
-\qquad \quad \tape(\cpath'') \not = \tapeFence{\_}{\_}) \land {} \\
-\quad (\forall \cpath' \ge \tT.\cpath, \delta(\cpath') = \bot) \land {} \\
 \quad (\tId, \aT, \tT) \in \invMemOneCERT \cap \invMemTwoCERT \cap \invStateCERT \cap \invViewRelCERT \cap \invViewWriteCERT \land {} \\
 \quad (\delta, \tId, \aT, \tT) \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo \cap
                %% \invViewDeltaCERT \cap
@@ -260,66 +260,44 @@ $\forall (\aT, \p) \in \simrelBase. \ainit \armStepP^{*} \aT \Rightarrow \certif
   \end{array}\]
   Если мы сможем показать, что $\invCert(n, \delta, k, \tId, \aT, \tT)$
   выполняется, то утверждение теоремы верно по лемме \ref{cert-lem-three}.
-
-  Проверим, что $\invCert(n, \delta, k, \tId, \aT, \tT)$ выполняется.
-  We have to show:
+  %% Проверим, что $\invCert(n, \delta, k, \tId, \aT, \tT)$ выполняется.
+  Так, нам нужно проверить следующее утверждение:
   \[\begin{array}{l}
-    \ainit \armStepP^{*} \aT \land {} \\
-    \tT.\cpath \le \cpath_{\textup{\sf next-last}} \land (n = \length(\cpath_{\textup{\sf next-last}}) - \length(\tT.\cpath)) \land {} \\
-    (\forall \cpath'. \; \tT.\cpath \le \cpath' < \cpath_{\textup{\sf next-last}} \Rightarrow \\
-    \quad (\Cprom[\lastInstr{\cpath'}] \in \{``\ifGotoInst{\_}{\_}", ``\fenceInst{\_}"\} \Rightarrow
-             \tape(\cpath') \text{ is committed}) \land {} \\
-    \quad \tape(\cpath') \text{ has a fully determined address} \land {} \\
-    \quad \lnot \Cprom[\lastInstr{\cpath'}] = ``\fenceInst{\SY}") \land {} \\
-    (\forall \cpath'', \cpath', \Rstate. \\
-    \quad \cpath'' \ge \cpath' \ge \tT.\cpath \land \tape(\cpath') = \tapeRead{\Rstate} \land
+ \ainit \armStepP^{*} \aT \land {} \\
+ \tT.\cpath \le \cpath_{\textup{\sf next-last}} \land (n = \length(\cpath_{\textup{\sf next-last}}) - \length(\tT.\cpath)) \land {} \\
+ (\forall \cpath' \ge \tT.\cpath, \delta(\cpath') = \bot) \land {} \\
+ (\forall \cpath'', \cpath', \Rstate. \\
+\quad \cpath'' \ge \cpath' \ge \tT.\cpath \land \tape(\cpath') = \tapeRead{\Rstate} \land
        \Rstate \not = \tapeSatisfied{\Committed}{\_} \Rightarrow \\
-    \qquad \tape(\cpath'') \not = \tapeFence{\_}{\_}) \land {} \\
-    (\forall \cpath' \ge \tT.\cpath, \delta(\cpath') = \bot) \land {} \\
-    (\tId, \aT, \tT) \in \invMemOneCERT \cap \invMemTwoCERT \cap \invStateCERT \cap \invViewRelCERT \cap \invViewWriteCERT \land {} \\
-    (\delta, \tId, \aT, \tT) \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo \cap
+\qquad  \tape(\cpath'') \not = \tapeFence{\_}{\_}) \land {} \\
+ (\forall \cpath'. \; \tT.\cpath \le \cpath' < \cpath_{\textup{\sf next-last}} \Rightarrow \\
+\quad (\Cfprom(\tId)[\lastInstr{\cpath'}] \in \{``\ifGotoInst{\_}{\_}"{}, ``\fenceInst{\_}"{}\} \Rightarrow
+             \tape(\cpath') \text{ завершён}) \land {} \\
+\quad \tape(\cpath') \text{ имеет полностью определённый адрес} \land {} \\
+\quad \lnot \Cfprom(\tId)[\lastInstr{\cpath'}] = ``\fenceInst{\SY}") \land {} \\
+ (\tId, \aT, \tT) \in \invMemOneCERT \cap \invMemTwoCERT \cap \invStateCERT \cap \invViewRelCERT \cap \invViewWriteCERT \land {} \\
+ (\delta, \tId, \aT, \tT) \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo \cap
                %% \invViewDeltaCERT \cap
                %% \invWriteTimestampCERT \cap
                \invViewReadCERT \land {} \\
-    (\delta, \tId, \aT) \in \invDeltaDefThree \cap \invDeltaDefFour. \\
+ (\delta, \tId, \aT) \in \invDeltaDefThree \cap \invDeltaDefFour. \\
   \end{array}\]
+  Первые три конъюнкта очевидно выполняются.
+  Четвертый конъюнкт выполняется по ограничениям перехода \transenv{Завершение барьера} машины ARMv8 POP.
+  Пятый конъюнкт выполняется по ограничениям перехода \transenv{Завершение записи} машины ARMv8 POP и
+  верности утверждения $\invComWrite(\aT, \p)$.
 
-  The following obviously holds:
-  \[\begin{array}{l}
-    \ainit \armStepP^{*} \aT \land {} \\
-    \tT.\cpath \le \cpath_{\textup{\sf next-last}} \land (n = \length(\cpath_{\textup{\sf next-last}}) - \length(\tT.\cpath)) \land {} \\
-    (\forall \cpath' \ge \tT.\cpath, \delta(\cpath') = \bot). \\
-  \end{array}\]
-
-  The following holds as committed memory instructions can't be restarted by the ARM machine and requirements of
-  the {\sf \bf Fence commit} transition:
-  \[\begin{array}{l}
-    \forall \cpath'', \cpath', \Rstate. \\
-    \quad \cpath'' \ge \cpath' \ge \tT.\cpath \land \tape(\cpath') = \tapeRead{\Rstate} \land
-       \Rstate \not = \tapeSatisfied{\Committed}{\_} \Rightarrow \\
-    \qquad \tape(\cpath'') \not = \tapeFence{\_}{\_}. \\
-  \end{array}\]
-
-  The following holds as committed memory instructions can't be restarted by the ARM machine, requirements of
-  the {\sf \bf Write commit} transition, and $\invComWrite(\aT, \p)$:
-  \[\begin{array}{l}
-    \forall \cpath'. \; \tT.\cpath \le \cpath' < \cpath_{\textup{\sf next-last}} \Rightarrow \\
-    \quad (\Cprom[\lastInstr{\cpath'}] \in \{``\ifGotoInst{\_}{\_}", ``\fenceInst{\_}"\} \Rightarrow
-             \tape(\cpath') \text{ is committed}) \land {} \\
-    \quad \tape(\cpath') \text{ has a fully determined address} \land
-    \quad \lnot \Cprom[\lastInstr{\cpath'}] = ``\fenceInst{\SY}". \\
-  \end{array}\]
-
-  $(\delta, \tId, \aT) \in \invDeltaDefThree \cap \invDeltaDefFour$ and
+  Утверждения $(\delta, \tId, \aT) \in \invDeltaDefThree \cap \invDeltaDefFour$ и
   $(\delta, \tId, \aT, \tT) \in \invDeltaDefOne \cap \invDeltaDefTwo \cap \invMemZeroCERT$
-  hold as $\delta = \lambda \cpath. \; \bot$.
-  $\invViewReadCERT(\delta, \tId, \aT, \tT)$ follows from $\delta = \lambda \cpath. \; \bot$ and \app{\ref{thm:invAview}}.
+  верны, поскольку $\delta = \lambda \cpath. \; \bot$ является нигде не определённой функцией.
+  Утверждение $(\delta, \tId, \aT, \tT) \in \invViewReadCERT$ верно, поскольку
+  $\delta = \lambda \cpath. \; \bot$ и выполняется теорема \ref{thm:invAview}.
 
-  
-  $\invMemOneCERT(\tId, \aT, \tT)$, $\invMemTwoCERT(\tId, \aT, \tT)$, and $\invStateCERT(\tId, \aT, \tT)$
-  directly follow from $\invMemOne(\aT, \p)$, $\invMemTwo(\aT, \p)$, and $\invState(\aT, \p)$ respectively.
-  $\invViewRelCERT(\tId, \aT, \tT)$ follows from $\invView(\aT, \p)$ and a fact that all reads before a committed fence are committed
-  in the ARM machine. $\invViewWriteCERT(\tId, \aT, \tT)$ follows $\invView(\aT, \p)$ and \app{\ref{thm:invAview}}.
+  Утверждение $(\tId, \aT, \tT) \in \invMemOneCERT \cap \invMemTwoCERT \cap \invStateCERT$
+  непосредственно следует из $(\aT, \p) \in \invMemOne \cap \invMemTwo \cap \invState$.
+  Утверждение $(\tId, \aT, \tT) \in \invViewRelCERT \cap \invViewWriteCERT$ следует из $(\aT, \p) \in \invView$
+  и того, что все экземпляры чтения, предшествующие завершённому экземпляру барьера, также являются завершёнными
+  по свойствам модели ARMv8 POP.
 \end{proof}
 
 
