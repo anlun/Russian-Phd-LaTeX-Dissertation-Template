@@ -1,8 +1,8 @@
 \chapter*{Введение}							% Заголовок
 \addcontentsline{toc}{chapter}{Введение}	% Добавляем его в оглавление
 
-\newcommand{\actuality}{}
-\newcommand{\progress}{}
+\newcommand{\actuality}{{\textbf{\actualityTXT}}}
+\newcommand{\progress}{\textbf{\progressTXT}}
 \newcommand{\aim}{{\textbf\aimTXT}}
 \newcommand{\tasks}{\textbf{\tasksTXT}}
 \newcommand{\novelty}{\textbf{\noveltyTXT}}
@@ -15,7 +15,7 @@
 \newcommand{\publications}{\textbf{\publicationsTXT}}
 
 \newcommand{\ccite}[1]{\cite{#1}}
-\newcommand{\cscite}[1]{ \cite{#1}}
+\newcommand{\cscite}[1]{~\cite{#1}}
 \input{common/characteristic} % Характеристика работы по структуре во введении и в автореферате не отличается (ГОСТ Р 7.0.11, пункты 5.3.1 и 9.2.1), потому её загружаем из одного и того же внешнего файла, предварительно задав форму выделения некоторым параметрам
 
 %% \textbf{Объем и структура работы.} Диссертация состоит из~введения, пяти глав, заключения и~двух приложений.
