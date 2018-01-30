@@ -246,6 +246,148 @@ $\forall k, \delta, \tId, \aT, \tT, \invCert(0, \delta, k, \tId, \aT, \tT), \tT.
   Т.о. мы получили противоречие с определением $\lastCommittedWrite$.
 \end{proof}
 
+
+\noindent \textbf{Лемма \ref{cert-lem-one}.}
+$\forall n \not = 0, \delta, k, \tId, \aT, \tT, \invCert(n, \delta, k, \tId, \aT, \tT).$ \\
+${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \land \invCert(n - 1, \delta', k, \tId, \aT, \tT')$.
+\begin{proof}
+  Зафиксируем $n, \tId, \aT, \tT$. Введём обозначения:
+  \[\begin{array}{l c l}
+  \tape & \triangleq & \aT.\tapef(\tId); \\
+  \angled{\Mprom, \angled{\cpath, \PromState, \V, \PromSet}} & \triangleq & \tT; \\
+  \Cprom & \triangleq & \Cfprom(\tId). \\
+  \end{array}\]
+  Далее в доказательстве нам нужно рассмотреть варианты $\tape(\cpath)$.
+  Варианты, при которых $\tape(\cpath) \in \{\tapeNop, \tapeAssign, \tapeIfGoto{\_}{\_}, \tape(\cpath) = \tapeFence{\_}{\_}\}$,
+  проверяются тривиальным образом (в этих случаях $\delta' = \delta$).
+  Рассмотрим оставшиеся варианты.
+  \begin{itemize}
+    \item $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\w})}$.
+      Поскольку $\ainit \armStepP^{*} \aT$ и $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\w})}$,
+      то $\Cprom(\lastInstr{\cpath}) = ``\readInst{\reg}{\expr}"$.
+      Введём обозначения:
+      \[\begin{array}{l l l}
+        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
+        %% \regstcom  & \triangleq & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath); \\
+        \loc       & \triangleq & \semfcom{\expr}{\cpath} = \w.\loc = \semf{\expr}{\PromState}; \\
+        \stval  & \triangleq & \w.\stval; \\
+        %% \regstcom' & \triangleq & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath') \\
+        %%            & =          & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath)[\reg \mapsto \w.\stval] \text{ (by definition)}; \\
+        \PromState' & \triangleq & \PromState[\reg \mapsto \stval]. \\
+      \end{array}\]
+      
+      Поскольку верно $\invViewReadCERT(\delta, \tId, \aT, \tT)$, то существуют $\tau$ и $\R$ такие, что 
+      $(\tau, \R) = \deltaHmap(\delta, \aT, \w.\tId, \w.\cpath)$ и
+      $\Rcur(\loc) \le \tau$. \\
+      То, что $\writeEvt{\loc}{\stval}{\tau}{\R} \in \tT.\Mprom \setminus \tT.\PromSet$,
+      следует из $(\delta, \tId, \aT, \tT) \in \invMemOneCERT \cap \invMemOneCERT$.
+      Введём обозначение:
+      \[\V' = \angled{\Rcur', \Racq', \Rrel'} \triangleq \angled{\Rcur \sqcup [\loc@\tau], \Racq \sqcup \R, \Rrel}.\]
+      Тогда $\tT \promTStepReadLoc \tT' \triangleq \angled{\Mprom, \angled{\cpath', \V', \PromSet}}$.
+      
+      То, что выполняется $\invCert(n - 1, \delta, k, \aT, \tT')$, проверяется тривиальным образом.
+
+    \item $\tape(\cpath) = \tapeRead{\Rstate}$, где состояние $\Rstate$ указывает, что экземпляр не завершён.
+      Аналогично предыдущему пункту, $\Cprom(\lastInstr{\cpath}) = ``\readInst{\reg}{\expr}"$.
+      Введём обозначения:
+      \[\begin{array}{l l l}
+        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
+        \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
+        \regstcom' & \triangleq & \regstcom(\Cprom, \tape, \cpath') \\
+                   & =          & \regstcom(\Cprom, \tape, \cpath)[\reg \mapsto \bot] \text{ (by definition)}; \\
+        \loc       & \triangleq & \semfcom{\expr}{\cpath} \\
+                   & =          & \semf{\expr}{\PromState} \text{ (by $\invStateCERT(\tId, \aT, \tT)$)}; \\
+        \tau       & \triangleq & \Rcur(\loc). \\
+      \end{array}\]
+      Из свойств обещающей машины следует, что существуют $\stval$ и $\R$ такие, что
+      $\writeEvt{\loc}{\stval}{\tau}{\R} \in \Mprom$.
+      Введём обозначения:
+      \[\begin{array}{l l l}
+      \V' = \angled{\Rcur', \Racq', \Rrel'} & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup \R, \Rrel} \\
+                                            & =          & \angled{\Rcur, \Racq \sqcup \R, \Rrel}; \\
+      \PromState' & \triangleq & \PromState[\reg \mapsto \stval].
+      \end{array}\]
+      
+      По определению, выполняется
+      $\tT \promTStepReadLoc \tT' \triangleq \angled{\Mprom, \angled{\cpath', \PromState', \V', \PromSet}}$.
+      Проверка $\invCert(n - 1, \delta, k, \aT, \tT')$ также тривиальна.
+
+    \item $\tape(\cpath) = \tapeWrite{(\tapeWriteCommitted{\InMemory}{\loc}{\stval})}$.
+      Аналогично предыдущим пунктам, $\Cprom(\lastInstr{\cpath}) = ``\writeInst{\expr_0}{\expr_1}"$.
+      Введём обозначения:
+      \[\begin{array}{l l l}
+        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
+        \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
+        \angled{\tau, \_, \R'} & \triangleq & \aT.\hmap(\tId, \cpath). \\
+      \end{array}\]
+      Из $\invStateCERT(\tId, \aT, \tT)$ следует, что
+      $\loc = \semfcom{\expr_0}{\cpath} = \semf{\expr_0}{\PromState}$ и
+      $\stval = \semfcom{\expr_1}{\cpath} = \semf{\expr_1}{\PromState}$.
+      Из $\invMemOneCERT(\tId, \aT, \tT)$ следует, что существует 
+      $\R \le \R'$ такой, что $\writeEvt{\loc}{\stval}{\tau}{\R} \in \tT.\PromSet \cap \tT.\Mprom$.
+      То, что $\Rcur(\loc) < \tau$, следует из $\invViewWriteCERT(\tId, \aT, \tT)$.
+      \[\begin{array}{l l l}
+        \V' & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup [\loc @ \tau], \Rrel}; \\
+        \PromSet' & \triangleq & \PromSet \setminus \{\writeEvt{\loc}{\stval}{\tau}{\R}\}. \\
+      \end{array}\]
+      Так, выполняется $\tT \promTStepFulfillLoc \tT' \triangleq \angled{\Mprom, \angled{\cpath', \PromState, \V', \PromSet'}}$.
+      Проверка $\invCert(n - 1, \delta, k, \aT, \tT')$ тривиальна.
+
+    \item $\tape(\cpath) = \tapeWrite{\Wstate}$, где состояние $\Wstate$ указывает, что экземпляр не завершён.
+      В этом случае поток обещающей машины с идентификатором $\tId$ совершит два перехода:
+      сначала пообещает некоторое сообщение, а потом выполнит это обещание.
+      Аналогично предыдущим пунктам,
+      $\Cprom(\lastInstr{\cpath}) = ``\writeInst{\expr_0}{\expr_1}"$.
+      Введём обозначения:
+      \[\begin{array}{l l l}
+        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
+        \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
+        \loc       & \triangleq & \semfcom{\expr_0}{\cpath} = \semf{\expr_0}{\PromState}; \\
+        \stval       & \triangleq & \semf{\expr_1}{\PromState}. \\
+        %% \angled{\tau, \_, \R'} & \triangleq & \aT.\hmap(\tId, \cpath)
+        %%   \text{ (it's defined according to properties of the $\ARMt$ machine)}. \\
+      \end{array}\]
+      Поскольку соответствующий экземпляр записи не завершён, то в памяти \ARMt~машины
+      нет связанного с ним запроса, а значит и нужной метки времени для добавляемого обещающей машиной сообщения.
+      Поэтому нам нужно выбрать эту метку времени, которую мы будем обозначать $\tau$.
+      Метка $\tau$ должна удовлетворять следующим ограничениям.
+      \[\begin{array}{l l}
+        1. & \Rcur(\loc) < \tau. \\
+        2. & \tau \not \in \{\tau' | \stRequestWrite{\loc}{\_}{\tau'}{\_} \in \Mprom \}. \\
+        3. & \forall \cpath_{write} \ge \cpath. \; \tape(\cpath_{write}) = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
+           &  \quad \tau < \aT.\tmap(\tId, \cpath_{write}). \\
+        4. & \forall \cpath_{read} \ge \cpath. \; \tape(\cpath_{read}) = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land {} \\
+           & \quad \aT.\tmap(\w.\tId, \w.\cpath) \not = \bot \Rightarrow \\
+           & \qquad \tau \le \aT.\tmap(\w.\tId, \w.\cpath). \\
+        5. & \forall \cpath_{read} < \cpath_{\LD} < \cpath_{\delta-read}, \w, \R. \cpath < \cpath_{read} \land {} \\
+           & \quad \tape(\cpath_{read}) = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land
+             \tape(\cpath_{\LD}) = \tapeFence{\Committed}{\LD} \land {} \\
+           & \quad \tape(\cpath_{\delta-read}) = \tapeRead{(\tapeSatisfied{\Committed}{\stRequestWrite{\tId}{\cpath}\loc}{\_})} \land {} \\
+           & \quad \R = \aT.\rmap(\w.\tId, \w.\cpath) \not = \bot \Rightarrow \\
+           & \qquad \R(\loc) \le \tau. \\
+      \end{array}\]
+      Поскольку метки времени являются элементами плотного множества $\mathbb{Q}$, то, как следствие
+      $\invViewWriteCERT(\tId, \aT, \tT)$, $\invViewReadCERT(\delta, \tId, \aT, \tT)$ и теоремы \ref{thm:invAview},
+      нужная метка $\tau$ существует.
+
+      Введём обозначения:
+      \[\begin{array}{l l l}
+        \R  & \triangleq & \Rrel \sqcup [\loc @ \tau]; \\
+        msg & \triangleq & \writeEvt{\loc}{\stval}{\tau}{\R}; \\
+        \Mprom' & \triangleq & \Mprom \cup \{msg\};\\
+        \V' = \angled{\Rcur', \Racq', \Rrel'} & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup [\loc @ \tau], \Rrel}; \\
+        \delta' & \triangleq & \delta[\cpath \mapsto \angled{\tau, \R}].\\ 
+      \end{array}\]
+      Тогда, верно следующее:
+      \[\begin{array}{l l l}
+        \tT & \promTStepPromiseLoc & \angled{\Mprom', \angled{\cpath , \PromState, \V, \PromSet \cup \{msg\}}} \\
+            & \promTStepFulfillLoc & \tT' \triangleq \angled{\Mprom', \angled{\cpath', \PromState, \V', \PromSet}}. \\
+      \end{array}\]
+      Проверка $\invCert(n - 1, \delta', k, \tId, \aT, \tT')$ тривиальна.
+          \qedhere
+  \end{itemize}
+\end{proof}
+
 \noindent
 {\bf Теорема \ref{cert-thm}.}
 $\forall (\aT, \p) \in \simrelBase. \ainit \armStepP^{*} \aT \Rightarrow \certifiable(\p)$.
@@ -299,738 +441,3 @@ $\forall (\aT, \p) \in \simrelBase. \ainit \armStepP^{*} \aT \Rightarrow \certif
   и того, что все экземпляры чтения, предшествующие завершённому экземпляру барьера, также являются завершёнными
   по свойствам модели ARMv8 POP.
 \end{proof}
-
-
-
-
-%% \begin{restatable}{lem}{certLemOne}
-\begin{proof}[Доказательство леммы \ref{cert-lem-one}]
-  Fix $n, \tId, \aT, \tT$.
-  Some notations:
-  \[\begin{array}{l c l}
-  \tape & \triangleq & \aT.\tapef(\tId); \\
-  \angled{\Mprom, \angled{\cpath, \PromState, \V, \PromSet}} & \triangleq & \tT; \\
-  \Cprom & \triangleq & \Cfprom(\tId). \\
-  \end{array}\]
-
-  Case analysis on $\tape(\cpath)$:
-  \begin{itemize}
-    \item $\tape(\cpath) = \tapeNop$.
-      Some notations:
-      \[\begin{array}{l l l}
-        \cpath' & \triangleq & \nextPathProm(\cpath, 1); \\
-        \tT'    & \triangleq & \angled{\Mprom, \angled{\cpath', \PromState, \V, \PromSet}}.
-      \end{array}\]
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeNop$, $\Cprom(\lastInstr{\cpath}) = \nop$.
-      Thus, $\tT \promStepNop \tT'$.
-      $\invCert(n - 1, \delta, k, \tId, \aT, \tT')$ obviously holds.
-
-    \item $\tape(\cpath) = \tapeAssign$.
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeAssign$, \\
-      $\exists \reg, \expr. \; \Cprom(\lastInstr{\cpath}) = ``\assignInst{\reg}{\expr}"$.
-      \[\begin{array}{l l l}
-        \cpath'     & \triangleq & \nextPathProm(\cpath, 1); \\
-        \PromState' & \triangleq & \PromState[\reg \mapsto \semState{\expr}{\PromState}] \\
-        \tT'        & \triangleq & \angled{\Mprom, \angled{\cpath', \PromState', \V, \PromSet}}.
-      \end{array}\]
-      Thus, $\tT \promStepNop \tT'$. Let's check $\invCert(n - 1, \delta, k, \tId, \aT, \tT')$.
-      The only component of $\invCert$ worth checking is $\invStateCERT(\tId, \aT, \tT')$.
-      As $\invStateCERT(\tId, \aT, \tT')$, we know that:
-      \[\begin{array}{l}
-        \stval \triangleq |[\expr|]^{\Committed}_{\cpath} \in \{\bot, |[\expr|]^{\PromState}\}; \\
-        \regstcom(\Cprom(\tId), \tape, \cpath') = \regstcom(\Cprom(\tId), \tape, \cpath)[\reg \mapsto \stval]. \\
-      \end{array}\]
-      Thus, $\invStateCERT(\tId, \aT, \tT')$ holds.
-
-    \item $\tape(\cpath) = \tapeIfGoto{\IfState}{\z}$. From $\invCert(n, \delta, k, \tId, \aT, \tT')$ we know that
-      $\tape(\cpath)$ is committed, so $\IfState \in \{\Taken, \Ignored\}$.
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeIfGoto{\IfState}{\z}$, \\
-      $\exists \expr. \; \Cprom[\lastInstr{\cpath}] = ``\ifGotoInst{\expr}{\z}"$.
-      From \app{\ref{inv:invATapeCfState}} we know that 
-      \[\begin{array}{l}
-        \exists \stval = \semfcom{\expr}{\cpath} \not = \bot.
-          (\IfState = \Taken \land \stval \not = 0) \lor (\IfState = \Ignored \land \stval = 0)).
-      \end{array}\]
-      Fix $\stval$. As $\stval = \semfcom{\expr}{\cpath} \not = \bot$, $|[\expr|]^{\PromState} = \stval$
-      by $\invCert(n, \delta, k, \tId, \aT, \tT)$.
-      So $\cpath' \triangleq \nextPathProm(\cpath, \textIf \stval \not = 0 \; \textThen \z \; \textElse 1)$
-      $\le \lastCommittedWrite(\tape)$, as the Promise machine chooses the same branch.
-      
-      By definition, $\tT \promTStepBranch \angled{\Mprom, \angled{\cpath', \PromState, \V, \PromSet}}$.
-      $\invCert(n - 1, \delta, k, \tId, \aT, \tT')$ obviously holds.
-
-    \item $\tape(\cpath) = \tapeFence{\Fstate}{\Ftype}$.
-      From $\invCert(n, \delta, k, \tId, \aT, \tT)$ we know that $\Fstate = \Committed, \Ftype = \LD$.
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeFence{\Committed}{\LD}$,
-      $\Cprom(\lastInstr{\cpath}) = \fenceInst{\LD}$.
-
-      Some notations:
-      \[\begin{array}{l l l}
-        \cpath' & \triangleq & \nextPathProm(\cpath, 1); \\
-        \V'     & \triangleq & \angled{\V.\Racq, \V.\Racq, \V.\Rrel} \\
-        \tT'    & \triangleq & \angled{\Mprom, \angled{\cpath', \PromState, \V', \PromSet}}.
-      \end{array}\]
-      $\tT \promTStepAcquire \tT'$ by definition. Thus, we need to check $\invCert(n - 1, \delta, k, \aT, \tT')$.
-      %% Obviously, it's enough to check $(\delta, \tId, \aT, \tT') \in \invViewDeltaCERT \cap \invViewWriteCERT \cap \invViewReadCERT$.
-      Obviously, it's enough to check $\invViewWriteCERT(\tId, \aT, \tT')$ and $\invViewReadCERT(\delta, \tId, \aT, \tT')$.
-
-      Let's first check $\invViewWriteCERT(\tId, \aT, \tT')$.
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \tT'.\cpath, \loc. \; \aT.\tapef(\tId, \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-  \quad \tT'.\Rcur(\loc) < \aT.\tmap(\tId, \cpath'') \land {} \\
-  \quad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-             \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-  \qquad \tT'.\Racq(\loc) < \aT.\tmap(\tId, \cpath'')).\\
-      \end{array}\]
-      Simplified:
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \loc. \; \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-  \quad \Racq(\loc) < \aT.\tmap(\tId, \cpath'') \land {} \\
-  \quad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-  \qquad \Racq(\loc) < \aT.\tmap(\tId, \cpath'')).\\
-      \end{array}\]
-      Obviously, it's enough to show that
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \loc. \; \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-  \quad \Racq(\loc) < \aT.\tmap(\tId, \cpath'').
-      \end{array}\]
-      It directly follows from $\invViewWriteCERT(\tId, \aT, \tT)$ (as $\aT.\tapef(\tId, \cpath) = \tapeFence{\Committed}{\LD}$).
-
-      Let's check $\invViewReadCERT(\delta, \tId, \aT, \tT')$.
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \tT'.\cpath, \w, \tau. \\
-\quad \aT.\tapef(\tId, \cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land
-   \angled{\tau, \_} = \deltaHmap(\delta, \tId, \aT, \w.\tId, \w.\cpath) \Rightarrow \\
-\qquad \tT'.\Rcur(\w.\loc) \le \tau \land {} \\
-\qquad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-             \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \tT'.\Racq(\w.\loc) \le \tau). \\
-      \end{array}\]
-      Simplified:
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \w, \tau. \\
-\quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land
-   \angled{\tau, \_} = \deltaHmap(\delta, \tId, \aT, \w.\tId, \w.\cpath) \Rightarrow \\
-\qquad \Racq(\w.\loc) \le \tau \land {} \\
-\qquad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \Racq(\w.\loc) \le \tau). \\
-      \end{array}\]
-      Obviously, it's enough to show that
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \w, \tau. \\
-\quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land
-   \angled{\tau, \_} = \deltaHmap(\delta, \tId, \aT, \w.\tId, \w.\cpath) \Rightarrow \\
-\qquad \Racq(\w.\loc) \le \tau.\\
-      \end{array}\]
-      It directly follows from $\invViewReadCERT(\tId, \aT, \tT)$ (as $\aT.\tapef(\tId, \cpath) = \tapeFence{\Committed}{\LD}$).
-
-  %%     Let's check $\invViewDeltaCERT(\delta, \tId, \aT, \tT')$:
-  %%     \[\begin{array}{l}
-  %% \textLet \cpath^{\LD}, \cpath^{\SY}, \cpath^{\LD\SY} \triangleq
-  %%    \lastLD(\tape, \cpath'), \lastSY(\tape, \cpath'), \lastLDSY(\tape, \cpath') \; \textIn \\
-  %% (\Racq \le \bigsqcup \readsCommittedR(\cpath', \tape, \aT.\hmap) \sqcup
-  %%                      \bigsqcup \opstau(\tId, \cpath', \tape, \aT.\hmap) \sqcup \\
-  %% \quad \deltaToView(\cpath', \delta)) \land {} \\
-  %% (\Racq \le \bigsqcup \readsCommittedR(\cpath^{\LD}, \tape, \aT.\hmap) \sqcup
-  %%                      \bigsqcup \opstau(\tId, \cpath', \tape, \aT.\hmap) \sqcup \\
-  %% \quad \deltaToView(\cpath', \delta)) \land {} \\
-  %% (\Rrel \le \bigsqcup \readsCommittedR(\cpath^{\LD\SY}, \tape, \aT.\hmap) \sqcup \bigsqcup \opstau(\tId, \cpath^{\SY}, \tape, \aT.\hmap)).\\
-  %%     \end{array}\]
-  %%     We know that $\cpath^{\LD} = \cpath$, $\lastSY(\tape, \cpath') = \lastSY(\tape, \cpath)$,
-  %%     $\lastLDSY(\tape, \cpath') = \lastLDSY(\tape, \cpath)$, and as $\tape(\cpath)$ isn't a read or a write:
-  %%     \[\begin{array}{l}
-  %% \textLet \cpath^{\SY}, \cpath^{\LD\SY} \triangleq
-  %%    \lastSY(\tape, \cpath), \lastLDSY(\tape, \cpath) \; \textIn \\
-  %% (\Racq \le \bigsqcup \readsCommittedR(\cpath, \tape, \aT.\hmap) \sqcup
-  %%                      \bigsqcup \opstau(\tId, \cpath, \tape, \aT.\hmap) \sqcup \\
-  %% \quad \deltaToView(\cpath, \delta)) \land {} \\
-  %% (\Racq \le \bigsqcup \readsCommittedR(\cpath^{\LD}, \tape, \aT.\hmap) \sqcup
-  %%                      \bigsqcup \opstau(\tId, \cpath', \tape, \aT.\hmap) \sqcup \\
-  %% \quad \deltaToView(\cpath, \delta)) \land {} \\
-  %% (\Rrel \le \bigsqcup \readsCommittedR(\cpath^{\LD\SY}, \tape, \aT.\hmap) \sqcup \bigsqcup \opstau(\tId, \cpath^{\SY}, \tape, \aT.\hmap)).\\
-  %%     \end{array}\]
-  %%     It directly follows from $\invViewDeltaCERT(\delta, \tId, \aT, \tT)$.
-
-    \item $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\w})}$.
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\w})}$,
-      $\Cprom(\lastInstr{\cpath}) = ``\readInst{\reg}{\expr}"$.
-      Some notations:
-      \[\begin{array}{l l l}
-        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
-        %% \regstcom  & \triangleq & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath); \\
-        \loc       & \triangleq & \semfcom{\expr}{\cpath} \\
-                   & =          & \w.\loc \text{ (by \app{\ref{inv:invATapeCfState}})} \\
-                   & =          & \semf{\expr}{\PromState} \text{ (by $\invStateCERT(\tId, \aT, \tT)$)}; \\
-        \stval  & \triangleq & \w.\stval; \\
-        %% \regstcom' & \triangleq & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath') \\
-        %%            & =          & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath)[\reg \mapsto \w.\stval] \text{ (by definition)}; \\
-        \PromState' & \triangleq & \PromState[\reg \mapsto \stval]. \\
-      \end{array}\]
-      
-      By $\invViewReadCERT(\delta, \tId, \aT, \tT)$, $\exists \tau, \R.$
-      $(\tau, \R) \triangleq \deltaHmap(\delta, \aT, \w.\tId, \w.\cpath)$ and \\
-      $\Rcur(\loc) \le \tau$.
-      $\writeEvt{\loc}{\stval}{\tau}{\R} \in \tT.\Mprom \setminus \tT.\PromSet$
-      follows from $\invMemOneCERT(\delta, \tId, \aT, \tT)$ and $\invMemOneCERT(\delta, \tId, \aT, \tT)$.
-      
-      Denote $\V' = \angled{\Rcur', \Racq', \Rrel'} \triangleq \angled{\Rcur \sqcup [\loc@\tau], \Racq \sqcup \R, \Rrel}.$\\
-      Thus, $\tT \promTStepReadLoc \tT' \triangleq \angled{\Mprom, \angled{\cpath', \V', \PromSet}}$.
-      
-      We need to check $\invCert(n - 1, \delta, k, \aT, \tT')$.
-      $(\tId, \aT, \tT') \in \invMemOneCERT \cap \invMemTwoCERT$ follows from 
-      $(\tId, \aT, \tT) \in \invMemOneCERT \cap \invMemTwoCERT$.
-      $\invStateCERT(\tId, \aT, \tT')$ follows from $\invStateCERT(\tId, \aT, \tT)$ and the definition of $\PromState'$
-      as in the $\tapeAssign$ case.
-      
-      $(\delta, \tId, \aT, \tT') \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo$ follows from
-      $(\delta, \tId, \aT, \tT) \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo$.
-      
-      Let's check $\invViewReadCERT(\delta, \tId, \aT, \tT')$:
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \tT'.\cpath, \w', \tau'. \\
-\quad \aT.\tapef(\tId, \cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-   \angled{\tau', \_} = \deltaHmap(\delta, \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-\qquad \tT'.\Rcur(\w'.\loc) \le \tau' \land {} \\
-\qquad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-             \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \tT'.\Racq(\w'.\loc) \le \tau'). \\
-      \end{array}\]
-      Simplified:
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \w', \tau'. \\
-\quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-   \angled{\tau', \_} = \deltaHmap(\delta, \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-\qquad (\Rcur \sqcup [\loc @ \tau])(\w'.\loc) \le \tau' \land {} \\
-\qquad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow (\Racq \sqcup \R)(\w'.\loc) \le \tau'). \\
-      \end{array}\]
-      
-      From $\invDeltaDefOne(\delta, \tId, \aT, \tT)$ follows that there are two options:
-      either $\aT.\tapef(\w.\tId, \w.\cpath)$ is a committed write, or $\w.\tId = \tId$ and $\delta(\w.\cpath) = (\tau, \R)$.
-      \begin{itemize}
-        \item $\aT.\tapef(\w.\tId, \w.\cpath)$ is a committed write: \\
-      Obviously, it's enough to show the statement for the new parts of views, as for the old parts the statement directly
-      follows from $\invViewReadCERT(\delta, \tId, \aT, \tT)$:
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \w', \tau'. \\
-\quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-   \angled{\tau', \_} = \deltaHmap(\delta, \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-\qquad [\loc @ \tau](\w'.\loc) \le \tau' \land {} \\
-\qquad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \aT.\rmap(\w.\tId, \w.\cpath)(\w'.\loc) \le \tau'). \\
-      \end{array}\]
-
-      Fix $\cpath'', \w', \tau'$. We need to show:
-      \[\begin{array}{l}
-        [\loc @ \tau](\w'.\loc) \le \tau' \land {} \\
-        ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \aT.\rmap(\w.\tId, \w.\cpath)(\w'.\loc) \le \tau'). \\
-      \end{array}\]
-      From $\invDeltaDefOne(\delta, \tId, \aT, \tT)$ follows that there are two options:
-      either $\aT.\tapef(\w'.\tId, \w'.\cpath)$ is a committed write, or $\w'.\tId = \tId$ and $\delta(\w'.\cpath) = (\tau', \_)$.
-      In the first case, the statement holds by \app{\ref{thm:invAview}}. Consider the second option.
-      
-      Let's check the first conjunct. If $\w'.\loc \not = \loc$, it might be simplified to $0 \le \tau'$, which holds.
-      Suppose, $\w'.\loc = \loc$.
-      We know that $\w'.\cpath < \cpath$ from $\delta(\w'.\cpath) \not = \bot$ and $\invCert(n, \delta, k, \aT, \tT)$.
-      We also know that $\cpath < \cpath''$. By \app{\ref{inv:invAReadRead}}, $\w = \w'$, so $\tau = \tau'$.
-      
-      Now let's check the second conjunct:
-      \[\begin{array}{l}
-        (\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \aT.\rmap(\w.\tId, \w.\cpath)(\w'.\loc) \le \tau'. \\
-      \end{array}\]
-      
-      Fix $\cpath'''$ and rename it to $\cpath_{LD}$.
-      Then we know that
-      \[\begin{array}{l}
-      \cpath_{\delta} \triangleq \w'.\cpath < \cpath < \cpath' \le \cpath_{LD} < \cpath_{\delta-read} \triangleq \cpath''.
-      \end{array}\]
-      %% By $\invDeltaDefFour(\delta, \tId, \aT)$, the statement holds.
-
-      $\aT.\rmap(\w.\tId, \w.\cpath)(\w'.\loc) \le \tau'$ holds by $\invDeltaDefFour(\delta, \tId, \aT)$.
-
-        \item $\w.\tId = \tId$ and $\delta(\cpath) = (\tau, \R)$: \\
-          $\R = [\loc @ \tau] \sqcup \Rrel$ by $\invDeltaDefTwo(\delta, \tId, \aT, \tT)$.
-          We know that $[\loc @ \tau] \le \Rcur$ (from $\invDeltaDefTwo(\delta, \tId, \aT, \tT)$) and $\Rrel \le \Rcur \le \Racq$
-          (by an invariant of the Promise machine), so $\Racq \sqcup [\loc @ \tau] \sqcup \Rrel = \Racq$ and
-          $\Rcur \sqcup [\loc @ \tau] = \Rcur$.
-          Thus, we can simplify the statement we want to prove:
-      \[\begin{array}{l}
-  \forall \cpath'' \ge \cpath', \w', \tau'. \\
-\quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-   \angled{\tau', \_} = \deltaHmap(\delta, \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-\qquad \Rcur(\w'.\loc) \le \tau' \land {} \\
-\qquad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \Racq(\w'.\loc) \le \tau'). \\
-      \end{array}\]
-      It directly follows from $\invViewReadCERT(\delta, \tId, \aT, \tT)$.
-      \end{itemize}
-
-      Let's check $\invViewWriteCERT(\tId, \aT, \tT')$:
-      \[\begin{array}{l}
-        \forall \cpath'' \ge \tT'.\cpath, \loc'. \aT.\tapef(\tId, \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-        \quad \tT'.\Rcur(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-        \quad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-             \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-        \qquad \tT'.\Racq(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-      \end{array}\]
-      Simplified:
-      \[\begin{array}{l}
-        \forall \cpath'' \ge \cpath', \loc'. \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-        \quad (\Rcur \sqcup [\loc @ \tau])(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-        \quad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-        \qquad (\Racq \sqcup \R)(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-      \end{array}\]
-      
-      From $\invDeltaDefOne(\delta, \tId, \aT, \tT)$ follows that there are two options:
-      either $\aT.\tapef(\w.\tId, \w.\cpath)$ is a committed write, or $\w.\tId = \tId$ and $\delta(\w.\cpath) = (\tau, \R)$.
-      
-      \begin{itemize}
-        \item $\aT.\tapef(\w.\tId, \w.\cpath)$ is a committed write: \\
-      Obviously, it's enough to show the statement for the new parts of views, as for the old parts the statement directly
-      follows from $\invViewWriteCERT(\delta, \tId, \aT, \tT)$:
-      \[\begin{array}{l}
-        \forall \cpath'' \ge \cpath', \loc'. \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-        \quad [\loc @ \tau](\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-        \quad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-        \qquad \R(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-      \end{array}\]
-      It directly follows from \app{\ref{thm:invAview}}.
-
-        \item $\w.\tId = \tId$ and $\delta(\cpath) = (\tau, \R)$: \\
-          $\R = [\loc @ \tau] \sqcup \Rrel$ by $\invDeltaDefTwo(\delta, \tId, \aT, \tT)$.
-          We know that $[\loc @ \tau] \le \Rcur$ (from $\invDeltaDefTwo(\delta, \tId, \aT, \tT)$) and $\Rrel \le \Rcur \le \Racq$
-          (by an invariant of the Promise machine), so $\Racq \sqcup [\loc @ \tau] \sqcup \Rrel = \Racq$ and
-          $\Rcur \sqcup [\loc @ \tau] = \Rcur$.
-          Thus, we can simplify the statement we want to prove:
-      \[\begin{array}{l}
-        \forall \cpath'' \ge \cpath', \loc'. \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-        \quad \Rcur(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-        \quad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-        \qquad \Racq(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-      \end{array}\]
-      It directly follows from $\invViewWriteCERT(\delta, \tId, \aT, \tT)$.
-
-      \end{itemize}
-      
-    \item $\tape(\cpath) = \tapeRead{\Rstate}$, where $\Rstate$ isn't a committed one. \\
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeRead{\Rstate}$,
-      $\Cprom(\lastInstr{\cpath}) = ``\readInst{\reg}{\expr}"$.
-      Some notations:
-      \[\begin{array}{l l l}
-        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
-        \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
-        \regstcom' & \triangleq & \regstcom(\Cprom, \tape, \cpath') \\
-                   & =          & \regstcom(\Cprom, \tape, \cpath)[\reg \mapsto \bot] \text{ (by definition)}; \\
-        \loc       & \triangleq & \semfcom{\expr}{\cpath} \\
-                   & =          & \semf{\expr}{\PromState} \text{ (by $\invStateCERT(\tId, \aT, \tT)$)}; \\
-        \tau       & \triangleq & \Rcur(\loc). \\
-      \end{array}\]
-
-      From properties of the Promise machine, $\exists \stval, \R. \; \writeEvt{\loc}{\stval}{\tau}{\R} \in \Mprom$. \\
-      \[\begin{array}{l l l}
-      \V' = \angled{\Rcur', \Racq', \Rrel'} & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup \R, \Rrel} \\
-                                            & =          & \angled{\Rcur, \Racq \sqcup \R, \Rrel}; \\
-      \PromState' & \triangleq & \PromState[\reg \mapsto \stval].
-      \end{array}\]
-      
-      By definition, $\tT \promTStepReadLoc \tT' \triangleq \angled{\Mprom, \angled{\cpath', \PromState', \V', \PromSet}}$.
-      We need to check $\invCert(n - 1, \delta, k, \aT, \tT')$.
-
-      $(\tId, \aT, \tT') \in \invMemOneCERT \cap \invMemTwoCERT \cap \invViewRelCERT$ follows from 
-      $(\tId, \aT, \tT) \in \invMemOneCERT \cap \invMemTwoCERT \cap \invViewRelCERT$.
-      $\invStateCERT(\tId, \aT, \tT')$ follows from $\invStateCERT(\tId, \aT, \tT)$ and definitions of
-      $\PromState' \triangleq \PromState[\reg \mapsto \stval]$ and $\regstcom'$.
-
-      $(\delta, \tId, \aT, \tT') \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo$ follows from
-      $(\delta, \tId, \aT, \tT) \in \invMemZeroCERT \cap \invDeltaDefOne \cap \invDeltaDefTwo$ and
-      $\Rcur' = \Rcur, \Rrel' = \Rrel$.
-
-      We know that there is no $\cpath'' > \cpath$, such that $\tape(\cpath'') = \tapeFence{\Committed}{\LD}$, so
-      we'll be able to drop parts of the invariants, which are related to committed fences.
-      So, $(\delta, \tId, \aT, \tT') \in \invViewReadCERT \cap \invViewWriteCERT(\tId, \aT, \tT')$ follow from
-      $(\delta, \tId, \aT, \tT') \in \invViewReadCERT(\delta, \tId, \aT, \tT) \cap \invViewWriteCERT(\tId, \aT, \tT)$,
-      and $\Rcur' = \Rcur$.
-      
-    \item $\tape(\cpath) = \tapeWrite{(\tapeWriteCommitted{\InMemory}{\loc}{\stval})}$. \\
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeWrite{(\tapeWriteCommitted{\InMemory}{\loc}{\stval})}$,
-      $\Cprom(\lastInstr{\cpath}) = ``\writeInst{\expr_0}{\expr_1}"$.
-      Some notations:
-      \[\begin{array}{l l l}
-        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
-        \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
-        \angled{\tau, \_, \R'} & \triangleq & \aT.\hmap(\tId, \cpath)
-          \text{ (it's defined according to properties of the $\ARMt$ machine)}. \\
-
-      \end{array}\]
-      
-      By \app{\ref{inv:invATapeCfState}} and $\invStateCERT(\tId, \aT, \tT)$ we know that
-      $\loc = \semfcom{\expr_0}{\cpath} = \semf{\expr_0}{\PromState}$ and
-      $\stval = \semfcom{\expr_1}{\cpath} = \semf{\expr_1}{\PromState}$. \\
-      
-      From $\invMemOneCERT(\tId, \aT, \tT)$ we know that \\
-      $\exists \R \le \R'. \; \writeEvt{\loc}{\stval}{\tau}{\R} \in \tT.\PromSet \cap \tT.\Mprom$.
-      $\Rcur(\loc) < \tau$ follows from $\invViewWriteCERT(\tId, \aT, \tT)$.
-      \[\begin{array}{l l l}
-        \V' & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup [\loc @ \tau], \Rrel}; \\
-        \PromSet' & \triangleq & \PromSet \setminus \{\writeEvt{\loc}{\stval}{\tau}{\R}\}. \\
-      \end{array}\]
-      Thus, $\tT \promTStepFulfillLoc \tT' \triangleq \angled{\Mprom, \angled{\cpath', \PromState, \V', \PromSet'}}$.
-      We need to check $\invCert(n - 1, \delta, k, \aT, \tT')$.
-      \begin{itemize}
-        \item $(\tId, \aT, \tT') \in \invMemOneCERT \cap \invMemTwoCERT(\tId, \aT, \tT')$: \\
-          It's trivially holds for the fulfilled write and for the other writes.
-        \item $(\tId, \aT, \tT') \in \invStateCERT \cap \invViewRelCERT$: \\
-          It holds as $\tT'.\PromState = \tT.\PromState$,
-          $\regstcom(\Cprom, \tape, \cpath) = \regstcom(\Cprom, \tape, \cpath')$,
-          and $\tT'.\Rrel = \tT.\Rrel$.
-        \item $\invMemZeroCERT(\delta, \tId, \aT, \tT')$: \\
-          We need to show that
-          \[\begin{array}{l}
-      \forall \cpath'', \tau', \R', \loc', \expr'_0, \expr'_1. \\
-\quad \angled{\tau', \R'} = \delta(\cpath'') \land ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath''}) \land
-      \loc' = \semfcom{\expr'_0}{\cpath''} \Rightarrow \\
-\quad \exists \stval'. \semfcom{\expr'_1}{\cpath''} \in \{\bot, \stval'\} \land
-      \writeEvt{\loc'}{\stval'}{\tau'}{\R'} \in \tT'.\Mprom \setminus \tT'.\PromSet. \\
-          \end{array}\]
-          Fix $\cpath''$ and do minor simplifications:
-      %% \forall \cpath'', \angled{\tau', \R'} = \delta(\cpath''), \\
-      %% \quad ``\writeInst{\expr'_0}{\expr'_1}" = \aT.\Cfarm(\tId, \lastInstr{\cpath''}), \loc' = \semfcom{\expr'_0}{\cpath''}. \\
-          \[\begin{array}{l}
-      \exists \stval'. \semfcom{\expr'_1}{\cpath''} \in \{\bot, \stval'\} \land
-      \writeEvt{\loc'}{\stval'}{\tau'}{\R'} \in \Mprom \setminus (\PromSet \cup \{\writeEvt{\loc}{\stval}{\tau}{\R}\}). \\
-          \end{array}\]
-      Suppose, $\cpath'' = \cpath$. By $\invDeltaDefOne(\delta, \tId, \aT, \tT)$, $\tape(\cpath)$ isn't committed. Contradiction.
-      So, $\cpath'' \not = \cpath$.
-      From $\invDeltaDefThree(\delta, \tId, \aT)$ we know that $(\loc, \tau) \not = (\loc', \tau')$, so we may simplify the
-      statement:
-          \[\begin{array}{l}
-      \exists \stval'. \semfcom{\expr'_1}{\cpath''} \in \{\bot, \stval'\} \land
-      \writeEvt{\loc'}{\stval'}{\tau'}{\R'} \in \Mprom \setminus \PromSet. \\
-          \end{array}\]
-      which directly follows from $\invMemZeroCERT(\delta, \tId, \aT, \tT)$.
-
-        \item $\invDeltaDefOne(\delta, \tId, \aT, \tT')$: \\
-          $\delta(\cpath) = \bot$, $\tape(\cpath)$ is committed, so the statement holds.
-        \item $\invDeltaDefTwo(\delta, \tId, \aT, \tT')$: \\
-          We need to show that
-          \[\begin{array}{l}
-\forall \cpath', \angled{\tau', \R'} = \delta(\cpath'), \\
-\quad ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath'}), \loc' = \semfcom{\expr'_0}{\cpath'}. \\
-\qquad \R' = [\loc' @ \tau'] \sqcup \tT'.\Rrel \land \tT'.\Rcur(\loc') \ge \tau'. \\
-          \end{array}\]
-          Simplified:
-          \[\begin{array}{l}
-\forall \cpath', \angled{\tau', \R'} = \delta(\cpath'), \\
-\quad ``\writeInst{\expr'_0}{\expr'_1}" = \Cfarm(\lastInstr{\cpath'}), \loc' = \semfcom{\expr'_0}{\cpath'}. \\
-\qquad \R' = [\loc' @ \tau'] \sqcup \tT.\Rrel \land [\loc @ \tau] \sqcup \tT.\Rcur(\loc') \ge \tau'. \\
-          \end{array}\]
-          It directly follows from $\invDeltaDefTwo(\delta, \tId, \aT, \tT')$.
-          
-          \item $\invViewWriteCERT(\tId, \aT, \tT')$: \\
-            We need to show:
-            \[\begin{array}{l}
-      \forall \cpath'' \ge \tT'.\cpath, \loc'. \; \aT.\tapef(\tId, \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\_})} \Rightarrow \\
-      \quad \tT'.\Rcur(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-      \quad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-             \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-      \qquad \tT'.\Racq(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-            \end{array}\]
-            Simplified:
-            \[\begin{array}{l}
-      \forall \cpath'' \ge \cpath', \loc'. \; \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\_})} \Rightarrow \\
-      \quad (\Rcur \sqcup [\loc @ \tau])(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-      \quad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-             \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-      \qquad (\Racq \sqcup [\loc @ \tau])(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-            \end{array}\]
-            As $\invViewWriteCERT(\tId, \aT, \tT)$ holds, it's enough to show that:
-            \[\begin{array}{l}
-      \forall \cpath'' \ge \cpath', \loc'. \; \tape(\cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\_})} \Rightarrow \\
-      \quad [\loc @ \tau](\loc') < \aT.\tmap(\tId, \cpath'').
-            \end{array}\]
-            It follows from \app{\ref{thm:invAview}}.
-          \item $\invViewReadCERT(\tId, \aT, \tT')$: \\
-            The same proof as for $\invViewWriteCERT(\tId, \aT, \tT')$.
-      \end{itemize}
-
-    \item $\tape(\cpath) = \tapeWrite{\Wstate}$, where $\Wstate$ isn't a committed one. \\
-      In this case we are going to make two steps via the Promise thread $\tId$: to promise a write
-      and to fulfill it.
-      As $\ainit \armStepP^{*} \aT$ and $\tape(\cpath) = \tapeWrite{\Wstate}$,
-      $\Cprom(\lastInstr{\cpath}) = ``\writeInst{\expr_0}{\expr_1}"$.
-      Some notations:
-      \[\begin{array}{l l l}
-        \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
-        \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
-        \loc       & \triangleq &
-          \semfcom{\expr_0}{\cpath} \text{ (addresses are defined according to $\invCert(n, \delta, k, \tId, \aT, \tT)$)} \\
-                   & =          & \semf{\expr_0}{\PromState} \text{ (by $\invStateCERT(\tId, \aT, \tT)$)}; \\
-        \stval       & \triangleq & \semf{\expr_1}{\PromState}. \\
-        %% \angled{\tau, \_, \R'} & \triangleq & \aT.\hmap(\tId, \cpath)
-        %%   \text{ (it's defined according to properties of the $\ARMt$ machine)}. \\
-      \end{array}\]
-      The most sophisticated part of this case is to choose a timestamp for the write properly.
-      Let's denote it $\tau$. The following statements have to hold:
-      \[\begin{array}{l l}
-        1. & \Rcur(\loc) < \tau. \\
-        2. & \tau \not \in \{\tau' | \stRequestWrite{\loc}{\_}{\tau'}{\_} \in \Mprom \}. \\
-        3. & \forall \cpath_{write} \ge \cpath. \; \tape(\cpath_{write}) = \tapeWrite{(\tapeWriteCommitted{\_}{\loc}{\_})} \Rightarrow \\
-           &  \quad \tau < \aT.\tmap(\tId, \cpath_{write}). \\
-        4. & \forall \cpath_{read} \ge \cpath. \; \tape(\cpath_{read}) = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land
-                 \aT.\tmap(\w.\tId, \w.\cpath) \not = \bot \Rightarrow \\
-           & \quad \tau \le \aT.\tmap(\w.\tId, \w.\cpath). \\
-        5. & \forall \cpath_{read} < \cpath_{\LD} < \cpath_{\delta-read}, \w, \R. \cpath < \cpath_{read} \land {} \\
-           & \quad \tape(\cpath_{read}) = \tapeRead{(\tapeSatisfied{\Committed}{\w})} \land
-             \tape(\cpath_{\LD}) = \tapeFence{\Committed}{\LD} \land {} \\
-           & \quad \tape(\cpath_{\delta-read}) = \tapeRead{(\tapeSatisfied{\Committed}{\stRequestWrite{\tId}{\cpath}\loc}{\_})} \land {} \\
-           & \quad \R = \aT.\rmap(\w.\tId, \w.\cpath) \not = \bot \Rightarrow \\
-           & \qquad \R(\loc) \le \tau. \\
-      \end{array}\]
-      Because timestamps are elements of $\mathbb{Q}^{+}$ (a dense order), by $\invViewWriteCERT(\tId, \aT, \tT)$,
-      $\invViewReadCERT(\delta, \tId, \aT, \tT)$, and \app{\ref{thm:invAview}}, there is $\tau$, which satisfies the requirements.
-
-      Some notations:
-      \[\begin{array}{l l l}
-        \R  & \triangleq & \Rrel \sqcup [\loc @ \tau]; \\
-        msg & \triangleq & \writeEvt{\loc}{\stval}{\tau}{\R}; \\
-        \Mprom' & \triangleq & \Mprom \cup \{msg\};\\
-        \V' = \angled{\Rcur', \Racq', \Rrel'} & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup [\loc @ \tau], \Rrel}; \\
-        \delta' & \triangleq & \delta[\cpath \mapsto \angled{\tau, \R}].\\ 
-      \end{array}\]
-      Then the following holds:
-      \[\begin{array}{l l l}
-        \tT & \promTStepPromiseLoc & \angled{\Mprom', \angled{\cpath , \PromState, \V, \PromSet \cup \{msg\}}} \\
-            & \promTStepFulfillLoc & \tT' \triangleq \angled{\Mprom', \angled{\cpath', \PromState, \V', \PromSet}}. \\
-      \end{array}\]
-      We have to show $\invCert(n - 1, \delta', k, \tId, \aT, \tT')$ holds.
-      
-      \begin{itemize}
-        \item $\invMemOneCERT(\tId, \aT, \tT')$: \\
-          The statement obviously holds as $\invMemOneCERT(\tId, \aT, \tT)$ holds and $\aT.\hmap(\tId, \cpath) = \bot$.
-        \item $\invMemTwoCERT(\tId, \aT, \tT')$: \\
-          $\tT'.\PromSet = \tT.\PromSet$, $\tape(\cpath) \not = \tapeWrite{(\tapeWriteCommitted{\_}{\_}{\_})}$,
-          so the statement holds.
-        \item $\invStateCERT(\tId, \aT, \tT')$: \\
-          $\tT'.\PromState = \tT.\PromState$, $\regstcom(\dots, \cpath) = \regstcom(\dots, \cpath')$, so the statement holds.
-
-        \item $\invViewRelCERT(\tId, \aT, \tT')$: \\
-          $\tT'.\Rrel = \tT.\Rrel$, so the statement holds.
-
-        \item $\invViewWriteCERT(\tId, \aT, \tT')$: \\
-          We need to show that
-          \[\begin{array}{l}
-            \forall \cpath'' \ge \tT'.\cpath, \loc'. \;
-              \aT.\tapef(\tId, \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\_})} \Rightarrow \\
-          \qquad \tT'.\Rcur(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-          \qquad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-                       \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-          \qquad \quad \tT'.\Racq(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-          \end{array}\]
-          Simplified:
-          \[\begin{array}{l}
-            \forall \cpath'' \ge \cpath', \loc'. \;
-              \aT.\tapef(\tId, \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\_})} \Rightarrow \\
-          \qquad ([\loc @ \tau] \sqcup \Rcur)(\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-          \qquad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-                       \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-          \qquad \quad ([\loc @ \tau] \sqcup \Racq)(\loc') < \aT.\tmap(\tId, \cpath'')).\\
-          \end{array}\]
-          Obviously, it's enough to check only the following:
-          \[\begin{array}{l}
-            \forall \cpath'' \ge \cpath', \loc'. \;
-              \aT.\tapef(\tId, \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{\loc'}{\_})} \Rightarrow \\
-          \qquad [\loc @ \tau](\loc') < \aT.\tmap(\tId, \cpath'') \land {} \\
-          \qquad ((\exists \cpath'''. \; \cpath' \le \cpath''' < \cpath'' \land 
-                       \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \\
-          \qquad \quad [\loc @ \tau](\loc') < \aT.\tmap(\tId, \cpath'')).\\
-          \end{array}\]
-          If $\loc' \not = \loc$, then the statement holds as $[\loc @ \tau](\loc') = 0$.
-          If $\loc' = \loc$, the statement is guaranteed by the way we have chosen $\tau$.
-
-        \item $\invMemZeroCERT(\delta', \tId, \aT, \tT')$: \\
-          We need to show that
-          \[\begin{array}{l}
-      \forall \cpath'', \tau', \R', \loc', \expr'_0, \expr'_1. \\
-\quad \angled{\tau', \R'} = \delta'(\cpath'') \land ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath''}) \land
-      \loc' = \semfcom{\expr'_0}{\cpath''} \Rightarrow \\
-\quad \exists \stval'. \semfcom{\expr'_1}{\cpath''} \in \{\bot, \stval'\} \land
-      \writeEvt{\loc'}{\stval'}{\tau'}{\R'} \in \tT'.\Mprom \setminus \tT'.\PromSet. \\
-          \end{array}\]
-          Fix $\cpath''$ and do minor simplifications:
-      %% \forall \cpath'', \angled{\tau', \R'} = \delta(\cpath''), \\
-      %% \quad ``\writeInst{\expr'_0}{\expr'_1}" = \aT.\Cfarm(\tId, \lastInstr{\cpath''}), \loc' = \semfcom{\expr'_0}{\cpath''}. \\
-          \[\begin{array}{l}
-      \exists \stval'. \semfcom{\expr'_1}{\cpath''} \in \{\bot, \stval'\} \land
-      \writeEvt{\loc'}{\stval'}{\tau'}{\R'} \in (\Mprom \setminus \PromSet) \cup \{\writeEvt{\loc}{\stval}{\tau}{\R}\}. \\
-          \end{array}\]
-          If $\cpath'' \not = \cpath$, then $\delta'(\cpath'') = \delta(\cpath'')$ and the statement holds by
-          $\invMemZeroCERT(\delta, \tId, \aT, \tT)$.
-          If $\cpath'' = \cpath$, then the statement obviously holds.
-
-        \item $\invDeltaDefOne(\delta', \tId, \aT, \tT')$: \\
-          We need to show that
-          \[\begin{array}{l}
-            \forall \cpath'' < \tT'.\cpath. \; \delta'(\cpath'') \not = \bot \Leftrightarrow \\
-            \quad (\exists \expr'_0, \expr'_1. \; ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath''})
-              \land {} \\
-            \qquad \aT.\tapef(\tId, \cpath'') \text{ isn't committed}). \\
-          \end{array}\]
-          Simplified:
-          \[\begin{array}{l}
-            \forall \cpath'' < \cpath'. \; \delta'(\cpath'') \not = \bot \Leftrightarrow \\
-            \quad (\exists \expr'_0, \expr'_1. \; ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath''})
-              \land {} \\
-            \qquad \tape(\cpath'') \text{ isn't committed}). \\
-          \end{array}\]
-          If $\cpath'' \not = \cpath$, then $\delta'(\cpath'') = \delta(\cpath'')$, and the statement holds as
-          $\invDeltaDefOne(\delta, \tId, \aT, \tT)$ holds.
-          If $\cpath'' \not = \cpath$, then the statement holds by definition of $\delta'$.
-
-        \item $\invDeltaDefTwo(\delta', \tId, \aT, \tT')$: \\
-          We need to show that
-          \[\begin{array}{l}
-            \forall \cpath'', \angled{\tau', \R'} = \delta'(\cpath''), \\
-            \quad ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath''}), \loc' = \semfcom{\expr'_0}{\cpath''}. \\
-            \qquad \R' = [\loc' @ \tau'] \sqcup \tT'.\Rrel \land \tT'.\Rcur(\loc') \ge \tau'. \\
-          \end{array}\]
-          Simplified:
-          \[\begin{array}{l}
-            \forall \cpath'', \angled{\tau', \R'} = \delta'(\cpath''), \\
-            \quad ``\writeInst{\expr'_0}{\expr'_1}" = \Cprom(\lastInstr{\cpath''}), \loc' = \semfcom{\expr'_0}{\cpath''}. \\
-            \qquad \R' = [\loc' @ \tau'] \sqcup \Rrel \land ([\loc @ \tau] \sqcup \Rcur)(\loc') \ge \tau'. \\
-          \end{array}\]
-          Fix $\cpath''$. If $\cpath'' \not = \cpath$, then $\delta'(\cpath'') = \delta(\cpath'')$, and the statement holds as
-          $\invDeltaDefTwo(\delta, \tId, \aT, \tT)$ holds.
-          If $\cpath'' = \cpath$, then the statement obviously holds by construction of $\delta'$.
-
-        \item $\invViewReadCERT(\delta', \tId, \aT, \tT')$: \\
-          \[\begin{array}{l}
-            \forall \cpath'' \ge \tT'.\cpath, \w', \tau'. \\
-            \quad \aT.\tapef(\tId, \cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \angled{\tau', \_} = \deltaHmap(\delta', \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-            \qquad \tT'.\Rcur(\w'.\loc) \le \tau' \land {} \\
-            \qquad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-                         \aT.\tapef(\tId, \cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow \tT'.\Racq(\w'.\loc) \le \tau'). \\
-          \end{array}\]
-          Simplified:
-          \[\begin{array}{l}
-            \forall \cpath'' \ge \cpath', \w', \tau'. \\
-            \quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \angled{\tau', \_} = \deltaHmap(\delta', \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-            \qquad ([\loc @ \tau] \sqcup \Rcur)(\w'.\loc) \le \tau' \land {} \\
-            \qquad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-                         \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow
-                         ([\loc @ \tau] \sqcup \Racq)(\w'.\loc) \le \tau'). \\
-          \end{array}\]
-          Fix $\cpath'', \w', \tau'$.
-          As $\deltaHmap(\delta', \tId, \aT, \w'.\tId, \w'.\cpath) \not = \bot$,
-          either $\aT.\tapef(\w'.\tId, \w'.\cpath)$ is a committed write, or $\w'.\tId = \tId$ and
-          $\delta'(\w'.\cpath) \not = \bot$.
-          \begin{itemize}
-            \item $\aT.\tapef(\w'.\tId, \w'.\cpath)$ is a committed write: \\
-              We may simplify the statement:
-          \[\begin{array}{l}
-            \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \tau' = \aT.\tmap(\w'.\tId, \w'.\cpath) \Rightarrow \\
-            \quad ([\loc @ \tau] \sqcup \Rcur)(\w'.\loc) \le \tau' \land {} \\
-            \quad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-                         \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow
-                         ([\loc @ \tau] \sqcup \Racq)(\w'.\loc) \le \tau'). \\
-          \end{array}\]
-          As $\invViewReadCERT(\delta, \tId, \aT, \tT)$ holds, it's enough to check that:
-          \[\begin{array}{l}
-            \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \tau' = \aT.\tmap(\w'.\tId, \w'.\cpath) \Rightarrow \\
-            \quad [\loc @ \tau](\w'.\loc) \le \tau' \land {} \\
-            \quad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-                         \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow
-                         [\loc @ \tau](\w'.\loc) \le \tau'). \\
-          \end{array}\]
-          Or even simplier:
-          \[\begin{array}{l}
-            \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \tau' = \aT.\tmap(\w'.\tId, \w'.\cpath) \Rightarrow \\
-            \quad [\loc @ \tau](\w'.\loc) \le \tau'. \\
-          \end{array}\]
-          This is guaranteed by the way we have chosen $\tau$.
-          
-            \item $\w'.\tId = \tId$ and $\delta'(\w'.\cpath) \not = \bot$: \\
-              We may simplify the statement:
-          \[\begin{array}{l}
-            \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \tau' = \delta'(\w'.\cpath) \Rightarrow \\
-            \quad ([\loc @ \tau] \sqcup \Rcur)(\w'.\loc) \le \tau' \land {} \\
-            \quad ((\exists \cpath'''. \; \tT'.\cpath \le \cpath''' < \cpath'' \land 
-                         \tape(\cpath''') = \tapeFence{\Committed}{\LD}) \Rightarrow
-                         ([\loc @ \tau] \sqcup \Racq)(\w'.\loc) \le \tau'). \\
-          \end{array}\]
-              There are two options --- either $\w'.\cpath = \cpath$, or $\w'.\cpath < \cpath$.
-              In the first case $\tau' = \tau$ and $\w'.\loc = \loc$, and the statement obviously holds as $\Rcur(\loc) < \tau$
-              by the way we have chosen $\tau$.
-              
-              Suppose, $\w'.\cpath < \cpath$. In this case $\delta'(\w'.\cpath) = \delta(\w'.\cpath)$.
-              As $\invViewReadCERT(\delta, \tId, \aT, \tT)$ holds, we may simplify the statement even further:
-          \[\begin{array}{l}
-            \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-               \tau' = \delta(\w'.\cpath) \Rightarrow \\
-            \quad [\loc @ \tau](\w'.\loc) \le \tau'. \\
-          \end{array}\]
-              If $\w'.\loc \not = \loc$, then the statement holds, as $[\loc @ \tau](\w'.\loc) = 0$.
-              Suppose $\w'.\loc = \loc$. As $\w'.\cpath < \cpath < \cpath''$, it would have meant that
-              a committed read $\tape(\cpath'')$ is satisfied from a write $\tape(\w'.\cpath)$, even though
-              there is a newer write to the same location ($\tape(\cpath)$) observable to the read. It contradicts
-              \app{\ref{inv:invAWriteWriteRead}}.
-          \end{itemize}
-
-          %% Obviously, it's enough to check the following as $\invViewReadCERT(\delta, )$:
-          %% \[\begin{array}{l}
-          %%   \forall \cpath'' \ge \cpath', \w', \tau'. \\
-          %%   \quad \tape(\cpath'') = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land
-          %%      \angled{\tau', \_} = \deltaHmap(\delta', \tId, \aT, \w'.\tId, \w'.\cpath) \Rightarrow \\
-          %%   \qquad [\loc @ \tau](\w.\loc) \le \tau'. \\
-          %% \end{array}\]
-          %% Or even simlified:
-          
-        \item $\invDeltaDefThree(\delta', \tId, \aT)$: \\
-          We have to show that
-          \[\begin{array}{l}
-            \forall \cpath'', \cpath''' \not = \cpath'', \\
-            \quad \angled{\tau'', \_} = \deltaHmap(\delta', \tId, \aT, \tId, \cpath''),
-                  \angled{\tau''', \_} = \deltaHmap(\delta', \tId, \aT, \tId, \cpath'''), \\
-            \quad ``\writeInst{\expr''_0}{\expr''_1}"   = \Cprom(\tId, \lastInstr{\cpath''}),
-                  ``\writeInst{\expr'''_0}{\expr'''_1}" = \Cprom(\tId, \lastInstr{\cpath'''}). \\
-            \quad \semfcom{\expr''_0}{\cpath''} = \semfcom{\expr'''_0}{\cpath'''} \Rightarrow \tau'' \not = \tau'''.
-          \end{array}\]
-          As $\invDeltaDefThree(\delta, \tId, \aT)$ holds, it's enough to check only cases $\cpath'' = \cpath$ or $\cpath''' = \cpath$.
-          In both cases it's obvious that the statement holds by the way we have choosen $\tau$.
-
-        \item $\invDeltaDefFour(\delta', \tId, \aT)$: \\
-          We have to show that
-          \[\begin{array}{l}
-      \forall \cpath_{\delta} < \cpath_{read} < \cpath_{\LD} < \cpath_{\delta-read}, \\
-\quad \angled{\tau', \_} = \delta'(\cpath_{\delta}), \w', \loc', \R'. \\
-\quad \tape(\cpath_{read}) = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land \tape(\cpath_{\LD}) = \tapeFence{\Committed}{\LD} \land {} \\
-\quad \tape(\cpath_{\delta-read}) = \tapeRead{(\tapeSatisfied{\Committed}{\stRequestWrite{\tId}{\cpath_{\delta}}{\loc'}{\_}})} \land {} \\
-\quad \R' = \aT.\rmap(\w'.\tId, \w'.\cpath) \not = \bot \Rightarrow \\
-\qquad \R'(\loc) \le \tau'. \\
-          \end{array}\]
-          If $\cpath_{\delta} \not = \cpath$, the statement directly follows from $\invDeltaDefFour(\delta, \tId, \aT)$.
-          Suppose $\cpath_{\delta} = \cpath$. The simplified statement:
-          \[\begin{array}{l}
-      \forall \cpath_{read}, \cpath_{\LD}, \cpath_{\delta-read}, \w', \loc', \R'. \\
-\quad \cpath < \cpath_{read} < \cpath_{\LD} < \cpath_{\delta-read} \land {} \\
-\quad \tape(\cpath_{read}) = \tapeRead{(\tapeSatisfied{\Committed}{\w'})} \land \tape(\cpath_{\LD}) = \tapeFence{\Committed}{\LD} \land {} \\
-\quad \tape(\cpath_{\delta-read}) = \tapeRead{(\tapeSatisfied{\Committed}{\stRequestWrite{\tId}{\cpath}{\loc'}{\_}})} \land {} \\
-\quad \R' = \aT.\rmap(\w'.\tId, \w'.\cpath) \not = \bot \Rightarrow \\
-\qquad \R'(\loc) \le \tau. \\
-          \end{array}\]
-          The statement is one of the requirements we used to choose $\tau$, so it holds.
-      \end{itemize}
-  \end{itemize}
-\end{proof}
-
-
