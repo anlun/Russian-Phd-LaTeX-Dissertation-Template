@@ -106,7 +106,7 @@
 \codePostfix
 }
 
-\newcommand{\possibleOutcomes}{Результаты в оригинальной модели C/C++11:}
+\newcommand{\possibleOutcomes}{Результаты в C/C++11 MM:}
 \newcommand{\midTests}{
   \vspace{.2cm} \hrule \vspace{.2cm}
 }
@@ -447,7 +447,7 @@
 \label{app:corr}
 
 \litmusTestStart{CoRR-rlx}{\tick}{History + Viewfronts}{
-  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  В C/C++11 MM возможны все результаты, соответствующие
   $\{a, b, c, d\} \suq \{0, 1, 2\}$, кроме тех, в которых
   $a > b = 0$ или $c > d = 0$, а также
 \[[a = 1, b = 2, c = 2, d = 1], [a = 2, b = 1, c = 1, d = 2].\]
@@ -476,7 +476,7 @@
 \midTests
 
 \litmusTestStart{CoRR-rel-acq}{\tick}{History + Viewfronts}{
-  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  В C/C++11 MM возможны все результаты, соответствующие
   $\{a, b, c, d\} \suq \{0, 1, 2\}$, кроме тех, в которых
   $a > b = 0$ или $c > d = 0$, а также
 \[[a = 1, b = 2, c = 2, d = 1], [a = 2, b = 1, c = 1, d = 2].\]
@@ -506,21 +506,21 @@
 \label{app:iriw}
 
 \litmusTestStart{IRIW-rlx}{\tick}{History + Viewfronts}{
-  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  В C/C++11 MM возможны все результаты, соответствующие
   $\{a, b, c, d\} \suq \{0, 1\}$.
 }{%
 \iriwTemplate{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}{\rlx}
 }
 
 \litmusTestStart{IRIW-rel-acq}{\tick}{History + Viewfronts}{
-  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  В C/C++11 MM возможны все результаты, соответствующие
   $\{a, b, c, d\} \suq \{0, 1\}$.
 }{%
 \iriwTemplate{\rel}{\rel}{\rel}{\rel}{\acq}{\acq}{\acq}{\acq}
 }
 
 \litmusTestStart{IRIW-sc}{\tick}{SC + History + Viewfronts}{
-  В оригинальной модели C/C++11 возможны все результаты, соответствующие
+  В C/C++11 MM возможны все результаты, соответствующие
   $\{a, b, c, d\} \suq \{0, 1\}$, кроме $[a = 1, b = 0, c = 1, d = 0]$.
 }{%
 \iriwTemplate{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}{\sc}
@@ -625,7 +625,7 @@
 %% clients~\cite{Batty-al:ESOP15}.
 
 \litmusTestStart{OTA-lb}{\fail}{Postponed reads + History + Viewfronts}{
-  Оригинальная модель C/C++11 разрешает для этой программы любой результат, в котором $a = b$.
+  C/C++11 MM разрешает для этой программы любой результат, в котором $a = b$.
 }{%
 \codePrefix
   $\writeInstParam{\rlx}{x}{0}; \writeInstParam{\rlx}{y}{0};$ \\
