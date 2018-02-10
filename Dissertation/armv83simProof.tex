@@ -291,21 +291,25 @@
   Из определений отношений следует, что $\lPO^{?}; \lSW; \lPO \suq \lBOB^{?}; \lBOB \cup \lBOB^{?}; \lBOB; \lRFE; \lBOB \suq \lEORD$.
   По транзитивности $\lEORD$, $\tup{w, w'} \in \lEORD$.
   
-  Мы знаем, что $\tup{w', w} \in \lCO$. Есть два варианта: $\tup{w', w} \in \lCOE$ или $\tup{w', w} \in \lCOI$.
+  Мы знаем, что $\tup{w', w} \in \lCO$. Существует два варианта: $\tup{w', w} \in \lCOE$ или $\tup{w', w} \in \lCOI$.
   Первый вариант противоречит ацикличности $\lEORD$, т.к. $\lCOE \suq \lOBS$. Опровергнем второй вариант, показав, что
   $(\lEORD \cup \lCOI)^{+} = (\lOBS \cup \lDOB \cup \lBOB \cup \lCOI)^{+}$ антирефлексивно.
 
   Предположим обратное и рассмотрим цикл минимальной длины, в котором точно есть $\lCOI$ по антирефлексивности $\lEORD$.
-  Рассмотрим предыдущее ребро и покажем, что во всех случаях цикл можно укоротить.  
+  Рассмотрим предыдущее ребро цикла, которое мы обозначим $r$, и покажем, что во всех случаях цикл можно укоротить.  
   \begin{itemize}
-    \item $\lCOI; \lCOI \suq \lCOI$
-    \item $\lOBS; \lCOI \suq \lOBS$: $\quad \lRFE; \lCOI = \emptyset \quad \lFRE; \lCOI \suq \lFRE \quad \lCOE; \lCOI \suq \lCOE$
-    \item $\lDOB; \lCOI \suq \lDOB$:
+    \item Если $r \in \lCOI$, то цикл может быть укорочен, т.к. $\lCOI; \lCOI \suq \lCOI$.
+    \item Если $r \in \lOBS = \lRFE \cup \lFRE \cup \lCOE$, то нужно рассмотреть три варианта.
+      Поскольку $\lRFE; \lCOI = \emptyset$, то $r$ не может быть из отношения $\lRFE$.
+      В двух других случаях цикл может быть укорочен, т.к. $\lFRE; \lCOI \suq \lFRE$, и $\lCOE; \lCOI \suq \lCOE$.
+    \item Если $r \in \lBOB$, то цикл может быть укорочен, поскольку $\lPO; \lCOI \suq \lPO$.
+    \item Если $r \in \lDOB$, то цикл может быть укорочен:
       \begin{itemize}
-        \item $\lADDR; \lPO^{?}; \lCOI \suq \lDOB \quad \lDATA; \lCOI \suq \lDOB$
-        \item $(\lADDR \cup \lDATA);\lRFI; \lCOI = \emptyset \quad (\lCTRL \cup \lDATA); [\lW]; \lCOI^{?}; \lCOI \suq \lDOB$
+        \item $\lADDR; \lPO^{?}; \lCOI \suq \lDOB$,
+        \item $\lDATA; \lCOI \suq \lDOB$,
+        \item $(\lADDR \cup \lDATA);\lRFI; \lCOI = \emptyset$,
+        \item $(\lCTRL \cup \lDATA); [\lW]; \lCOI^{?}; \lCOI \suq \lDOB$.
       \end{itemize}
-    \item $\lBOB; \lCOI \suq \lBOB$: $\lPO; \lCOI \suq \lPO$
     \qedhere
   \end{itemize}
 \end{proof}

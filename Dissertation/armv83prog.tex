@@ -216,7 +216,8 @@
 
 \section{Связь между системой переходов и предзапусками}
 \label{sec:lts-rel}
-
+Для того, чтобы определить связь между системой переходов, на которой строится исполнение
+обещающей модели памяти, и предзапусков модели ARMv8.3, мы вводим отношение $\approx$:
 \[\inarr{
   \approx : \Label_{\Promise} \rightarrow \Label_{\ARM} \rightarrow {\rm Boolean} \\
   lbl_{\Promise} \approx lbl_{\ARM} \defeq \\
@@ -228,17 +229,22 @@
       \mid \flab{\rel}, \flab{\SY}
       \mid \flab{\acq}, \flab{\LD} \rightarrow {\rm true} \\
       \mid \_, \_ \rightarrow {\rm false}
-    \end{array} \\
-  \\
-  \nthf : \{A : Set\} \rightarrow \Pset(A \times A) \rightarrow \mathbb{N} \rightarrow \Pset(A) \\
-  \nthf \; rel \; n \defeq \codom{rel^{n}} \setminus \codom{rel^{n + 1}}.
+    \end{array}
 }\]
+Это отношение, по сути, является отношением компиляции. Так, оно связывает метки переходов
+чтения и записи с событиями чтения и записи, только если они имеют одинаковые параметры: целевую локацию
+и значение. Кроме того, отношение $\approx$ связывает метку высвобождающего барьера $\flab{\rel}$
+с событием полного барьера $\flab{\SY}$, а приобретающего барьера $\flab{\acq}$ --- с событием $\LD$-барьера.
+
 
 \begin{theorem}
+  \label{thm:compl-state-preexec}
+  %% Для любого предзапуска $\tup{set, lbl, \lPO, \_, \_, \_}$ программы $\Carm$ верно, что 
+  %% Кроме того, 
 \[\inarr{
 \forall \Carm. \\
 \quad (\forall \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \\
-\qquad \exists path \in \cmdsToLbls \; \Carm. \; \forall n \in \mathbb{N}, a \in \nthf \; \lPO \; n. \\
+\qquad \exists path \in \cmdsToLbls \; \Carm[\tId]. \; \forall n \in \mathbb{N}, a \in \nthf \; \lPO \; n. \\
 \qquad \quad \exists k \in \mathbb{N}. \; path[n + k] \approx lbl \; a) \land {} \\
 \quad (\forall path \in \cmdsToLbls \; \Carm. \\
 \qquad \exists \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \;
@@ -246,6 +252,14 @@
 \qquad \quad path[n] \neq \epsilon \Rightarrow \exists k \in \mathbb{N}, a \in \nthf \; \lPO \; (n - k). \; path[n] \approx lbl \; a).
 }\]
 \end{theorem}
-\begin{proof}
+
+В формулировке теоремы присутствует функция $\nthf$, которая по бинарному отношению $rel$ и натуральному числу $n$ возвращает множество элементов
+из области определения $rel$, до которых в $rel$ существует путь длины $n$, но не $n+1$:
+\[\inarr{
+  \nthf : \{A : Set\} \rightarrow \Pset(A \times A) \rightarrow \mathbb{N} \rightarrow \Pset(A) \\
+  \nthf \; rel \; n \defeq \codom{rel^{n}} \setminus \codom{rel^{n + 1}}.
+}\]
+
+\begin{proof}[Доказательство теоремы \ref{thm:compl-state-preexec}]
   Верно по определению функций $\cmdsToLbls$ и $\cmdsToVrtxs$.
 \end{proof}
