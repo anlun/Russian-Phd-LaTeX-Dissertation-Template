@@ -3,7 +3,7 @@
 
 При доказательстве того, что обещающая машина может симулировать исполнение \ARMt~машины,
 мы используем леммы \ref{lem-snd} и \ref{lem-fst}, в которых конструируется шаг обещающей машины.
-Согласно определению после каждого шага обещающая машина должна показывать, что находится в \emph{сертифицируемом состоянии}
+Согласно определению, после каждого шага обещающая машина должна показывать, что находится в \emph{сертифицируемом состоянии}
 (предикат $\certifiable$), т.е. что для каждого потока существует последовательность
 локальных шагов, при исполнении которых поток
 выполняет все данные обещания (предикат $\certifiableTid$):
@@ -119,7 +119,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
 %% \begin{itemize}
 %% \end{itemize}
 
-В определении используются следующие отношения, определённые ниже.
+В определении используются отношения, определённые ниже.
 \[\begin{array}{l}
 \invTidWriteComCERT(\tId, \aT, \p) \triangleq \\
 \quad \textLet \tape, \cpath \triangleq \aT.\tapef(\tId), \p.\TSfprom(\tId).\cpath \; \textIn \\
@@ -251,7 +251,7 @@ $\forall k, \delta, \tId, \aT, \tT, \invCert(0, \delta, k, \tId, \aT, \tT), \tT.
 $\forall n \not = 0, \delta, k, \tId, \aT, \tT, \invCert(n, \delta, k, \tId, \aT, \tT).$ \\
 ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \land \invCert(n - 1, \delta', k, \tId, \aT, \tT')$.
 \begin{proof}
-  Зафиксируем $n, \tId, \aT, \tT$. Введём обозначения:
+  Зафиксируем $n, \tId, \aT, \tT$. Введём следующие обозначения:
   \[\begin{array}{l c l}
   \tape & \triangleq & \aT.\tapef(\tId); \\
   \angled{\Mprom, \angled{\cpath, \PromState, \V, \PromSet}} & \triangleq & \tT; \\
@@ -265,7 +265,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
     \item $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\w})}$.
       Поскольку $\ainit \armStepP^{*} \aT$ и $\tape(\cpath) = \tapeRead{(\tapeSatisfied{\Committed}{\w})}$,
       то $\Cprom(\lastInstr{\cpath}) = ``\readInst{\reg}{\expr}"$.
-      Введём обозначения:
+      Введём следующие обозначения:
       \[\begin{array}{l l l}
         \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
         %% \regstcom  & \triangleq & \regstcom(\aT.\Cfarm(\tId), \tape, \cpath); \\
@@ -289,7 +289,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
 
     \item $\tape(\cpath) = \tapeRead{\Rstate}$, где состояние $\Rstate$ указывает, что экземпляр не завершён.
       Аналогично предыдущему пункту, $\Cprom(\lastInstr{\cpath}) = ``\readInst{\reg}{\expr}"$.
-      Введём обозначения:
+      Введём следующие обозначения:
       \[\begin{array}{l l l}
         \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
         \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
@@ -301,7 +301,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
       \end{array}\]
       Из свойств обещающей машины следует, что существуют $\stval$ и $\R$ такие, что
       $\writeEvt{\loc}{\stval}{\tau}{\R} \in \Mprom$.
-      Введём обозначения:
+      Введём следующие обозначения:
       \[\begin{array}{l l l}
       \V' = \angled{\Rcur', \Racq', \Rrel'} & \triangleq & \angled{\Rcur \sqcup [\loc @ \tau], \Racq \sqcup \R, \Rrel} \\
                                             & =          & \angled{\Rcur, \Racq \sqcup \R, \Rrel}; \\
@@ -314,7 +314,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
 
     \item $\tape(\cpath) = \tapeWrite{(\tapeWriteCommitted{\InMemory}{\loc}{\stval})}$.
       Аналогично предыдущим пунктам, $\Cprom(\lastInstr{\cpath}) = ``\writeInst{\expr_0}{\expr_1}"$.
-      Введём обозначения:
+      Введём следующие обозначения:
       \[\begin{array}{l l l}
         \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
         \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
@@ -338,7 +338,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
       сначала пообещает некоторое сообщение, а потом выполнит это обещание.
       Аналогично предыдущим пунктам,
       $\Cprom(\lastInstr{\cpath}) = ``\writeInst{\expr_0}{\expr_1}"$.
-      Введём обозначения:
+      Введём следующие обозначения:
       \[\begin{array}{l l l}
         \cpath'    & \triangleq & \nextPath{\cpath}{1}; \\
         \regstcom  & \triangleq & \regstcom(\Cprom, \tape, \cpath); \\
@@ -348,7 +348,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
         %%   \text{ (it's defined according to properties of the $\ARMt$ machine)}. \\
       \end{array}\]
       Поскольку соответствующий экземпляр записи не завершён, то в памяти \ARMt~машины
-      нет связанного с ним запроса, а значит и нужной метки времени для добавляемого обещающей машиной сообщения.
+      нет связанного с ним запроса, а значит, и нужной метки времени для добавляемого обещающей машиной сообщения.
       Поэтому нам нужно выбрать эту метку времени, которую мы будем обозначать $\tau$.
       Метка $\tau$ должна удовлетворять следующим ограничениям.
       \[\begin{array}{l l}
@@ -366,11 +366,11 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
            & \quad \R = \aT.\rmap(\w.\tId, \w.\cpath) \not = \bot \Rightarrow \\
            & \qquad \R(\loc) \le \tau. \\
       \end{array}\]
-      Поскольку метки времени являются элементами плотного множества $\mathbb{Q}$, то, как следствие
-      $\invViewWriteCERT(\tId, \aT, \tT)$, $\invViewReadCERT(\delta, \tId, \aT, \tT)$ и теоремы \ref{thm:invAview},
+      Поскольку метки времени являются элементами плотного множества $\mathbb{Q}$, то в силу 
+      $\invViewWriteCERT(\tId, \aT, \tT)$, $\invViewReadCERT(\delta, \tId, \aT, \tT)$ и теоремы \ref{thm:invAview}
       нужная метка $\tau$ существует.
 
-      Введём обозначения:
+      Введём следующие обозначения:
       \[\begin{array}{l l l}
         \R  & \triangleq & \Rrel \sqcup [\loc @ \tau]; \\
         msg & \triangleq & \writeEvt{\loc}{\stval}{\tau}{\R}; \\
@@ -392,7 +392,7 @@ ${} \quad \exists \delta', \tT'. \Cfprom(\tId) \vdash \tT \promTStep^{*} \tT' \l
 {\bf Теорема \ref{cert-thm}.}
 $\forall (\aT, \p) \in \simrelBase. \ainit \armStepP^{*} \aT \Rightarrow \certifiable(\p)$.
 \begin{proof}%[Доказательство теоремы \ref{cert-thm}]
-  Зафиксируем $\tId, \tape \triangleq \aT.\tapef(\tId)$. Введём обозначения:
+  Зафиксируем $\tId, \tape \triangleq \aT.\tapef(\tId)$. Введём следующие обозначения:
   \[\begin{array}{l l l}
     k & \triangleq & \lastInstr{\lastCommittedWrite(\tape)} + 1; \\
     n & \triangleq & \length(\lastCommittedWrite(\tape):k) - \length(\tT.\cpath); \\
@@ -403,7 +403,7 @@ $\forall (\aT, \p) \in \simrelBase. \ainit \armStepP^{*} \aT \Rightarrow \certif
   Если мы сможем показать, что $\invCert(n, \delta, k, \tId, \aT, \tT)$
   выполняется, то утверждение теоремы верно по лемме \ref{cert-lem-three}.
   %% Проверим, что $\invCert(n, \delta, k, \tId, \aT, \tT)$ выполняется.
-  Так, нам нужно проверить следующее утверждение:
+  Таким образом нам нужно проверить следующее утверждение:
   \[\begin{array}{l}
  \ainit \armStepP^{*} \aT \land {} \\
  \tT.\cpath \le \cpath_{\textup{\sf next-last}} \land (n = \length(\cpath_{\textup{\sf next-last}}) - \length(\tT.\cpath)) \land {} \\
@@ -425,9 +425,9 @@ $\forall (\aT, \p) \in \simrelBase. \ainit \armStepP^{*} \aT \Rightarrow \certif
  (\delta, \tId, \aT) \in \invDeltaDefThree \cap \invDeltaDefFour. \\
   \end{array}\]
   Первые три конъюнкта очевидно выполняются.
-  Четвертый конъюнкт выполняется по ограничениям перехода \transenv{Завершение барьера} машины ARMv8 POP.
+  Четвертый конъюнкт выполняется в силу ограничений перехода \transenv{Завершение барьера} машины ARMv8 POP.
   Пятый конъюнкт выполняется по ограничениям перехода \transenv{Завершение записи} машины ARMv8 POP и
-  верности утверждения $\invComWrite(\aT, \p)$.
+  истинности утверждения $\invComWrite(\aT, \p)$.
 
   Утверждения $(\delta, \tId, \aT) \in \invDeltaDefThree \cap \invDeltaDefFour$ и
   $(\delta, \tId, \aT, \tT) \in \invDeltaDefOne \cap \invDeltaDefTwo \cap \invMemZeroCERT$

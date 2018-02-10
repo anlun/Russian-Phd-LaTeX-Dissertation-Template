@@ -15,7 +15,7 @@ $\forall (\aT, \p) \in \simrelPre. \;
 Далее в доказательстве мы конструируем состояние обещающей машины $\p'$ такое, что 
 оно удовлетворяет утверждению теоремы.
 
-Введём обозначения:
+Введём следующие обозначения:
 \[\begin{array}{l l l}
   \Carm & \triangleq & \Cfarm(\tId); \\
   \angled{\Rcur, \Racq, \Rrel} & \triangleq & \p.\TSfprom(\tId).\V; \\
@@ -27,6 +27,7 @@ $\forall (\aT, \p) \in \simrelPre. \;
   \PromSet & \triangleq & \p.\TSfprom(\tId).\PromSet;\\
   \hmap   & \triangleq & \aT.\hmap.
 \end{array}\]
+
 Мы покажем, что обещающая машина в состоянии $\p$ может сделать переход, связанный с $\tape(\cpath)$, в состояние $\p'$,
 и при этом будет выполняться $(\aT, \p') \in \simrelPre \cup \simrel$.
 Далее мы проведём разбор вариантов состояния экземпляра $\tape(\cpath)$.
@@ -119,7 +120,7 @@ $(\aT, \p') \in \invReach \cap \invMemThree$.
 
     Поскольку все экземпляры с путями, меньше чем $\cpath$, завершены, то
     экземпляр записи $(\tId'', \cpath'')$, из которого читает экземпляр $\tape(\cpath)$, точно завершён.
-    Введём обозначения:
+    Введём следующие обозначения:
     \[\begin{array}{l}
     \aT.\tapef(\tId'', \cpath'') = \tapeWrite{(\tapeWriteCommitted{\_}{x}{\stval})}; \\
     (\tau, \_, \R') \triangleq \aT.\hmap(\tId'', \cpath'') \not = (\bot, \_ , \bot). \\
@@ -180,7 +181,7 @@ $\forall (\aT, \p) \in \simrel. \\
 \begin{proof}
   Рассмотрим первый конъюнкт.
   Зафиксируем $\aT, \p$ и $\aT'$ такие, что $\aT \armStepgen{\lnot \; \transenv{Write commit} \; \tId} \aT'$.
-  Введём обозначения:
+  Введём следующие обозначения:
 \[
 \begin{array}{l l l}
 \multicolumn{3}{l}{\angled{\cpath', \PromState, \angled{\Rcur, \Racq, \Rrel}, \PromSet} \triangleq \p.\TSfprom(\tId);}\\
@@ -189,6 +190,7 @@ $\forall (\aT, \p) \in \simrel. \\
 %% \cpathLDSY & \triangleq & \lastLDSY(\tape, \cpath').\\
 \end{array}
 \]
+
   Нам нужно показать, что $(\aT', \p) \in \simrel \cup \simrelPre$.
   Из определений $\invReach$ и $\invMemThree$ следует, что $(\aT', \p) \in \invReach \cap \invMemThree$ выполняется.
   Утверждения $\invPrefix(\aT', \p)$ и $\invView(\aT', \p)$ выполняется, потому что переход $\aT \armStepgen{} \aT'$
@@ -212,7 +214,7 @@ $\forall (\aT, \p) \in \simrel. \\
   
   Рассмотрим второй конъюнкт.
   Зафиксируем $\aT$, $\p$ и $\aT'$ такие, что $\aT \armStepWriteCommit \aT'$.
-  Введём обозначения:
+  Введём следующие обозначения:
 \[
 \begin{array}{l l l}
 \multicolumn{3}{l}{\angled{\cpath', \PromState, \angled{\Rcur, \Racq, \Rrel}, \PromSet} \triangleq \p.\TSfprom(\tId);}\\
@@ -240,7 +242,7 @@ $\forall (\aT, \p) \in \simrel. \\
 и в предыдущем рассмотренном варианте.
 
 Утверждение $\invMemOne(\aT', \p')$ верно, поскольку верно $\invMemOne(\aT, \p)$, а изменения памяти машин
-как раз отражают требования $\invMemOne$.
+отражают требования $\invMemOne$.
 
 Проверим, что выполняется $\invMemTwo(\aT', \p')$. Для этого нужно показать, что верно следующее утверждение.
   \[\begin{array}{l}
