@@ -37,7 +37,7 @@ $(\aT, \p') \in \invReach \cap \invMemThree$.
 Выполнение $\invPrefix(\aT, \p')$ следует из того, что
   $\cpath' \in \nextPathCom{\cpath}{\Carm}{\tape}$, $\invAnextCommitted(\aT)$, и исполнение экземпляра $\tape(\cpath)$ завершено.
 Поскольку переход $\p \promStep \p'$ будет использован для того, чтобы ``нагнать'' исполнение машины \ARMt,
-то он не является переходом \transenv{Завершения записи}. Как следствие, $\p'.\Mprom = \p.\Mprom$, и 
+то он не является переходом \transenv{Завершение записи}. Как следствие, $\p'.\Mprom = \p.\Mprom$, и 
 утверждение $\invMemTwo(\aT, \p')$ следует из $\invMemTwo(\aT, \p)$.
 Кроме того, очевидно, что будет выполняться
 либо $\invPromUptoARM(\aT, \p')$, либо $\invPromUptoARMnot(\aT, \p')$ в зависимости от
@@ -198,7 +198,7 @@ $\forall (\aT, \p) \in \simrel. \\
   Утверждение $\invComWrite(\aT', \p)$ следует из $\invComWrite(\aT, \p)$ и требований правила \transenv{Завершение $\SY$-барьера}.
    
   Нам нужно показать, что выполняется либо $\invPromUptoARM(\aT', \p)$, либо $\invPromUptoARMnot(\aT', \p)$.
-  Если переход $\aT \armStepgen{} \aT'$ является \transenv{Уведомлением потока $\tId''$ о запросе $\e''$},
+  Если переход $\aT \armStepgen{} \aT'$ является \transenv{Уведомление потока $\tId''$ о запросе $\e''$},
   для плёнка любого потока не меняется, а значит как следствие того, что $(\aT, \p) \in \simrel$,
   выполняется $\invPromUptoARM(\aT', \p)$.
   Иначе, существует некоторый экземпляр $(\tId, \cpath)$, часть исполнения которого выполняется на переходе $\aT \armStepgen{} \aT'$.
