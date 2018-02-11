@@ -96,6 +96,9 @@
 }
 \]
 
+Важно отметить, что каждый поток (в обещающей машине) имеет свою систему переходов, которая
+представляет программу этого потока и, соответственно, строится с помощью функции $\cmdsToLbls$.
+
 \section{Предзапуски}
 \label{app:comptopreexec}
 
@@ -118,26 +121,17 @@
 таким образом, чтобы получалось \ARM-согласованное исполнение. Важно отменить, что не для всех предзапусков
 существуют подходящие $\lCO$ и $\lRF$.
 
-\[
-\inarr{
-  \cmdsToVrtxs : \Carm \rightarrow \PreExecutions \\
-  \cmdsToVrtxs \; ilist = \instToVrtx \; ilist \; 0 \; (\lambda \reg. 0) \; \emptyset \\
-}\]
-Функция построения предзапусков по программе $\cmdsToVrtxs$ использует вспомогательную функцию $\instToVrtx$,
+Функция построения предзапусков по списку команд потока $\cmdsToVrtxs$ использует вспомогательную функцию $\instToVrtx$,
 которая принимает список инструкций потока $ilist$, указатель на текущую инструкцию $pos$,
 состояние локальных переменных $st$ и отношение зависимости локальной переменной от сгенерированного события $\dep$.
 Последний параметр нужен для отношений зависимости.
 
 \[
 \inarr{
-  \regs : \Expr \rightarrow \Pset(\Reg) \\
-  \regs \; e \defeq \\
-  \quad \kw{match} \; e \; \kw{with} \\
-  \quad | \; \loc \; | \; \val \rightarrow \emptyset \\
-  \quad | \; \reg \rightarrow \{\reg\} \\
-  \quad | \; uop \; \expr \rightarrow \regs \; \expr \\
-  \quad | \; bop \; \expr_o \; \expr_1 \rightarrow (\regs \; \expr_0) \cup (\regs \; \expr_1) \\
+  \cmdsToVrtxs : \Carm \rightarrow \PreExecutions \\
+  \cmdsToVrtxs \; ilist \defeq \instToVrtx \; ilist \; 0 \; (\lambda \reg. 0) \; \emptyset \\
 }\]
+
 %% \[\inarr{
 %%   \sembr{-} : \Carm \rightarrow
 %%     \{\tup{\emptyset, \bot, \emptyset, \emptyset, \emptyset, \emptyset, \emptyset, \lambda \reg. \; 0, \emptyset} \} \\
@@ -214,10 +208,47 @@
 \]
 }
 
+В определении функции $\instToVrtx$ используется вспомогательная функция $\regs$, которая по выражению
+вычисляет множество регистров, от которых это выражение зависит.
+
+\[
+\inarr{
+  \regs : \Expr \rightarrow \Pset(\Reg) \\
+  \regs \; e \defeq \\
+  \quad \kw{match} \; e \; \kw{with} \\
+  \quad | \; \loc \; | \; \val \rightarrow \emptyset \\
+  \quad | \; \reg \rightarrow \{\reg\} \\
+  \quad | \; uop \; \expr \rightarrow \regs \; \expr \\
+  \quad | \; bop \; \expr_o \; \expr_1 \rightarrow (\regs \; \expr_0) \cup (\regs \; \expr_1) \\
+}\]
+
+Как было отмечено выше, функция $\cmdsToVrtxs$ строит предзапуски только одного потока.
+Для того, чтобы получить предзапуск всей программы, предзапуски потоков программы должны быть покомпонентно
+объединены, а также в каждый получившийся предзапуск должны быть добавлены события инициализирующей записи:
+\[
+\inarr{
+{\textup{\sf prog-to-vertex}} : {\sf Prog} \rightarrow \PreExecutions \\
+{\textup{\sf prog-to-vertex}} \; \Cfarm \defeq \\
+\quad \letdef{E(\tId)}{\cmdsToVrtxs \; \Cfarm(\tId)} \\
+\quad \kw{let} \; P \defeq
+  \{\langle \bigcup_{\tId \in \dom{\Cfarm}} pe_{\tId}.set, \bigsqcup_{\tId \in \dom{\Cfarm}} pe_{\tId}.\lLAB,
+    \bigcup_{\tId \in \dom{\Cfarm}} pe_{\tId}.\lPO, \\
+\qquad 
+    \bigcup_{\tId \in \dom{\Cfarm}} pe_{\tId}.\lCTRL, \bigcup_{\tId \in \dom{\Cfarm}} pe_{\tId}.\lADDR,
+    \bigcup_{\tId \in \dom{\Cfarm}} pe_{\tId}.\lDATA \rangle \\
+\qquad \mid \tId \in \dom{\Cfarm}, pe_{\tId} \in E(\tId) \} \;
+\kw{in} \\
+\quad \letdef{\lE_{init}, lab_{init}}{\{e_{\loc}, [e_{\loc} \mapsto \evlab{\lW}{\pln}{\loc}{0}] \mid \loc \in \Loc \}} \\
+\quad \letdef{\lLAB'}{\bigsqcup lab_{init}} \\
+\quad \{\tup{set \cup \lE_{init}, \lLAB \sqcup \lLAB', \lPO \cup (\lE_{init} \times set), \lCTRL, \lADDR, \lDATA} \\
+\qquad \mid \tup{set, \lLAB, \lPO, \lCTRL, \lADDR, \lDATA} \in P\}
+}\]
+
+
 \section{Связь между системой переходов и предзапусками}
 \label{sec:lts-rel}
 Для того, чтобы определить связь между системой переходов, на которой строится исполнение
-обещающей модели памяти, и предзапусков модели ARMv8.3, мы вводим отношение $\approx$:
+потока обещающей модели, и предзапуска потока в модели ARMv8.3, мы вводим отношение $\approx$:
 \[\inarr{
   \approx : \Label_{\Promise} \rightarrow \Label_{\ARM} \rightarrow {\rm Boolean} \\
   lbl_{\Promise} \approx lbl_{\ARM} \defeq \\
@@ -236,11 +267,12 @@
 и значение. Кроме того, отношение $\approx$ связывает метку высвобождающего барьера $\flab{\rel}$
 с событием полного барьера $\flab{\SY}$, а приобретающего барьера $\flab{\acq}$ --- с событием $\LD$-барьера.
 
-
 \begin{theorem}
   \label{thm:compl-state-preexec}
-  %% Для любого предзапуска $\tup{set, lbl, \lPO, \_, \_, \_}$ программы $\Carm$ верно, что 
-  %% Кроме того, 
+  Для любого события из предзапуска, построенного по списку инструкций $\Carm$, существует путь
+  в системе переходов, построенной по $\Carm$, который имеет эквивалентный событию переход.
+  Кроме того, верно и обратное: для любого перехода некоторого пути в системе переходов, построенной по $\Carm$,
+  существует предзапуск $\Carm$ и событие в нём, эквивалентное этому переходу.
 \[\inarr{
 \forall \Carm. \\
 \quad (\forall \tup{set, lbl, \lPO, \_, \_, \_} \in \cmdsToVrtxs \; \Carm. \\
@@ -252,8 +284,11 @@
 \qquad \quad path[n] \neq \epsilon \Rightarrow \exists k \in \mathbb{N}, a \in \nthf \; \lPO \; (n - k). \; path[n] \approx lbl \; a).
 }\]
 \end{theorem}
+Теорема тривиальным образом обобщается на случай программ, т.е. функций, которые по идентификатору потока возвращают
+его список инструкций.
 
-В формулировке теоремы присутствует функция $\nthf$, которая по бинарному отношению $rel$ и натуральному числу $n$ возвращает множество элементов
+В формулировке теоремы \ref{thm:compl-state-preexec}
+присутствует функция $\nthf$, которая по бинарному отношению $rel$ и натуральному числу $n$ возвращает множество элементов
 из области определения $rel$, до которых в $rel$ существует путь длины $n$, но не $n+1$:
 \[\inarr{
   \nthf : \{A : Set\} \rightarrow \Pset(A \times A) \rightarrow \mathbb{N} \rightarrow \Pset(A) \\
