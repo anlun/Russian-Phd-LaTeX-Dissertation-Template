@@ -1,0 +1,764 @@
+\fr{Оптимизация повторяющихся чтений некорректна в Java MM}{
+  \[\inarrII{
+    r1 := [x];   \comment{1} \\
+    {} [y] := r1  \; \comment{1} \\
+  }{
+    r2 := [y]; \nocomment{1} \\
+    \iteml{r2 = 1}{
+      r3 := [y]; \\
+      {} [x] := r3
+    }{
+      {} [x] := 1
+    }
+  }\]
+}
+
+\fr{}{
+\LARGE
+$$\begin{array}{c}
+\uncover<7->{\hspace{12pt} [x] := 0; [y] := 0} \\
+\begin{array}{l||l}
+\only<-10,13->{\inarr{
+  \tikzmark{reorder1} {} [x] := 1;  \\
+  \tikzmark{reorder2} a := [y]
+}}
+\only<11-12>{\inarr{
+  a := [y]; \\
+  {} [x] := 1
+}}
+\uncover<7->{& \inarr{
+  {} [y] := 1; \\
+  b := [x]
+}}
+\end{array}\end{array}$$
+
+\mycallout<2>{green}{(reorder1)}{(-0.5cm, -0.5cm)}{{\bf Компилятор:} \\ Независимые обращения. \\ Можно переупорядочить.}
+\mycallout<3>{blue}{(reorder2)}{(-0.5cm, 1.0cm)}{{\bf Процессор:} \\ Независимые обращения. \\ Можно выполнить не по порядку.}
+
+\dimalert<5>{Всегда ли корректны такие преобразования?}
+
+\only<8-11>{\cntrd{\textcolor{red}{a = b = 0}}}
+
+\dimalert<9>{А если переупорядочить?}
+
+\only<12->{\cntrd{\textcolor{darkGreen}{a = b = 0}}}
+\only<14->{\cntrd{\bf \alert{Такое поведение наблюдается для GCC + x86!}}}
+
+    \tikz[remember picture, overlay]{ \draw<10,13->[<->,ultra thick] (reorder2) to[out=178,in=182] (reorder1); }
+}
+
+\fr{\Large Исполнение в oперационной модели (\OpCpp)}{
+  \setorder{{firstFr, memoryAppearFr},{viewAppearFr},
+            {pointerAppearFr},
+            {postponeReadFr,propReadLeftFr},
+            {promLeftFr,fulfillLeftFr},
+            {readRightFr, propReadRightFr},{fulfillRightFr},
+            {readLeftFr}}
+  \prevFr{\befReadLeftFr}{\readLeftFr}
+  \prevFr{\befPromLeftFr}{\promLeftFr}
+  \prevFr{\befPropReadLeftFr}{\propReadLeftFr}
+  \prevFr{\befFulfillLeftFr}{\fulfillLeftFr}
+
+  \prevFr{\befReadRightFr}{\readRightFr}
+  \prevFr{\befPropReadRightFr}{\propReadRightFr}
+  \prevFr{\befFulfillRightFr}{\fulfillRightFr}
+
+  \prevFr{\befPostponeReadFr}{\postponeReadFr}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst , node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of= leftFirstInst , node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of=rightFirstInst , node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of=rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+
+      \node (memory)           at ($(middleBuffer) + (0.0,-2.4)$) {};
+      \node (memorySecondLine) at ($(memory)       + (-1.35,-0.6)$) {};
+      
+      \onslide<\postponeReadFr-\befReadLeftFr>
+        { \postponedBorder{leftFirstInst}
+          \postponedCommentLeft{leftFirstInst} }
+      %% \onslide<\promRightFr-\readRightFr>
+      %%   { \promisedBorder{rightSecondInst}
+      %%     \promisedCommentRight{rightSecondInst} }
+      
+      \onslide<\pointerAppearFr-\befPostponeReadFr>
+        { \ptrPromiseLeft{leftFirstInst} } 
+      \onslide<\postponeReadFr-\befFulfillLeftFr>
+        { \ptrPromiseLeft{leftSecondInst} } 
+      \onslide<\fulfillLeftFr->
+        { \ptrPromiseLeft{leftThirdInst} } 
+
+      \onslide<\pointerAppearFr-\befReadRightFr>
+        { \ptrPromiseRight{rightFirstInst} }
+      \onslide<\readRightFr-\befFulfillRightFr>
+        { \ptrPromiseRight{rightSecondInst} } 
+      \onslide<\fulfillRightFr->
+        { \ptrPromiseRight{rightThirdInst} } 
+      
+      \node (memoryBackLeft)     at ($(memory) + (-5.5,1.5)$) {};
+      \node (memoryBackRightOne) at ($(memory) + (5.5,-0.5)$) {};
+      \node (memoryBackRightTwo) at ($(memory) + (5.5,-1.0)$) {};
+
+      \onslide<\memoryAppearFr-\befPromLeftFr>{
+        \draw[draw,fill=yellow!20] (memoryBackLeft) rectangle (memoryBackRightOne);
+        \node at (memory) {\Large Память: $[\promMsg{x}{0}{0},\promMsg{y}{0}{0}]$};
+      }
+      \onslide<\promLeftFr->{
+        \draw[draw,fill=yellow!20] (memoryBackLeft) rectangle (memoryBackRightTwo);
+        \node at (memory) {\Large Память: $[\promMsg{x}{0}{0},\promMsg{y}{0}{0},$};
+      }
+      \onslide<\promLeftFr-\befFulfillRightFr>
+        { \node [anchor=west] at (memorySecondLine) {\Large $\promMsg{y}{1}{1}]$}; }
+      \onslide<\fulfillRightFr->
+        { \node [anchor=west] at (memorySecondLine) {\Large $\promMsg{y}{1}{1}, \promMsg{x}{1}{1}]$}; }
+
+      \node<\viewAppearFr-\befFulfillLeftFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}]$
+      };
+      \node<\fulfillLeftFr-\befReadRightFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{1}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}]$
+      };
+      \node<\readRightFr-\befFulfillRightFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{1}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{1}]$
+      };
+      \node<\fulfillRightFr-\befReadLeftFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{1}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+      \node<\readLeftFr-> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+      
+      \node (values)  at ($(middleBuffer) + (0, -4.5)$) {};
+      \onslide<\firstFr->
+        { \draw[draw,fill=yellow!20] ($(values) + (-1.9,  0.8)$) rectangle
+                                     ($(values) + ( 1.9, -0.3)$) ;
+          \node[anchor=north] at ($(values) + (0,  0.85)$) {\Large Регистры}; }
+      \node at ($(values) + (-0.05, -0.1)$) {\Large $;$}; 
+      \node<-\befReadLeftFr>[anchor=east] at (values) {\Large $a = \bot$}; 
+      \node<\readLeftFr->[anchor=east] at (values) {\Large $a = \textcolor{colorVAL}{1}$}; 
+      \node<-\befReadRightFr>[anchor=west] at (values) {\Large $b = \bot$}; 
+      \node<\readRightFr->[anchor=west] at (values) {\Large $b = \textcolor{colorVAL}{1}$}; 
+    \end{tikzpicture}
+  }
+}
+
+\fr{\Large Исполнение в обещающей модели (\Promise)}{
+  \setorder{{firstFr, memoryAppearFr,viewAppearFr,pointerAppearFr},
+            {promLeftFr},
+            {readRightFr, propReadRightFr},{fulfillRightFr},
+            {readLeftFr, propReadLeftFr},{fulfillLeftFr}}
+  \prevFr{\befReadLeftFr}{\readLeftFr}
+  \prevFr{\befPropReadLeftFr}{\propReadLeftFr}
+  \prevFr{\befFulfillLeftFr}{\fulfillLeftFr}
+
+  \prevFr{\befReadRightFr}{\readRightFr}
+  \prevFr{\befPropReadRightFr}{\propReadRightFr}
+  \prevFr{\befFulfillRightFr}{\fulfillRightFr}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst , node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of= leftFirstInst , node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of=rightFirstInst , node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of=rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+
+      \node (memory)           at ($(middleBuffer) + (0.0,-2.4)$) {};
+      \node (memorySecondLine) at ($(memory)       + (-1.35,-0.6)$) {};
+      
+      \onslide<\promLeftFr-\readLeftFr>
+        { \promisedBorder{leftSecondInst}
+          \promisedCommentLeft{leftSecondInst} }
+      %% \onslide<\promRightFr-\readRightFr>
+      %%   { \promisedBorder{rightSecondInst}
+      %%     \promisedCommentRight{rightSecondInst} }
+      
+      \onslide<\pointerAppearFr-\befReadLeftFr>
+        { \ptrPromiseLeft{leftFirstInst} } 
+      \onslide<\readLeftFr-\befFulfillLeftFr>
+        { \ptrPromiseLeft{leftSecondInst} } 
+      \onslide<\fulfillLeftFr->
+        { \ptrPromiseLeft{leftThirdInst} } 
+
+      \onslide<\pointerAppearFr-\befReadRightFr>
+        { \ptrPromiseRight{rightFirstInst} }
+      \onslide<\readRightFr-\befFulfillRightFr>
+        { \ptrPromiseRight{rightSecondInst} } 
+      \onslide<\fulfillRightFr->
+        { \ptrPromiseRight{rightThirdInst} } 
+      
+      \node (memoryBackLeft)     at ($(memory) + (-5.5,1.5)$) {};
+      \node (memoryBackRightOne) at ($(memory) + (5.5,-0.5)$) {};
+      \node (memoryBackRightTwo) at ($(memory) + (5.5,-1.0)$) {};
+
+      \onslide<\memoryAppearFr-\pointerAppearFr>{
+        \draw[draw,fill=yellow!20] (memoryBackLeft) rectangle (memoryBackRightOne);
+        \node at (memory) {\Large Память: $[\promMsg{x}{0}{0},\promMsg{y}{0}{0}]$};
+      }
+      \onslide<\promLeftFr->{
+        \draw[draw,fill=yellow!20] (memoryBackLeft) rectangle (memoryBackRightTwo);
+        \node at (memory) {\Large Память: $[\promMsg{x}{0}{0},\promMsg{y}{0}{0},$};
+      }
+      \onslide<\promLeftFr-\befFulfillRightFr>
+        { \node [anchor=west] at (memorySecondLine) {\Large $\promMsg{y}{1}{1}]$}; }
+      \onslide<\fulfillRightFr->
+        { \node [anchor=west] at (memorySecondLine) {\Large $\promMsg{y}{1}{1}, \promMsg{x}{1}{1}]$}; }
+
+      \node<\viewAppearFr-\befReadRightFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}]$
+      };
+      \node<\readRightFr-\befFulfillRightFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{1}]$
+      };
+      \node<\fulfillRightFr-\befReadLeftFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+      \node<\readLeftFr-\befFulfillLeftFr> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{0}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+      \node<\fulfillLeftFr-> at ($(memory) + (0,1.0)$) {\Large
+        \lviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}] \quad$
+        \rviewTXT: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+      
+      \node (values)  at ($(middleBuffer) + (0, -4.5)$) {};
+      \onslide<\firstFr->
+        { \draw[draw,fill=yellow!20] ($(values) + (-1.9,  0.8)$) rectangle
+                                     ($(values) + ( 1.9, -0.3)$) ;
+          \node[anchor=north] at ($(values) + (0,  0.85)$) {\Large Регистры}; }
+      \node at ($(values) + (-0.05, -0.1)$) {\Large $;$}; 
+      \node<-\befPropReadLeftFr>[anchor=east] at (values) {\Large $a = \bot$}; 
+      \node<\propReadLeftFr->[anchor=east] at (values) {\Large $a = \textcolor{colorVAL}{1}$}; 
+      \node<-\befPropReadRightFr>[anchor=west] at (values) {\Large $b = \bot$}; 
+      \node<\propReadRightFr->[anchor=west] at (values) {\Large $b = \textcolor{colorVAL}{1}$}; 
+    \end{tikzpicture}
+  }
+}
+
+\newcommand{\storageTwoThreadsRelative}[5]{
+    \draw
+      ($#1 + (0,-0.5)$) -- ($#1 + (0,-0.5-#3)$) -- ($#2 + (0,-0.5-#3)$) -- ($#2 + (0,-0.5)$);
+      
+    \draw
+        let \p1 = #1 in
+        let \p2 = #2 in
+        (.5*\x1 + .5*\x2, #5) -- +(0,-#4);
+}
+
+\fr{\huge Исполнение в \ARMpop}{
+  \setorder{{firstFr},{storageAppearFr},{grayBoxFr},
+            {issueReadRightFr}, {comRightFr},
+            {reorderArrowRightFr}, {reorderRightFr},
+            {propWriteRightFr},
+            {comLeftFr}, {propWriteLeftFr},
+            {propReadRightFr},
+            {issueReadLeftFr},{propReadLeftFr}}
+  \prevFr{\befPropWriteLeftFr}{\propWriteLeftFr}
+  \prevFr{\befPropReadLeftFr}{\propReadLeftFr}
+  \prevFr{\befPropWriteRightFr}{\propWriteRightFr}
+  \prevFr{\befPropReadRightFr}{\propReadRightFr}
+
+  \prevFr{\befReorderRightFr}{\reorderRightFr}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of= leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of=rightFirstInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+      \node (finalValues)  at ($(middleBuffer) + (0, -4.5)$) {};
+
+      \node (memoryValues) at ($(middleBuffer) + (0, -3.2)$) {};
+
+      \node (firstLeftReq)   at ($(leftBuffer)  + (0.0, -1.0)$) {};
+      \node (secondLeftReq)  at ($(leftBuffer)  + (0.0, -1.7)$) {};
+      \node (firstRightReq)  at ($(rightBuffer) + (0.0, -1.0)$) {};
+      \node (secondRightReq) at ($(rightBuffer) + (0.0, -1.7)$) {};
+      
+      \onslide<\storageAppearFr->{
+        \storageTwoThreadsRelative{(leftBuffer)}{(rightBuffer)}{1.7}{0.5}{-3.0}
+        \draw[draw,fill=yellow!20] ($(middleBuffer) + (-1.9,-2.4)$) rectangle ($(middleBuffer) + (1.9,-3.5)$) ;
+        \node at ($(middleBuffer) + (0,-2.7)$) {\Large Память};
+      }
+
+      \onslide<\storageAppearFr-\befPropWriteRightFr>
+        { \node at (memoryValues) 
+          {\Large $\writeReq{x}{0}; \writeReq{y}{0}$}; }
+      \onslide<\propWriteRightFr-\befPropWriteLeftFr>
+        { \node at (memoryValues)
+          {\Large $\writeReq{x}{\textcolor{colorVAL}{1}}; \writeReq{y}{0}$}; }
+      \onslide<\propWriteLeftFr->
+        { \node at (memoryValues)
+          {\Large $\writeReq{x}{\textcolor{colorVAL}{1}}; \writeReq{y}{\textcolor{colorVAL}{1}}$}; }
+
+      \onslide<\grayBoxFr->{
+        \instBackground{colorFETCH}{leftFirstInst}
+        \instBackground{colorFETCH}{leftSecondInst}
+        \instBackground{colorFETCH}{rightFirstInst}
+        \instBackground{colorFETCH}{rightSecondInst}
+      }
+
+      \onslide<\comLeftFr->
+        {\instBackground{colorCOM  }{leftSecondInst}}
+      \onslide<\comRightFr->
+        {\instBackground{colorCOM  }{rightSecondInst}}
+
+      \onslide<\issueReadLeftFr->
+        {\instBackground{colorSAT  }{leftFirstInst}}
+      \onslide<\issueReadRightFr->
+        {\instBackground{colorSAT  }{rightFirstInst}}
+
+      \onslide<\propReadLeftFr->
+        {\instBackground{colorCOM  }{leftFirstInst}}
+      \onslide<\propReadRightFr->
+        {\instBackground{colorCOM  }{rightFirstInst}}
+      
+      \onslide<\comLeftFr-\befPropWriteLeftFr>
+        { \node [anchor=east] at (firstLeftReq) {\Large $\writeReq{y}{1}$}; }
+      \onslide<\issueReadLeftFr-\befPropReadLeftFr>
+        { \node [anchor=east] at (firstLeftReq)  {\Large $\readReq{a}{x}$}; }
+
+      \onslide<\comRightFr-\befReorderRightFr>
+        { \node [anchor=west] at (firstRightReq) {\Large $\writeReq{x}{1}$}; }
+      \onslide<\issueReadRightFr-\befReorderRightFr>
+        { \node [anchor=west] at (secondRightReq)  {\Large $\readReq{b}{y}$}; }
+      \onslide<\reorderRightFr-\befPropWriteRightFr>
+        { \node [anchor=west] at (secondRightReq) {\Large $\writeReq{x}{1}$}; }
+      \onslide<\reorderRightFr-\befPropReadRightFr>
+        { \node [anchor=west] at (firstRightReq)  {\Large $\readReq{b}{y}$}; }
+      
+      \onslide<\reorderArrowRightFr-\befReorderRightFr>
+        { \draw[-,red,ultra thick] ($(firstRightReq) + (0.1, 0)$)
+            to[out=180,in=180] ($(secondRightReq) + (0.1, 0)$);
+          \node[anchor=east] at ($(firstRightReq) + (-0.1, -0.4)$)  {\Large \textcolor{red}{Независимы}}; }
+
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+      \onslide<-\befPropReadRightFr>
+        { \node at (finalValues)
+          { \Large $a = \_$, $b = \_$}; }
+      \onslide<\propReadRightFr-\befPropReadLeftFr>
+        { \node at (finalValues)
+          { \Large $a = \_$, $b = \textcolor{colorVAL}{1}$}; }
+      \onslide<\propReadLeftFr->
+        { \node at (finalValues) 
+          { \Large $a = \textcolor{colorVAL}{1}$, $b = \textcolor{colorVAL}{1}$}; }
+    \end{tikzpicture}
+  }
+}
+
+\fr{\huge Основные отличия \newline $\Promise$ от \ARMpop}{
+
+  {\LARGE
+  \begin{enumerate}
+  \item В $\Promise$ только запись исполняется не по порядку  \\
+  \vfill
+  \item В $\ARMpop$ нет порядка над записями в одну локацию 
+  \end{enumerate}
+  }
+}
+
+\begin{frame}<1,2>[label=mainingred]{\Huge \toShadow{1}{2,3-}{Основа доказательства}}
+  \begin{center}
+  { \LARGE
+    \toShadow{1,2}{3-}{1. ``Запаздывающая'' симуляция} \\
+    \vfill
+    \toShadow{1,3-}{2}{2. \ARMpop + метки времени}
+  }
+  \end{center}
+\end{frame}
+
+\fr{\huge ``Запаздывающая'' симуляция} {
+  \setorder{{firstFr},{justInstFr},{grayBoxFr,grayBoxFEFr,grayBoxPEFr,grayBoxNEFr},{promPtrFr},
+            {simRelOneFr}, {simRelTwoFr}, {simRelThreeFr},
+            {satFirstFr}, {comFirstFr}, {promFirstFr}, %{satSecondFr}, 
+            {comFifthFr}, {promWriteFifthFr}, %{satFourthOneFr},
+            {comSecondFr}, {promSecondFr}, %{comFourthFr},
+            %% {promFourthFr},
+            {promFifthFr}}
+
+  \prevFr{\befComFifthFr}{\comFifthFr}
+
+  \cntrd{
+    \begin{tikzpicture}
+    \node (zeroInst)  {};
+    \node (firstInst)  [below of=zeroInst  , node distance = 0.8cm] {}; 
+    \node (secondInst) [below of=firstInst , node distance = 0.8cm] {}; 
+    %% \node (thirdInst)  [below of=secondInst, node distance = 0.8cm] {}; 
+    %% \node (fourthInst) [below of=secondInst , node distance = 0.8cm] {}; 
+    \node (fifthInst)  [below of=secondInst, node distance = 0.8cm] {}; 
+    \node (sixthInst)  [below of=fifthInst , node distance = 0.8cm] {}; 
+
+    %% \onslide<\grayBoxFr-\promPtrFr> 
+    %%   {\instBackground{colorFETCH}{zeroInst}};
+    %% \onslide<\satZeroFr>
+    %%   {\instBackground{colorSAT  }{zeroInst}};
+    \onslide<\grayBoxFr->
+      {\instBackground{colorCOM  }{zeroInst}};
+
+    \onslide<\grayBoxFr-\simRelThreeFr>
+      {\instBackground{colorFETCH}{firstInst}};
+    \onslide<\satFirstFr>
+      {\instBackground{colorSAT  }{firstInst}};
+    \onslide<\comFirstFr->
+      {\instBackground{colorCOM  }{firstInst}};
+
+    %% \onslide<\grayBoxFr->
+    %%   {\instBackground{colorFETCH}{secondInst}};
+    \onslide<\grayBoxFr->
+      {\instBackground{colorSAT  }{secondInst}};
+    \onslide<\comSecondFr->
+      {\instBackground{colorCOM  }{secondInst}};
+
+    %% \onslide<\grayBoxFr->
+    %%   {\instBackground{colorFETCH}{thirdInst}};
+    %% \onslide<\comThirdFr->
+    %%   {\instBackground{colorCOM  }{thirdInst}};
+
+    %% \onslide<\grayBoxFr-\simRelThreeFr,\satSecondFr->
+    %%   {\instBackground{colorFETCH}{fourthInst}};
+    %% \onslide<\grayBoxFr-\promFirstFr,\satFourthOneFr->
+    %%   {\instBackground{colorSAT  }{fourthInst}};
+    %% \onslide<\comFourthFr->
+    %%   {\instBackground{colorCOM  }{fourthInst}};
+
+    \onslide<\grayBoxFr->
+      {\instBackground{colorFETCH}{fifthInst}};
+    \onslide<\comFifthFr->
+      {\instBackground{colorCOM  }{fifthInst}};
+
+    \onslide<\promWriteFifthFr-\promSecondFr>{
+      \draw[colorPROM, ultra thick, rounded corners=3pt] ($(fifthInst)  + (-1.1,0.35)$) rectangle ++(2.2,-0.7);
+      \node[anchor=west] at ($(fifthInst) + (1.4, 0.0)$) {\Large \textcolor{colorPROM}{\promisedTXT}};
+    }
+
+    %% \onslide<-\satZeroFr>  {\ptrPromise{zeroInst}};
+    \onslide<\promPtrFr-\comFirstFr>     {\ptrPromise{firstInst}};
+    \onslide<\promFirstFr-\comSecondFr> {\ptrPromise{secondInst}};
+    %% \onslide<\promSecondFr>              {\ptrPromise{thirdInst}};
+    %% \onslide<\promSecondFr-\comFourthFr> {\ptrPromise{fourthInst}};
+    \onslide<\promSecondFr>              {\ptrPromise{fifthInst}};
+    \onslide<\promFifthFr>               {\ptrPromise{sixthInst}};
+
+    \node at (zeroInst)   {\Large $\readInst{a}{x};$};
+    \node at (firstInst)  {\Large $\readInst{b}{y};$};
+    \node at (secondInst) {\Large $\readInst{c}{x};$};
+    %% \node at (thirdInst)  {\Large $\writeInst{z}{1};$};
+    %% \node at (fourthInst) {\Large $\readInst{d}{x};$};
+    \node at (fifthInst)  {\Large $\writeInst{y}{1};$};
+
+    \onslide<\firstFr>{
+      \node at (sixthInst)  {\fontsize{50}{60}\selectfont \dots};
+      \draw[-,ultra thick] ($(zeroInst) + (1.4,0.5)$) -- ($(sixthInst) + (1.4,-0.5)$);
+      \draw[-,ultra thick] ($(zeroInst) + (1.6,0.5)$) -- ($(sixthInst) + (1.6,-0.5)$);
+      \node at ($(secondInst) + (2.5,0.0)$) {\fontsize{50}{60}\selectfont \dots};
+    }
+    
+    %% \onslide<\grayBoxFEFr-\grayBoxNEFr>{
+    %%   \draw[<-,ultra thick] ($(zeroInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   \node[anchor=west] at ($(zeroInst)  + (2.0, 0.0)$) {\Large Fully};
+    %%   \node[anchor=west] at ($(zeroInst)  + (3.9, 0.0)$) {\Large executed by $\ARM$};
+    %% }
+    %% \onslide<\grayBoxPEFr-\grayBoxNEFr>{
+    %%   %% \draw[<-,ultra thick] ($(fourthInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   %% \node[anchor=west] at ($(fourthInst) + (2.0, 0.0)$) {\Large Partially Executed by $\ARM$};
+    %%   \draw[<-,ultra thick] ($(secondInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   \node[anchor=west] at ($(secondInst) + (2.0, 0.0)$) {\Large Partially executed by $\ARM$};
+    %% }
+    %% \onslide<\grayBoxNEFr>{
+    %%   \draw[<-,ultra thick] ($(fifthInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   \node[anchor=west] at ($(fifthInst) + (2.0, 0.0)$) {\Large Not};
+    %%   \node[anchor=west] at ($(fifthInst) + (3.9, 0.0)$) {\Large executed by $\ARM$};
+    %% }
+
+    %% \onslide<\comThirdFr->{
+    %%   \draw[colorPROM, ultra thick, rounded corners=3pt] ($(thirdInst)  + (-1.2,0.45)$) rectangle ++(2.4,-0.9);
+    %%   \node[anchor=west] at ($(thirdInst) + (2.0, 0.0)$) {\Large \textcolor{colorPROM}{Promised by $\Promise$}};
+    %% }
+    
+    \onslide<\comFifthFr>{
+      \fill[colorBUG, rounded corners=3pt] ($(sixthInst) + (-3.0,-0.9)$) rectangle ++(11.6,0.9);
+    }
+    
+    \onslide<\simRelOneFr>{
+      \node [anchor=west] at ($(sixthInst) + (-3.0,-0.5)$) { \huge $\simrel$ --- инвариант};
+    }
+    \onslide<\simRelTwoFr->{
+      \node [anchor=west] at ($(sixthInst) + (-3.0,-0.5)$)
+        { \huge $\simrel = \simrel_{\Promise\;\text{ждёт}} \cup \simrel_{\Promise\;\text{выполняется}}$ };
+    }
+    \onslide<\simRelThreeFr-\satFirstFr,\promFirstFr-\befComFifthFr,\promWriteFifthFr,\promFifthFr>{
+      \draw[ultra thick, rounded corners=3pt] ($(sixthInst) + (-1.6,0.0)$) rectangle ++(3.65,-0.9);
+    }
+    \onslide<\comFirstFr,\comSecondFr,\promSecondFr>{
+      \draw[ultra thick, rounded corners=3pt] ($(sixthInst) + (2.7,0.0)$) rectangle ++(5.35,-0.9);
+    }
+    \end{tikzpicture}
+  }
+
+  %% \mycallout<\timeNoteFr>[left]{green}{($(fifthInst) + (2.9, 0.0)$)}{(-0.5cm, 1.0cm)}{{\bf Note:} we assign \\ a timestamp}
+}
+
+\againframe<3>{mainingred}
+
+\fr{\huge \ARMpop\only<11->{ + метки времени}}{
+  \setorder{{firstFr}, {storageAppearFr}, {comLeftFr}, {comRightFr},
+            {leftOptionFr}, {propLeftFr}, {undoPropLeftFr},
+            {rightOptionFr}, {propRightFr},
+            {alertFr}, {uncommitFr},
+            {comLeftTwoFr}, {comRightTwoFr},
+            {leftOptionTwoFr}, {rightOptionTwoFr}}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftInst)  {};
+      \node (rightInst) [right of=leftInst, node distance = 3.0cm] {};
+      \node (instMiddle)  at ($.5*(leftInst) + .5*(rightInst)$) {};
+      %% \node (leftBuffer)  at ($(leftInst)  + (-0.75,0)$) {};
+      \node (leftBuffer)  at (leftInst) {};
+      %% \node (rightBuffer) at ($(rightInst) + (    0,0)$) {};
+      \node (rightBuffer) at (rightInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+      
+      \onslide<\storageAppearFr->
+        {\storageTwoThreadsRelative{(leftBuffer)}{(rightBuffer)}{1}{1}{-1.5}}
+
+      \onslide<\storageAppearFr->
+        {\instBackground{colorFETCH}{leftInst}};
+      \onslide<\comLeftFr-\alertFr,\comLeftTwoFr->
+        {\instBackground{colorCOM  }{leftInst}};
+
+      \onslide<\storageAppearFr->
+        {\instBackground{colorFETCH}{rightInst}};
+      \onslide<\comRightFr-\alertFr,\comRightTwoFr->
+        {\instBackground{colorCOM  }{rightInst}};
+        
+      \onslide<\comLeftFr-\leftOptionFr,\undoPropLeftFr-\alertFr>
+        { \node [anchor=east] at ($(leftBuffer)  + (0.0, -1.0)$) {\Large $\writeReq{x}{1}$}; }
+      \onslide<\comRightFr-\rightOptionFr>
+        { \node [anchor=west] at ($(rightBuffer) + (0.0, -1.0)$) {\Large $\writeReq{x}{2}$}; }
+
+      \onslide<\comLeftTwoFr->
+        { \node [anchor=east] at ($(leftBuffer)  + (0.0, -1.0)$) {\Large $\writeReq{x}{1} \,@\, \tstampWOsize{3}$}; }
+      \onslide<\comRightTwoFr->
+        { \node [anchor=west] at ($(rightBuffer) + (0.0, -1.0)$) {\Large $\writeReq{x}{2} \,@\, \tstampWOsize{8}$}; }
+
+      \onslide<\propLeftFr>
+        { \node [anchor=east] at ($(middleBuffer) + (0.0, -2.0)$) {\Large $\writeReq{x}{1}$}; }
+      \onslide<\propRightFr>
+        { \node [anchor=west] at ($(middleBuffer) + (0.0, -2.0)$) {\Large $\writeReq{x}{2}$}; }
+        
+      \onslide<\leftOptionFr,\leftOptionTwoFr>
+        { \draw[->,colorPROP,ultra thick] ($(leftBuffer)  + (-0.8,-1.5)$) to[out=-90,in=180] ($(middleBuffer) + (-0.5,-2.0)$); }
+      \onslide<\rightOptionFr>
+        { \draw[->,colorPROP,ultra thick] ($(rightBuffer) + ( 0.8,-1.5)$) to[out=-90,in=  0] ($(middleBuffer) + ( 0.5,-2.0)$); }
+      \onslide<\rightOptionTwoFr>
+        { \draw[->,colorNPROP,ultra thick] ($(rightBuffer) + ( 0.8,-1.5)$) to[out=-90,in=  0] ($(middleBuffer) + ( 0.5,-2.0)$); }
+
+      \node at (leftInst)  {\Large $\writeInst{x}{1};$};
+      \node at (rightInst) {\Large $\writeInst{x}{2};$};
+      \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5)$);
+      \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5)$);
+
+      \onslide<\leftOptionTwoFr>{
+        \node[fill=green!20, rounded corners, draw,rectangle]
+          at ($(middleBuffer) + (0, -3.5)$) { \LARGE {\bf Можно} из левого}; }
+
+      \onslide<\rightOptionTwoFr>{
+        \node[fill=red!20, rounded corners, draw,rectangle]
+          at ($(middleBuffer) + (0, -3.5)$) { \LARGE {\bf Нельзя} из правого! }; }
+    \end{tikzpicture}
+  
+    %% \vspace{1cm}
+    %% \onslide<\leftOptionTwoFr> { \LARGE Possible to propagate from left }
+    %% \onslide<\rightOptionTwoFr>{ \LARGE {\bf Im}possible to propagate from right! }
+  }
+  \dimalert<\alertFr>{Будем определять порядок заранее!}
+}
+
+\begin{frame}<-2>[label=armAxFrame]{\huge \only<-2>{Исполнение в \ARMax}\only<3->{Обход \ARMax}}
+  \setorder{{firstFr},{bigLBFr},{titleTraverseFr},{legendFr},
+            {issueLeftFr},
+            {coverReadRightFr},{issueRightFr},{coverWriteRightFr},
+            {coverReadLeftFr},{coverWriteLeftFr}}
+  %% , {initEventsFr}
+  \prevFr{\befBigLBFr}{\bigLBFr}
+  \prevFr{\befTitleTraverseFr}{\titleTraverseFr}
+  \prevFr{\befIssueLeftFr}{\issueLeftFr}
+  \prevFr{\befCoverReadRightFr}{\coverReadRightFr}
+  \prevFr{\befIssueRightFr}{\issueRightFr}
+  \prevFr{\befCoverWriteRightFr}{\coverWriteRightFr}
+  \prevFr{\befCoverReadLeftFr}{\coverReadLeftFr}
+  \prevFr{\befCoverWriteLeftFr}{\coverWriteLeftFr}
+
+
+  \cntrd{
+    \vspace{-1.5cm}
+    \begin{tikzpicture}[every node/.style={transform shape}]
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of= leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of=rightFirstInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+      \node (finalValues)  at ($(middleBuffer) + (0, -4.5)$) {};
+      
+      %% \node (ptrLeft)  at ($.5*(rightFirstInst) + .5*(rightSecondInst) + (1.5, 0)$) {};
+      %% \node (ptrRight) at ($(ptrLeft) + (1.0, 0)$) {};
+      \node (ptrLeft)  at ($(instMiddle) + (0.0, -1.7)$) {};
+      \node (ptrRight) at ($(ptrLeft) + (0.0, -1.5)$) {};
+
+      %% \node (leftCurlyCenter)  at ($(ptrRight) + (1.0, 0)$) {};
+      \node (leftCurlyCenter)  at ($(leftSecondInst) +  (-3.25, -4.0)$) {};
+      \node (rightCurlyCenter) at ($(rightSecondInst) + ( 3.25, -4.0)$) {};
+      
+      \node (curlyTopShift) at (0, -1.5) {};
+      \node (curlyBotShift) at (0,  1.5) {};
+      \node (leftCurlyTop)  at ($(leftCurlyCenter)  + (curlyTopShift)$) {};
+      \node (rightCurlyTop) at ($(rightCurlyCenter) + (curlyTopShift)$) {};
+
+      \node (leftCurlyBot)  at ($(leftCurlyCenter)  + (curlyBotShift)$) {};
+      \node (rightCurlyBot) at ($(rightCurlyCenter) + (curlyBotShift)$) {};
+      
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+  \only<-\befTitleTraverseFr>{ \node (bigLBpos) at ($(ptrRight) + (0.0, -1.0)$)  {}; }
+  \only<\titleTraverseFr->   { \node (bigLBpos) at ($(ptrRight) + (-2.0, -1.0)$) {}; }
+      
+  \uncover<\bigLBFr->{
+  \node at (bigLBpos) {
+    \begin{tikzpicture}[scale=2.0,every node/.style={transform shape}]
+  \node (dGraphCenter) at ($(0.0, 0.0)$) {};
+
+    \uncover<\coverReadRightFr-\befCoverWriteRightFr>{ \traverseSingleBorder{colorCOV}{d11} }
+    \uncover<\coverWriteRightFr-\befCoverReadLeftFr>{ \traverseTwoVertBorder{colorCOV}{d11}{d12} }
+
+    \uncover<\coverReadLeftFr-\befCoverWriteLeftFr>{
+      \draw[pattern=custom north east lines, hatchcolor=colorCOV, thick, rounded corners]
+        ($(d1) + (-0.45,0.4)$)   -- ($(d11) + (0.45,0.4)$)
+        -- ($(d12) + (0.45,-0.4)$) -- ($(d12) + (-0.45,-0.4)$) -- ($(d11) + (-0.45,-0.4)$) -- ($(d1) + (-0.45,-0.4)$) -- cycle;
+    }
+
+    \uncover<\coverWriteLeftFr->{ \traverseTwoVertBorder{colorCOV}{d1}{d12} }
+
+    \uncover<\issueLeftFr->{ \traverseSingleBorder{colorISS}{d2} }
+    \uncover<\issueRightFr->{ \traverseSingleBorder{colorISS}{d12} }
+
+    \node (d1)  at ($(dGraphCenter) + (-0.5, 0.5)$) {$\rlab{}{x}{1}$ };
+    \node (d2)  at ($(d1)  + (0, -1)$)  {$\wlab{}{y}{1}$ };
+    \node (d11) at ($(d1)  + (1,  0)$)  {$\rlab{}{y}{1}$ };
+    \node (d12) at ($(d11) + (0, -1)$)  {$\wlab{}{x}{1}$ };
+
+    %% \uncover<\initEventsFr->{
+    %%   \node (di1) at ($(d1)  + (0, 1)$)  {$\wlab{}{x}{0}$ };
+    %%   \node (di2) at ($(d11) + (0, 1)$)  {$\wlab{}{y}{0}$ };
+
+    %%   \draw[po, ultra thick] (di1)  edge node {} (d1);  % {\small $\lPO$} (d1);
+    %%   \draw[po, ultra thick] (di1)  edge node {} (d11); % {\small $\lPO$} (d11);
+    %%   \draw[po, ultra thick] (di2)  edge node {} (d1);  % {\small $\lPO$} (d1);
+    %%   \draw[po, ultra thick] (di2)  edge node {} (d11); % {\small $\lPO$} (d11);
+    %% }
+
+  \draw[po, ultra thick] (d1)  edge node  {} (d2);  % {\small $\lPO$} (d2);
+  \draw[po, ultra thick] (d11) edge node {} (d12); % {\small $\lPO$} (d12);
+  \draw[rf, ultra thick] (d2)  edge node {} (d11); % {\small $\lRF$} (d11);
+  \draw[rf, ultra thick] (d12) edge node {} (d1);
+    \end{tikzpicture}
+    };
+  }
+
+  \only<\titleTraverseFr->{
+    \uncover<\legendFr->{
+      \node (covLegend) at ($(ptrRight) + (3.0, -0.2)$) {};
+      \node (covEllL)   at ($(covLegend) + (-1.6,-0.5)$) {};
+      \node (covEllR)   at ($(covLegend) + (1.6,0.5)$) {};
+
+      \node (issLegend) at ($(ptrRight) + (3.0, -1.7)$) {};
+      \node (issEllL)   at ($(issLegend) + (-1.6,-0.5)$) {};
+      \node (issEllR)   at ($(issLegend) + (1.6,0.5)$) {};
+  
+      \draw[pattern=custom north east lines, hatchcolor=colorCOV, thick, rounded corners]
+        (covEllL) rectangle (covEllR);
+      \node at (covLegend) {\Large Покрытые};
+
+      \draw[pattern=custom north east lines, hatchcolor=colorISS, thick, rounded corners]
+        (issEllL) rectangle (issEllR);
+      \node at (issLegend) {\Large Выпущенные};
+    }
+  }
+    
+    \end{tikzpicture}
+  }
+\end{frame}
+
+\phrase{Как по графу построить исполнение \Promise? \\ \pause Нужен обход!}
+
+\againframe<3->{armAxFrame}
+
+\fri{\huge Планы на будущее}{
+  \LARGE
+  \item Компиляция из всей обещающей машины в $\ARMax$ и Power в Coq
+  \vfill
+  \item Логика для программ в обещающей машине
+}
