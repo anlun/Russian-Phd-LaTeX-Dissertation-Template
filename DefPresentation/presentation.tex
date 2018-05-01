@@ -49,6 +49,7 @@
 \usepackage{fontspec}
 %% \usepackage{polyglossia}
 %% \setdefaultlanguage{russian}
+\usepackage{ebproof}
 
 \setmainfont[Ligatures=TeX]{CMU Serif}
 \setsansfont[Ligatures=TeX]{CMU Sans Serif}
@@ -2064,14 +2065,23 @@ at #5 {#7};
 %%   \dimalert<\alertFr>{Будем определять порядок заранее!}
 %% }
 
-\fr{\LARGE Структура д-ва корректности компиляции из обещающей модели в модель \ARMpop}{
-  \Large
+\fr{\large Структура д-ва корректности компиляции из обещающей модели \Promise в модель \ARMpop}{
+  %% \Large
   \iteN{
     \item Вводится инструментированная ограниченная версия модели $\ARMpop$, т.н. $\ARMt$.
     \vfill
-    \item Доказывается эквивалентность между моделями $\ARMt$ и $\ARMpop$.
+    \item Доказывается эквивалентность $\ARMt$ и $\ARMpop$.
+    \[\begin{array}{l}
+      \forall P. \; \semState{P}{\ARMt} = \semState{P}{\ARMpop}.
+    \end{array}\]
     \vfill
-    \item Показывается, что обещающая модель симулирует модель $\ARMt$.
+    \item Доказывается симуляция $\ARMt$ обещающей моделью. \\
+    \vspace{.3cm}
+    { \footnotesize
+    \textbf{Теорема 1.} $S({\sf init}_{\ARMt}, {\sf init}_{\Promise}) $. \\
+    \textbf{Теорема 2.} $\forall arm, arm \to arm', promise, S(arm, promise).$ \\
+    $\quad \exists promise', promise \to promise' \land S(arm', promise').$
+    }
   }
 }
 
@@ -2205,14 +2215,36 @@ at #5 {#7};
 
 %% \againframe<3->{armAxFrame}
 
-\fr{\LARGE Структура д-ва корректности компиляции из обещающей модели в аксиоматическую модель \ARMax}{
-  \Large
+\fr{\large Структура д-ва корректности компиляции из обещающей модели в аксиоматическую модель \ARMax}{
   \iteN{
-    \item Вводится операционная семантика обхода \ARMax-исполнения.
-    \vfill
+    \item Вводится операционная семантика обхода \ARMax-исполнения $G$. \\
+    \vspace{.5cm}
+    { \footnotesize
+    \begin{minipage}[t]{0.5\textwidth}
+    \begin{prooftree}
+      \Hypo{a \in \nextset(G, C) \cap \coverable(G, C, I)}
+      \Infer1{G \vdash \tup{C, I} \travConfigStep \tup{C \cup \{a\}, I}}
+    \end{prooftree}
+    \end{minipage}
+    \begin{minipage}[t]{0.4\textwidth}
+    \begin{prooftree}
+      \Hypo{w \in \issuable(\tikzmark{issuableMk}G, C, I) \setminus I}
+      \Infer1{G \vdash \tup{C, \IssuedSet} \travConfigStep \tup{C, \IssuedSet \cup \{w\}}}
+    \end{prooftree}
+    \end{minipage}
+    }
+    \vspace{.3cm}
     \item Доказывается полнота обхода.
-    \vfill
-    \item Показывается, что обещающая модель симулирует обход \ARMax-исполнения.
+    { \footnotesize
+    \[\forall P, G. \; G \in \semState{P}{\ARMax} \Rightarrow G \vdash \tup{\emptyset, \emptyset} \to^{*} G \vdash \tup{G.E, G.W}.\]
+    }
+    \item Показывается, что обещающая модель симулирует обход \ARMax-исполнения. \\
+    \vspace{.3cm}
+    { \footnotesize
+    \textbf{Теорема 1.} $S_{G}(\tup{\emptyset, \emptyset}, {\sf init}_{\Promise}) $. \\
+    \textbf{Теорема 2.} $\forall G \vdash \tup{C, I} \to \tup{C', I'}, promise, S_{G}(\tup{C, I}, promise).$ \\
+    $\quad \exists promise', promise \to promise' \land S_{G}(\tup{C', I'}, promise').$
+    }
   }
 }
 
