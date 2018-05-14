@@ -339,6 +339,7 @@ at #5 {#7};
 \definecolor{darkGreen}{RGB}{0,127,0}
 \definecolor{darkYellow}{RGB}{127,127,0}
 \definecolor{darkRed}{RGB}{127,0,0}
+\definecolor{darkBlue}{RGB}{0,0,127}
 \definecolor{darkPurple}{RGB}{127,0,127}
 \colorlet{colorFETCH}{gray!40!white}
 \colorlet{colorSAT}{yellow!40!white}
@@ -483,6 +484,11 @@ at #5 {#7};
     \pgfusepath{stroke}
    }
 
+\newcommand{\cntrd}[1]{ \begin{center} #1 \end{center} }
+\newcommand\titlebox[2][]{\tikz[overlay]\node[fill=black,
+  text=white,inner sep=20pt, anchor=text,
+  rectangle, rounded corners=2mm,#1] {#2};\phantom{#2}}
+
 \begin{document}
 
 \title
@@ -509,6 +515,61 @@ at #5 {#7};
 %% Семинар ИСП РАН
 }
 \date[17-05-18]{17.05.2018}
+
+\frame[noframenumbering,plain]{
+  \includegraphics[width=1.7cm]{SPbGU_Logo.png}
+  \vspace{-40pt}
+  %% \hspace{-10pt}
+  \begin{center}
+    % \begin{tabular}{m{1.5cm}  m{0.48\textwidth}}
+    %   \begin{center}\includegraphics[width=1.5cm]{SPbGU_Logo.png}\end{center} 
+    %   &
+    \begin{tabular}{c}
+      \scriptsize{Санкт-Петербургский государственный университет} \\
+      \scriptsize{Кафедра системного программирования}
+    \end{tabular}
+  \end{center}
+  %% \vspace{0.2cm}
+  %% \titlebox
+  \cntrd{
+  \color{darkBlue}
+  {\Large Операционные методы в приложении \newline к слабым моделям памяти}%\\
+  }
+  % \vspace{0.7cm}
+  % \titlebox{\large \hspace{1.4cm}\textbf{Березун Даниил}\hspace{1.4cm}$\;$}
+  % \titlebox{\large \hspace{1.31cm}\textbf{Березун Даниил Андреевич}\hspace{1.31cm}$\;$}
+  %% \vspace{0.1cm}
+  \cntrd{
+  \textbf{Подкопаев Антон Викторович}
+  % \vfill
+  % Санкт-Петербургский Государственный Университет\\
+  % СПбГУ, мат.-мех. ф-т, кафедра системного программирования\\
+  % СПбГУ, Мат-Мех, кафедра СП\\
+  % Лаборатория языковых инструментов JetBrains\\
+  %{\color{blue}{d.berezun@2009.spbu.ru}}\\
+  %% \vfill
+
+  \vspace{0.2cm}
+  {\scriptsize  Специальность: {\color{blue}05.13.11}
+  ``Математическое и программное обеспечение вычислительных
+  машин, комплексов и компьютерных сетей''}\\
+  }
+  \vfill
+  {\scriptsize
+    {
+      \begin{tabular} {p{0.5cm} r l} 
+        &{Научный руководитель:}  & д.т.н., проф. Кознов Д.В. (СПбГУ)\\
+        &{Официальные оппоненты:} & д.т.н., проф. Гергель В.П. (ННГУ) \\
+        &                         & к.т.н., доц. Лукашин А.А. (СПбГПУ) \\
+        &{Ведущая организация:} & ИСП РАН\\ 
+      \end{tabular}
+    }}
+  % Научный руководитель: д.т.н., профессор Кознов Д.В. \hfill (СПбГУ)\\
+  % Научные консультанты: Jones, Neil D. \hfill ({DIKU}, prof. em.)\\
+  % \hspace{4.55cm}к.ф.-м.н. Булычев Д.Ю. \hfill (СПбГУ)\\ 
+  \vfill
+  \cntrd{{\scriptsize Санкт-Петербург, 2018}}
+}
 
 \newcommand{\fr} [2]{\begin{frame}{#1} #2 \end{frame}}
 \newcommand{\frN}[2]{\begin{frame}[noframenumbering]{#1} #2 \end{frame}}
@@ -581,7 +642,6 @@ at #5 {#7};
 \end{textblock*}
 }
 }
-\newcommand{\cntrd}[1]{ \begin{center} #1 \end{center} }
 
 \newcommand{\instBackground}[2]{
     \fill[#1, rounded corners=3pt] ($(#2)  + (-1.1,0.35)$) rectangle ++(2.2,-0.7);
@@ -648,9 +708,9 @@ at #5 {#7};
     \draw[pattern=custom north east lines, hatchcolor=#1, thick, rounded corners] ($(#2)  + (-0.45,0.4)$) rectangle ($(#3)  + (0.45,-0.4)$);
 }
 
-{\setbeamertemplate{footline}{}
-\setbeamertemplate{headline}{}
-\frame[plain,noframenumbering]{\titlepage}}
+%% {\setbeamertemplate{footline}{}
+%% \setbeamertemplate{headline}{}
+%% \frame[plain,noframenumbering]{\titlepage}}
 %% \begin{frame}[plain,noframenumbering]
 %%   \titlepage
 %% \end{frame}
@@ -781,11 +841,11 @@ at #5 {#7};
   {\Large (x86, Power, ARM, C++, Java)}
 }
 
-\phrase{
-  Почему системы имеют слабые MM?
-}
+%% \phrase{
+%%   Почему системы имеют слабые MM?
+%% }
 
-\fr{\huge Процессоры и компиляторы \newline {\bf оптимизируют} программы}{
+\begin{frame}<3>{\huge Процессоры и компиляторы \newline {\bf оптимизируют} программы}
   \setorder{{firstFr, listFr}, {correctFr, oneThreadFr}, {weakFr}}
   \LARGE
   
@@ -831,7 +891,7 @@ at #5 {#7};
       \node [anchor=west,below of=test, node distance=0.9cm,xshift=-0.5cm] {\Large потока};
     }
   }
-}
+\end{frame}
 
 %% \fr{}{
 %% \LARGE
@@ -1162,7 +1222,7 @@ at #5 {#7};
 
 \phrase{C/C++11 MM --- {\bf аксиоматическая} MM}
 
-\fr{\huge Исполнения в C/C++11 MM}{
+\begin{frame}<4->{\huge Исполнение в C/C++11 MM}
   \setorder{{firstFr}, {lbHighlightFr}, {bigLBFr}, {axiomsFr}, {removeValueFr}, {randomValueFr}}
   \prevFr{\befBigLBFr}{\bigLBFr}
   \prevFr{\befRemoveValueFr}{\removeValueFr}
@@ -1307,12 +1367,14 @@ at #5 {#7};
 
     \end{tikzpicture}
   }
-}
+\end{frame}
+
+
 
 \begin{frame}{\huge Постановка задачи}
    \setorder{{opCppFr},{promiseFr},{armPOPSectionFr},{armAxSectionFr}}
 \begin{itemize}
-  \Large
+  \large
 
   \uncover<\opCppFr->{
   \item Разработать операционную модель памяти С/С++11, свободную от проблемы ``значений из воздуха''.
@@ -1333,7 +1395,7 @@ at #5 {#7};
             %% }
             %% \uncover<\promiseARMHoleFr->{
               %% \vfill 
-              \item \alert{Нет д-ва корректности компиляции в MM ARM}!
+              \item \alert{Нет доказательства корректности компиляции в MM ARM}!
             %% }
           \end{itemize}
         
@@ -1343,6 +1405,16 @@ at #5 {#7};
   \uncover<\armPOPSectionFr->{
   \item Доказать корректность эффективной схемы компиляции из существенного подмножества обещающей модели (ККОМ) в операционную модель памяти ARMv8 POP.
   }
+
+  \only<\armPOPSectionFr>{
+\begin{block}{Корректность компиляции}
+  $compile : S \rightarrow T$\\
+  $\forall Prog \in S.$ \\
+  $\quad \semState{compile(Prog)}{T}$
+  $\subseteq$
+  $\semState{Prog}{S}$.
+\end{block}
+}
 
   \vfill
   \uncover<\armAxSectionFr->{
@@ -1459,7 +1531,7 @@ at #5 {#7};
     \item \url{github.com/anlun/OperationalSemanticsC11}
   \end{itemize}
   \vfill
-  \item Апробирована на 41 тесте
+  \item Апробирована на 41 тесте из литературы
   \begin{itemize}
     \large
     \item Совпадает с C/C++11 MM на 36 тестах
@@ -1470,23 +1542,23 @@ at #5 {#7};
 
 \againframe<10>{resultsFrame}
 
-\fr{\Huge Корректность компиляции}{
-  \LARGE
+%% \fr{\Huge Корректность компиляции}{
+%%   \LARGE
 
-  $\onslide<3->{compile :} \tikzmark{proglang}S \onslide<3->{\rightarrow} \tikzmark{hardlang}\onslide<2->{T}$\\
-  \onslide<4->{
-  $\onslide<6->{\forall Prog \in S.} \\$
-  $\onslide<5->{\quad \semState{\onslide<6->{compile(\tikzmark{hardsem}Prog)}}{T}}$
-  $\onslide<6->{\subseteq}$
-  $\semState{\onslide<6->{Prog}\tikzmark{progsem}}{S}$.
-  }
+%%   $\onslide<3->{compile :} \tikzmark{proglang}S \onslide<3->{\rightarrow} \tikzmark{hardlang}\onslide<2->{T}$\\
+%%   \onslide<4->{
+%%   $\onslide<6->{\forall Prog \in S.} \\$
+%%   $\onslide<5->{\quad \semState{\onslide<6->{compile(\tikzmark{hardsem}Prog)}}{T}}$
+%%   $\onslide<6->{\subseteq}$
+%%   $\semState{\onslide<6->{Prog}\tikzmark{progsem}}{S}$.
+%%   }
 
-  \mycallout<1>{green}{(proglang)}{(0.0cm, 1.0cm)}{Исходный язык}
-  \mycallout<2>{green}{(hardlang)}{(0.0cm, 1.0cm)}{Целевой язык}
+%%   \mycallout<1>{green}{(proglang)}{(0.0cm, 1.0cm)}{Исходный язык}
+%%   \mycallout<2>{green}{(hardlang)}{(0.0cm, 1.0cm)}{Целевой язык}
 
-  \mycallout<4>{green}{(progsem)}{(0.0cm, 1.0cm)}{Исходная MM}
-  \mycallout<5>{green}{(hardsem)}{(0.0cm, 1.0cm)}{Целевая MM}
-}
+%%   \mycallout<4>{green}{(progsem)}{(0.0cm, 1.0cm)}{Исходная MM}
+%%   \mycallout<5>{green}{(hardsem)}{(0.0cm, 1.0cm)}{Целевая MM}
+%% }
 
 
 \fr{\large Структура д-ва корректности компиляции из обещающей модели $\Promise$ в модель \ARMpop}{
@@ -1554,18 +1626,21 @@ at #5 {#7};
         отличает его от существующих доказательств для моделей x86 и Power.
   \vfill
   \item Доказательства ККОМ в модели $\ARMpop$ и $\ARMax$ являются первыми результатами о компиляции для данных моделей.
-}
-
-\fri{\Large Теоретическая и практическая значимость работы}{
-  \large
-  \item Предложен операционный способ представления реалистичной семантики многопоточности с помощью меток времени и фронтов.
-  \vfill
-  \item Приводится метод доказательства корректности компиляции из обещающей в аксиоматические модели памяти,
-  который может быть использован для последующих доказательств.
   \vfill
   \item Доказательство корректности эффективной компиляции для архитектуры ARM является
   необходимым аргументом в пользу обещающей модели памяти как новой модели памяти для C/C++ и Java.
 }
+
+%% \fri{\Large Теоретическая и практическая значимость работы}{
+%%   \large
+%%   \item Предложен операционный способ представления реалистичной семантики многопоточности с помощью меток времени и фронтов.
+%%   \vfill
+%%   \item Приводится метод доказательства корректности компиляции из обещающей в аксиоматические модели памяти,
+%%   который может быть использован для последующих доказательств.
+%%   \vfill
+%%   \item Доказательство корректности эффективной компиляции для архитектуры ARM является
+%%   необходимым аргументом в пользу обещающей модели памяти как новой модели памяти для C/C++ и Java.
+%% }
 
 \fr{\LARGE Публикации}{
   \scriptsize
